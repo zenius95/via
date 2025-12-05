@@ -109,7 +109,7 @@ function createWindow() {
 
             const browser = await puppeteer.launch({
                 executablePath,
-                headless: false, // Show browser UI
+                headless: data.headless === true ? true : false, // Default to false if not provided
                 defaultViewport: null,
                 args,
                 ignoreDefaultArgs: ['--enable-automation']

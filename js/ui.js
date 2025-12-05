@@ -79,6 +79,39 @@ function closeColumnModal() {
     setTimeout(() => { colModal.classList.add('hidden'); }, 200);
 }
 
+// --- SETTINGS MODAL ---
+const settingsModal = document.getElementById('settings-modal');
+
+function openSettingsModal() {
+    settingsModal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        settingsModal.classList.remove('opacity-0');
+        settingsModal.querySelector('.relative').classList.replace('scale-95', 'scale-100');
+    });
+}
+
+function closeSettingsModal() {
+    settingsModal.classList.add('opacity-0');
+    settingsModal.querySelector('.relative').classList.replace('scale-100', 'scale-95');
+    setTimeout(() => { settingsModal.classList.add('hidden'); }, 200);
+}
+
+function switchSettingsTab(tabName) {
+    // 1. Update Sidebar
+    document.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+            item.classList.add('active');
+        }
+    });
+
+    // 2. Update Content
+    document.querySelectorAll('.setting-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    document.getElementById(`setting-tab-${tabName}`).classList.remove('hidden');
+}
+
 function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); this.classList.add('dragging'); }
 function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragSrcEl !== this) { const list = dragSrcEl.parentNode; const siblings = Array.from(list.children); const s = siblings.indexOf(dragSrcEl); const t = siblings.indexOf(this); if (s < t) { this.after(dragSrcEl); } else { this.before(dragSrcEl); } } return false; }
 function handleDrop(e) { if (e.stopPropagation) e.stopPropagation(); return false; }
@@ -176,7 +209,9 @@ function menuAction(action) {
             }
         });
         showToast(`Đã tick chọn ${count} tài khoản từ vùng bôi đen`, "success");
-    } else if (action === 'openBrowser') {
+    } else if (action === 'openBrowser' || action === 'openBrowserHeadless') {
+        const isHeadless = (action === 'openBrowserHeadless');
+
         if (selectedData.length === 0) {
             showToast('Vui lòng chọn 1 tài khoản', 'error');
             return;
@@ -187,8 +222,7 @@ function menuAction(action) {
 
         // Duyệt qua các row đã chọn và mở tab
         selectedData.forEach(acc => {
-            // Giả lập thêm dữ liệu Proxy/UA nếu trong data chưa có để test
-            // acc.proxy = "http://127.0.0.1:8888"; 
+            acc.headless = isHeadless;
             TabManager.createTab(acc);
         });
     }
@@ -432,12 +466,14 @@ const TabManager = {
         }
 
         // 1. Gọi Main Process để mở Puppeteer Browser
-        showToast(`Đang khởi động Browser cho ${accountData.name}...`, 'info');
+        const isHeadless = accountData.headless || false;
+        showToast(`Đang khởi động Browser (${isHeadless ? 'Headless' : 'GUI'}) cho ${accountData.name}...`, 'info');
         try {
             const result = await ipcRenderer.invoke('puppeteer-start', {
                 uid: accountData.uid,
                 proxy: accountData.proxy,
-                userAgent: accountData.userAgent
+                userAgent: accountData.userAgent,
+                headless: isHeadless
             });
 
             if (!result.success) {
