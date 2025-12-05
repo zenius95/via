@@ -226,6 +226,10 @@ body {
     border: 0 !important;
 }
 
+.ag-watermark {
+    display: none !important;
+}
+
 /* Custom Header Component */
 .custom-header-container {
     display: flex;

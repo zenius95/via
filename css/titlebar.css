@@ -67,8 +67,6 @@
     justify-content: space-between;
     height: 32px;
     /* Slightly smaller than toolbar buttons (38px) */
-    min-width: 140px;
-    max-width: 220px;
     padding: 0 12px;
     background: var(--tab-inactive);
     border: 1px solid transparent;
@@ -119,29 +117,6 @@
 .tab.active i {
     opacity: 1;
     color: #60a5fa;
-}
-
-/* Close Button */
-.tab-close {
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    opacity: 0;
-    transition: all 0.2s;
-    margin-left: 4px;
-}
-
-.tab:hover .tab-close {
-    opacity: 1;
-}
-
-.tab-close:hover {
-    background: rgba(239, 68, 68, 0.15);
-    /* Red tint */
-    color: #f87171;
 }
 
 /* Window Controls */
