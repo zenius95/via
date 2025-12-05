@@ -400,12 +400,10 @@ function toggleStatusFilter(status, event) {
 }
 
 
-// --- TAB MANAGER SYSTEM (NEW) ---
 const TabManager = {
-    tabs: {}, // Lưu trữ thông tin tabs: { id: { title, webview, ... } }
+    tabs: {},
     activeTabId: 'dashboard',
 
-    // Chuyển về Dashboard
     switchToDashboard: function () {
         this.activeTabId = 'dashboard';
 
@@ -414,30 +412,32 @@ const TabManager = {
         document.getElementById('tab-dashboard').classList.add('active');
 
         // UI Views
+        // Dashboard dùng display:none cũ cũng được vì nó nhẹ
         document.getElementById('dashboard-view').classList.remove('hidden');
         document.getElementById('webview-container').classList.add('hidden');
 
-        // Ẩn tất cả webview
-        document.querySelectorAll('webview').forEach(wv => wv.classList.add('hidden'));
+        // Ẩn tất cả các wrapper tabs bằng class mới
+        Object.values(this.tabs).forEach(t => {
+            t.viewWrapper.classList.remove('tab-view-active');
+            t.viewWrapper.classList.add('tab-view-hidden');
+        });
     },
 
-    // Tạo Tab mới
     createTab: function (accountData) {
         const tabId = 'tab-' + accountData.uid;
 
-        // Nếu tab đã tồn tại -> focus vào nó
         if (this.tabs[tabId]) {
             this.switchToTab(tabId);
             return;
         }
 
-        // 1. Tạo Button trên Titlebar
+        // 1. Tạo Button (Giữ nguyên)
         const tabBtn = document.createElement('div');
         tabBtn.className = 'tab';
         tabBtn.id = `btn-${tabId}`;
         tabBtn.innerHTML = `
             <div class="tab-content">
-                <img src="${accountData.avatar || 'https://via.placeholder.com/20'}" class="w-5 h-5 rounded-full mr-2 border border-slate-600">
+                <img src="${accountData.avatar || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mr-2 border border-slate-600">
                 <span class="tab-title max-w-[100px] overflow-hidden text-ellipsis">${accountData.name || accountData.uid}</span>
             </div>
             <div class="tab-close-btn" onclick="event.stopPropagation(); TabManager.closeTab('${tabId}')">
@@ -447,49 +447,53 @@ const TabManager = {
         tabBtn.onclick = () => this.switchToTab(tabId);
         document.getElementById('tabs-container').appendChild(tabBtn);
 
-        // 2. Tạo Webview (Browser)
-        const webview = document.createElement('webview');
-        webview.id = `wv-${tabId}`;
-        webview.className = 'w-full h-full hidden';
-        webview.src = 'https://www.facebook.com'; // Mặc định vào Facebook
+        // 2. Tạo Wrapper chứa Webview
+        const viewWrapper = document.createElement('div');
+        viewWrapper.id = `view-${tabId}`;
 
-        // --- QUAN TRỌNG: CẤU HÌNH USERAGENT & PARTITION (SESSION) ---
-        // Partition: "persist:uid" -> Giữ cookies riêng biệt cho từng UID. Tắt app bật lại vẫn còn login.
-        webview.partition = `persist:${accountData.uid}`;
+        // --- SỬA ĐỔI Ở ĐÂY ---
+        // Không dùng 'hidden' hay 'flex' nữa. Dùng class stacking mới.
+        viewWrapper.className = 'tab-view-wrapper tab-view-hidden';
 
-        // UserAgent: Fake UA nếu cần (Bro có thể lấy từ data account)
+        // 3. Webview Headless (Chạy ngầm)
+        const headlessWv = document.createElement('webview');
+        headlessWv.src = 'https://www.facebook.com';
+        headlessWv.partition = `persist:${accountData.uid}`;
+        // Style ẩn hoàn toàn
+        Object.assign(headlessWv.style, { width: '0', height: '0', position: 'absolute', visibility: 'hidden' });
+
+        // Fake UA
         const userAgent = accountData.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-        webview.setAttribute('useragent', userAgent);
+        headlessWv.setAttribute('useragent', userAgent);
 
-        // Append vào container
-        const container = document.getElementById('webview-container');
-        container.appendChild(webview);
+        // 4. Webview UI (Giao diện Demo)
+        const uiWv = document.createElement('webview');
+        uiWv.src = 'demo.html';
+        uiWv.className = 'w-full h-full bg-slate-900'; // Thêm bg-slate-900 cho chắc
 
-        // 3. Cấu hình Proxy (Sau khi webview được attach)
-        webview.addEventListener('dom-ready', () => {
-            // Logic inject JS hoặc CSS nếu thích
-            // webview.insertCSS('body { background: #000 !important; }');
-        });
+        viewWrapper.appendChild(headlessWv);
+        viewWrapper.appendChild(uiWv);
+        document.getElementById('webview-container').appendChild(viewWrapper);
 
-        // Xử lý Proxy: Webview cần truy cập Session để set Proxy
-        // Lưu ý: Proxy format ví dụ: "http://user:pass@ip:port" hoặc "ip:port"
+        // --- Proxy Logic (Giữ nguyên) ---
         if (accountData.proxy) {
-            const session = webview.getWebContents().session;
-            const proxyConfig = { proxyRules: accountData.proxy }; // Cấu hình đơn giản
-            session.setProxy(proxyConfig).then(() => {
-                console.log(`Đã set proxy ${accountData.proxy} cho ${accountData.uid}`);
-            }).catch(console.error);
+            headlessWv.addEventListener('dom-ready', () => {
+                headlessWv.getWebContents().session.setProxy({ proxyRules: accountData.proxy }).catch(console.error);
+            });
         }
 
-        // Lưu vào memory
-        this.tabs[tabId] = { id: tabId, data: accountData, webview: webview };
+        this.tabs[tabId] = {
+            id: tabId,
+            data: accountData,
+            viewWrapper: viewWrapper,
+            headlessWv: headlessWv,
+            uiWv: uiWv
+        };
 
-        // Chuyển sang tab vừa tạo
         this.switchToTab(tabId);
-        showToast(`Đã mở trình duyệt cho: ${accountData.name}`, 'success');
+        showToast(`Đã mở: ${accountData.name}`, 'success');
     },
 
-    // Chuyển Tab
     switchToTab: function (tabId) {
         if (!this.tabs[tabId]) return;
         this.activeTabId = tabId;
@@ -498,28 +502,30 @@ const TabManager = {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`btn-${tabId}`).classList.add('active');
 
-        // UI Views
+        // UI Views Main
         document.getElementById('dashboard-view').classList.add('hidden');
         document.getElementById('webview-container').classList.remove('hidden');
 
-        // Ẩn tất cả webview, chỉ hiện cái cần thiết
-        document.querySelectorAll('webview').forEach(wv => wv.classList.add('hidden'));
-        this.tabs[tabId].webview.classList.remove('hidden');
+        // --- LOGIC MỚI: Dùng Visibility thay vì Display ---
+        Object.values(this.tabs).forEach(t => {
+            if (t.id === tabId) {
+                // Hiện tab này
+                t.viewWrapper.classList.remove('tab-view-hidden');
+                t.viewWrapper.classList.add('tab-view-active');
+            } else {
+                // Ẩn tab khác
+                t.viewWrapper.classList.remove('tab-view-active');
+                t.viewWrapper.classList.add('tab-view-hidden');
+            }
+        });
     },
 
-    // Đóng Tab
     closeTab: function (tabId) {
         if (!this.tabs[tabId]) return;
-
-        // Xóa Webview DOM
-        this.tabs[tabId].webview.remove();
-        // Xóa Button DOM
+        this.tabs[tabId].viewWrapper.remove();
         document.getElementById(`btn-${tabId}`).remove();
-
-        // Xóa khỏi memory
         delete this.tabs[tabId];
 
-        // Nếu đang ở tab đó thì về dashboard
         if (this.activeTabId === tabId) {
             this.switchToDashboard();
         }

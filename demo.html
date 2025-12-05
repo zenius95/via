@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automation Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .glass-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            transition: all 0.2s;
+        }
+
+        .glass-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .log-item {
+            border-left: 2px solid #334155;
+            padding-left: 12px;
+            margin-bottom: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .blink {
+            animation: blinker 1.5s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col p-6 overflow-hidden">
+
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
+                <i class="ri-robot-2-fill text-2xl text-blue-400"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">Automation Controller</h1>
+                <p class="text-xs text-slate-400 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 blink"></span>
+                    Headless Browser is running...
+                </p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="glass-btn px-4 py-2 rounded-lg text-sm font-medium"><i class="ri-restart-line mr-1"></i>
+                Reload</button>
+            <button
+                class="glass-btn px-4 py-2 rounded-lg text-sm font-medium text-red-400 border-red-500/20 bg-red-500/10 hover:bg-red-500/20"><i
+                    class="ri-shut-down-line mr-1"></i> Stop</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6 flex-1 min-h-0">
+
+        <div class="col-span-8 flex flex-col gap-6">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="card p-4">
+                    <div class="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Status</div>
+                    <div class="text-2xl font-bold text-emerald-400">Active</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Memory</div>
+                    <div class="text-2xl font-bold text-blue-400">145 MB</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Uptime</div>
+                    <div class="text-2xl font-bold text-purple-400">00:02:15</div>
+                </div>
+            </div>
+
+            <div class="card flex-1 p-1 flex flex-col relative overflow-hidden group">
+                <div
+                    class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center z-10 group-hover:opacity-0 transition-opacity">
+                    <div
+                        class="bg-black/40 px-4 py-2 rounded-full border border-white/10 text-xs font-mono text-slate-300">
+                        <i class="ri-eye-off-line mr-2"></i>Running in Background
+                    </div>
+                </div>
+                <div
+                    class="bg-slate-800 h-full rounded-lg flex items-center justify-center border border-slate-700 border-dashed">
+                    <div class="text-center opacity-30">
+                        <i class="ri-facebook-circle-fill text-6xl mb-2"></i>
+                        <p class="text-sm font-mono">Simulating User Interaction...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-4 card flex flex-col">
+            <div class="p-3 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <span class="text-xs font-bold uppercase text-slate-400">Live Logs</span>
+                <i class="ri-terminal-box-line text-slate-500"></i>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto font-mono text-xs space-y-2" id="logs">
+                <div class="text-emerald-400">[INFO] Browser initialized</div>
+                <div class="text-slate-400">[SYSTEM] Proxy connected: 192.168.1.10</div>
+                <div class="text-blue-400">[ACTION] Navigating to facebook.com...</div>
+                <div class="text-yellow-400">[WAIT] Waiting for selector #email...</div>
+                <div class="text-slate-500 italic">Processing...</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
