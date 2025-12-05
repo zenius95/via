@@ -1,0 +1,67 @@
+/* Custom Titlebar Styles */
+#titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    user-select: none;
+    -webkit-app-region: drag; /* Allow dragging */
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    width: 100%;
+}
+
+.titlebar-drag-region {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    height: 100%;
+}
+
+.window-title {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.window-controls {
+    display: flex;
+    -webkit-app-region: no-drag; /* Buttons are clickable */
+}
+
+.control-btn {
+    width: 46px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: default;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.control-btn.close-btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+.control-btn i {
+    font-size: 14px;
+}

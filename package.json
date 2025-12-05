@@ -1,0 +1,24 @@
+{
+  "name": "via",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zenius95/via.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zenius95/via/issues"
+  },
+  "homepage": "https://github.com/zenius95/via#readme",
+  "devDependencies": {
+    "electron": "^39.2.5"
+  }
+}

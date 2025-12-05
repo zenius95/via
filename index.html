@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tài Khoản - Pro Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/styles/ag-grid.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/styles/ag-theme-alpine-dark.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/titlebar.css">
+</head>
+
+<body oncontextmenu="return false;">
+    <div id="titlebar">
+        <div class="titlebar-drag-region">
+            <div class="window-title">
+                <i class="ri-dashboard-3-line"></i>
+                <span>Pro Dashboard</span>
+            </div>
+        </div>
+        <div class="window-controls">
+            <button class="control-btn" id="min-btn">
+                <i class="ri-subtract-line"></i>
+            </button>
+            <button class="control-btn" id="max-btn">
+                <i class="ri-checkbox-blank-line"></i>
+            </button>
+            <button class="control-btn close-btn" id="close-btn">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="glass-toolbar">
+        <div class="flex items-center gap-2">
+            <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
+                <i class="ri-play-fill text-lg"></i>
+                <span class="ml-1">Bắt đầu</span>
+            </button>
+
+            <div class="glass-divider"></div>
+
+            <div class="relative z-50">
+                <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
+                    data-tooltip="Lọc trạng thái">
+                    <i class="ri-filter-3-fill text-blue-400"></i>
+                    <span>Trạng thái</span>
+                    <span id="filter-badge-count"
+                        class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
+                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+                </button>
+
+                <div id="filter-dropdown-menu" class="glass-dropdown-menu">
+                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
+                        trạng thái</div>
+                    <div id="filter-list-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-divider"></div>
+
+            <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
+                <i class="ri-layout-line text-lg"></i>
+            </button>
+        </div>
+
+        <div class="toolbar-center-container">
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                </div>
+                <input type="text" placeholder="Tìm kiếm tài khoản..."
+                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-[320px] focus:w-[400px] transition-all"
+                    oninput="onQuickFilterChanged()">
+            </div>
+        </div>
+
+        <div class="flex items-center"></div>
+    </div>
+
+    <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
+
+    <div class="footer-pro">
+        <div class="stat-pill group cursor-default glass-btn-border">
+            <div>
+                <span class="stat-label">Tổng:</span>
+                <span id="total-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Chọn:</span>
+                <span id="selected-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Vùng:</span>
+                <span id="range-rows" class="stat-value text-slate-200">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div id="menu-select-range" class="menu-item" onclick="menuAction('selectRange')">
+            <i class="ri-checkbox-multiple-fill text-purple-400"></i> Chọn vùng bôi đen
+        </div>
+        <div class="menu-item">
+            <i class="ri-share-forward-line text-blue-400"></i> Xuất dữ liệu
+            <i class="ri-arrow-right-s-line ml-auto text-lg text-slate-500"></i>
+            <div class="submenu">
+                <div class="menu-item" onclick="menuAction('exportExcel')">
+                    <i class="ri-file-excel-2-fill text-emerald-400"></i> Xuất Excel
+                </div>
+                <div class="menu-item" onclick="menuAction('exportCsv')">
+                    <i class="ri-file-text-fill text-sky-400"></i> Xuất CSV
+                </div>
+            </div>
+        </div>
+        <div class="h-px bg-white/10 my-1 mx-2"></div>
+        <div class="menu-item group hover:!bg-red-500/10" onclick="menuAction('delete')">
+            <i class="ri-delete-bin-line text-red-400 group-hover:text-red-300"></i>
+            <span class="text-red-400 group-hover:text-red-300">Xóa tài khoản</span>
+            <span
+                class="ml-auto text-xs text-slate-500 font-mono border border-slate-600 rounded px-1 group-hover:border-red-500/30 group-hover:text-red-300">Del</span>
+        </div>
+    </div>
+
+    <div id="column-menu" class="glass-dropdown-menu"
+        style="width: 200px; display: none; position: fixed; z-index: 9999;">
+        <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Thao tác cột</div>
+
+        <div id="col-menu-hide" class="menu-item" onclick="colMenuAction('hide')">
+            <i class="ri-eye-off-line text-slate-400"></i> Ẩn cột này
+        </div>
+
+        <div id="col-menu-copy" class="menu-item" onclick="colMenuAction('copy')">
+            <i class="ri-file-copy-line text-blue-400"></i> Copy nội dung
+        </div>
+
+        <div id="col-menu-pin" class="menu-item" onclick="colMenuAction('pin')">
+            <i class="ri-pushpin-2-line text-amber-400"></i> Ghim cột
+        </div>
+
+        <div class="h-px bg-white/10 my-1 mx-2"></div>
+
+        <div id="col-menu-mask" class="menu-item" onclick="colMenuAction('mask')">
+            <i class="ri-eye-close-line text-red-400"></i> Che thông tin
+        </div>
+    </div>
+
+    <div id="confirm-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[400px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box">
+                <div class="p-8 text-center">
+                    <div class="flex flex-col items-center gap-5">
+                        <div
+                            class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            <i class="ri-alarm-warning-fill text-3xl text-red-500 drop-shadow-md"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="modal-title" class="text-xl font-bold text-white mb-2 tracking-tight">Xóa dữ liệu?
+                            </h3>
+                            <p id="modal-msg" class="text-slate-300 text-sm leading-relaxed">Hành động này sẽ xóa vĩnh
+                                viễn dữ liệu khỏi hệ thống và không thể khôi phục.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-center gap-3">
+                        <button onclick="closeConfirmModal()"
+                            class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                            Hủy bỏ
+                        </button>
+                        <button id="modal-confirm-btn"
+                            class="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-900/40 transition-all transform hover:-translate-y-0.5">
+                            Xác nhận xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="col-config-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-opacity duration-200">
+        <div class="relative w-full max-w-[380px] transform scale-95 transition-transform duration-200 p-4">
+            <div class="glass-modal-box flex flex-col max-h-[80vh]">
+                <div class="px-5 py-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="ri-layout-column-line text-blue-400"></i> Tùy chỉnh cột
+                    </h3>
+                    <div class="text-[10px] text-slate-400 bg-white/5 px-2 py-1 rounded border border-white/5">Kéo thả
+                        để xếp</div>
+                </div>
+
+                <div id="col-config-list" class="p-3 overflow-y-auto flex-1 space-y-2 custom-scrollbar"></div>
+
+                <div class="p-4 border-t border-white/10 bg-black/20 flex items-center gap-3">
+                    <button onclick="resetGridStateInModal()"
+                        class="px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mr-auto flex items-center gap-1">
+                        <i class="ri-restart-line"></i> Reset
+                    </button>
+
+                    <button onclick="closeColumnModal()"
+                        class="btn-glass-secondary px-4 py-2 rounded-lg text-xs font-medium">Đóng</button>
+                    <button onclick="saveColumnConfig()"
+                        class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all flex items-center gap-1">
+                        <i class="ri-save-3-line"></i> Lưu lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"
+        class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
+        <div id="toast-icon-container" class="p-1 rounded-full"></div>
+        <div class="flex flex-col">
+            <span id="toast-title" class="text-xs font-bold uppercase tracking-wider opacity-70 mb-0.5">Thông báo</span>
+            <span id="toast-msg" class="text-sm font-medium">Nội dung thông báo</span>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/titlebar.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>
