@@ -38,9 +38,6 @@
                         <i class="ri-close-line"></i>
                     </div>
                 </div>
-                <button class="new-tab-btn">
-                    <i class="ri-add-line"></i>
-                </button>
             </div>
         </div>
         <div class="window-controls">
@@ -57,7 +54,8 @@
     </div>
 
     <div class="glass-toolbar">
-        <div class="flex items-center gap-2">
+        <!-- LEFT CONTROLS -->
+        <div class="flex items-center gap-2 shrink-0">
             <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
                 <i class="ri-play-fill text-lg"></i>
                 <span class="ml-1">Bắt đầu</span>
@@ -90,18 +88,25 @@
             </button>
         </div>
 
-        <div class="toolbar-center-container">
-            <div class="relative group">
+        <!-- CENTER SEARCH (Responsive) -->
+        <div class="flex-1 px-8 flex justify-center">
+            <div class="relative group w-full max-w-[600px]">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
                 </div>
+                <!-- w-full to fill max-w-[600px] container -->
                 <input type="text" placeholder="Tìm kiếm tài khoản..."
-                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-[320px] focus:w-[400px] transition-all"
+                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
                     oninput="onQuickFilterChanged()">
             </div>
         </div>
 
-        <div class="flex items-center"></div>
+        <!-- RIGHT CONTROLS -->
+        <div class="flex items-center shrink-0">
+            <button class="glass-btn-border" data-tooltip="Cài đặt">
+                <i class="ri-settings-3-line text-lg"></i>
+            </button>
+        </div>
     </div>
 
     <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>

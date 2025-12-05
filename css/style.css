@@ -218,12 +218,12 @@ body {
 }
 
 .ag-root-wrapper {
-    border: 0!important;
-    border-radius: 0!important;
+    border: 0 !important;
+    border-radius: 0 !important;
 }
 
 .ag-header {
-    border: 0!important;
+    border: 0 !important;
 }
 
 /* Custom Header Component */
@@ -267,7 +267,7 @@ body {
 }
 
 .custom-header-action-btn:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
 
@@ -501,14 +501,7 @@ body {
 }
 
 /* --- ABSOLUTE CENTER SEARCH --- */
-.toolbar-center-container {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: auto;
-    z-index: 60;
-}
+/* --- ABSOLUTE CENTER SEARCH REMOVED (Replaced by Flex layout in index.html) --- */
 
 /* --- TOOLTIP STYLES --- */
 [data-tooltip] {
@@ -651,7 +644,8 @@ body {
 }
 
 /* --- GLASS CONTEXT MENU --- */
-#context-menu, #column-menu {
+#context-menu,
+#column-menu {
     display: none;
     position: absolute;
     z-index: 9999;
@@ -732,7 +726,7 @@ body {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
     padding: 6px;
     /* Bro: Đổi từ margin-left: 8px thành -2px để nó dính vào menu cha, không bị gap */
-    margin-left: -2px; 
+    margin-left: -2px;
     animation: menuFadeIn 0.2s ease;
 }
 

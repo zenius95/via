@@ -1,11 +1,26 @@
-/* Custom Titlebar Styles - Premium Glass */
+/* Custom Titlebar Styles - Harmonized Slate Glass */
 :root {
     --titlebar-height: 48px;
-    --tab-radius: 6px;
-    /* Active tab blends with the toolbar below (usually has a glass-toolbar class) */
-    --tab-bg-active: rgba(255, 255, 255, 0.12);
-    --tab-bg-hover: rgba(255, 255, 255, 0.06);
-    --titlebar-bg: rgba(0, 0, 0, 0.4);
+    /* Compact like the toolbar */
+    --tab-radius: 8px;
+    /* Match app border radius */
+    /* Colors from style.css */
+    --slate-900: #0f172a;
+    --slate-800: #1e293b;
+    --slate-700: #334155;
+    --blue-500: #3b82f6;
+
+    --bg-glass: rgba(15, 23, 42, 0.85);
+    /* Match glass-toolbar base */
+    --border-glass: rgba(255, 255, 255, 0.08);
+
+    --tab-inactive: rgba(30, 41, 59, 0.0);
+    /* Transparent initially */
+    --tab-hover: rgba(30, 41, 59, 0.6);
+    /* Match glass-btn-border active */
+    --tab-active: rgba(59, 130, 246, 0.15);
+    /* Match badge-info / selected row */
+    --tab-active-border: rgba(59, 130, 246, 0.3);
 }
 
 #titlebar {
@@ -13,28 +28,26 @@
     justify-content: space-between;
     align-items: center;
     height: var(--titlebar-height);
-    background: var(--titlebar-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    /* Remove bottom border for seamless connection, or keep subtle */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-glass);
     user-select: none;
     -webkit-app-region: drag;
     position: sticky;
     top: 0;
     z-index: 9999;
     width: 100%;
-
 }
 
 .titlebar-drag-region {
     flex-grow: 1;
     display: flex;
-    align-items: flex-end;
-    padding-left: 10px;
+    align-items: center;
+    padding-left: 8px;
+    /* Match toolbar padding roughly */
+    height: 100%;
     overflow: hidden;
-    padding-bottom: 0px;
-    /* Tabs sit on the line */
 }
 
 /* Tabs Container */
@@ -42,60 +55,51 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    /* Tighter gap */
     width: 100%;
     padding-right: 12px;
 }
 
-/* Tab Styles */
+/* Tab Styles - Harmonized */
 .tab {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* Fixed styling height */
-    min-width: 220px;
+    height: 32px;
+    /* Slightly smaller than toolbar buttons (38px) */
+    min-width: 140px;
     max-width: 220px;
-    padding: 0 10px;
-    background: transparent;
+    padding: 0 12px;
+    background: var(--tab-inactive);
+    border: 1px solid transparent;
+    /* Reserve space for border */
     border-radius: var(--tab-radius);
     color: #94a3b8;
-    font-size: 12px;
+    /* Slate 400 */
+    font-size: 13px;
     font-weight: 500;
-    transition: background 0.15s, color 0.15s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-app-region: no-drag;
     cursor: default;
-    height: 32px;
-    /* Subtle separator between inactive tabs */
-    margin-right: 1px;
 }
 
-/* Separator visual for inactive tabs - optional, implementation via pseudo-element typically better but sticking to simple first */
-.tab:not(.active):not(:hover)::after {
-    content: '';
-    position: absolute;
-    right: -3px;
-    top: 25%;
-    bottom: 25%;
-    width: 1px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
+/* Hover Effect */
 .tab:hover {
-    background: var(--tab-bg-hover);
-    color: #cbd5e1;
+    background: var(--tab-hover);
+    color: #e2e8f0;
+    /* Slate 200 */
 }
 
-.tab:hover::after {
-    opacity: 0;
+/* Active Tab */
+.tab.active {
+    background: var(--tab-active);
+    color: #60a5fa;
+    /* Blue 400 */
+    border: 1px solid var(--tab-active-border);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
 }
 
-.tab.active {}
-
-.tab.active::after {
-    display: none;
-}
-
+/* Content & Icon */
 .tab-content {
     display: flex;
     align-items: center;
@@ -107,27 +111,27 @@
 }
 
 .tab i {
-    font-size: 14px;
-    opacity: 0.8;
+    font-size: 15px;
+    opacity: 0.7;
+    transition: color 0.2s;
 }
 
 .tab.active i {
     opacity: 1;
     color: #60a5fa;
-    /* Blue accent for active tab icon */
 }
 
-/* Tab Close Button */
+/* Close Button */
 .tab-close {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 4px;
     opacity: 0;
     transition: all 0.2s;
-    margin-left: 2px;
+    margin-left: 4px;
 }
 
 .tab:hover .tab-close {
@@ -135,54 +139,34 @@
 }
 
 .tab-close:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ef4444;
-    /* Red close hover */
-}
-
-/* New Tab Button */
-.new-tab-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    color: #94a3b8;
-    background: transparent;
-    border: none;
-    -webkit-app-region: no-drag;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    align-self: center;
-    margin-left: 4px;
-}
-
-.new-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: rgba(239, 68, 68, 0.15);
+    /* Red tint */
+    color: #f87171;
 }
 
 /* Window Controls */
 .window-controls {
     display: flex;
     -webkit-app-region: no-drag;
-    align-items: flex-start;
+    align-items: center;
+    height: 100%;
+    padding-right: 4px;
 }
 
 .control-btn {
-    width: 48px;
+    width: 42px;
     height: 32px;
-    /* Keep controls cleaner, not full height of titlebar */
     display: flex;
     justify-content: center;
     align-items: center;
     color: #94a3b8;
     background: transparent;
     border: none;
+    border-radius: 6px;
     outline: none;
     cursor: default;
     transition: all 0.2s;
+    margin-left: 2px;
 }
 
 .control-btn:hover {
@@ -191,11 +175,6 @@
 }
 
 .control-btn.close-btn:hover {
-    background-color: #dc2626;
-    /* Darker red */
+    background-color: #ef4444;
     color: white;
-}
-
-.control-btn i {
-    font-size: 14px;
 }
