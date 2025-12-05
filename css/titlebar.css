@@ -38,24 +38,19 @@
     top: 0;
     z-index: 9999;
     width: 100%;
+    padding: 0 15px
 }
 
-.titlebar-drag-region {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    padding-left: 8px;
-    /* Match toolbar padding roughly */
-    height: 100%;
-    overflow: hidden;
-}
-
+/* Tabs Container */
 /* Tabs Container */
 .tabs-container {
     display: flex;
     align-items: center;
     gap: 4px;
-    width: 100%;
+    flex: 1;
+    /* Take remaining space */
+    min-width: 0;
+    /* Allow shrinking */
     padding-right: 12px;
 }
 
@@ -79,6 +74,26 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-app-region: no-drag;
     cursor: default;
+
+    /* Config: Start at 150px, shrink if needed, strictly max 150px */
+    flex: 0 1 180px;
+    max-width: 180px;
+    min-width: 60px;
+    min-width: 60px;
+    /* overflow: hidden; Removed to allow dividers to show */
+}
+
+/* Divider between tabs */
+.tab:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 14px;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.15);
+    pointer-events: none;
 }
 
 /* Hover Effect */
@@ -166,7 +181,10 @@ webview {
     -webkit-app-region: no-drag;
     align-items: center;
     height: 100%;
-    padding-right: 4px;
+    flex-shrink: 0;
+    /* Never shrink controls */
+    position: relative;
+    z-index: 999999;
 }
 
 .control-btn {
@@ -190,7 +208,10 @@ webview {
     color: #fff;
 }
 
-.control-btn.close-btn:hover {
-    background-color: #ef4444;
-    color: white;
+/* Dragging State */
+.tab.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    background: var(--tab-hover);
+    border: 1px dashed var(--blue-500);
 }

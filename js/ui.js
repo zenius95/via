@@ -112,7 +112,17 @@ function switchSettingsTab(tabName) {
     document.getElementById(`setting-tab-${tabName}`).classList.remove('hidden');
 }
 
-function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); this.classList.add('dragging'); }
+function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+    this.classList.add('dragging');
+
+    // Hide default drag ghost
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(img, 0, 0);
+}
 function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragSrcEl !== this) { const list = dragSrcEl.parentNode; const siblings = Array.from(list.children); const s = siblings.indexOf(dragSrcEl); const t = siblings.indexOf(this); if (s < t) { this.after(dragSrcEl); } else { this.before(dragSrcEl); } } return false; }
 function handleDrop(e) { if (e.stopPropagation) e.stopPropagation(); return false; }
 function handleDragEnd(e) { this.classList.remove('dragging'); }
@@ -500,6 +510,14 @@ const TabManager = {
             </div>
         `;
         tabBtn.onclick = () => this.switchToTab(tabId);
+
+        // Enable Drag & Drop
+        tabBtn.draggable = true;
+        tabBtn.addEventListener('dragstart', handleDragStart);
+        tabBtn.addEventListener('dragover', handleDragOver);
+        tabBtn.addEventListener('drop', handleDrop);
+        tabBtn.addEventListener('dragend', handleDragEnd);
+
         document.getElementById('tabs-container').appendChild(tabBtn);
 
         // 3. Tạo Wrapper chứa Webview Controller (via.html)

@@ -18,8 +18,6 @@
 
 <body oncontextmenu="return false;">
     <div id="titlebar">
-        <div class="titlebar-drag-region">
-        </div>
         <div class="tabs-container" id="tabs-container">
             <div class="tab active" onclick="TabManager.switchToDashboard()" id="tab-dashboard">
                 <div class="tab-content">
@@ -41,63 +39,65 @@
         </div>
     </div>
 
-    <div class="glass-toolbar">
-        <!-- LEFT CONTROLS -->
-        <div class="flex items-center gap-2 shrink-0">
-            <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
-                <i class="ri-play-fill text-lg"></i>
-                <span class="ml-1">Bắt đầu</span>
-            </button>
+    <div id="dashboard-view" class="flex flex-col flex-1 w-full min-h-0">
 
-            <div class="glass-divider"></div>
-
-            <div class="relative z-50">
-                <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
-                    data-tooltip="Lọc trạng thái">
-                    <i class="ri-filter-3-fill text-blue-400"></i>
-                    <span>Trạng thái</span>
-                    <span id="filter-badge-count"
-                        class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
-                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+        <div class="glass-toolbar">
+            <!-- LEFT CONTROLS -->
+            <div class="flex items-center gap-2 shrink-0">
+                <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
+                    <i class="ri-play-fill text-lg"></i>
+                    <span class="ml-1">Bắt đầu</span>
                 </button>
 
-                <div id="filter-dropdown-menu" class="glass-dropdown-menu">
-                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
-                        trạng thái</div>
-                    <div id="filter-list-container">
+                <div class="glass-divider"></div>
+
+                <div class="relative z-50">
+                    <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
+                        data-tooltip="Lọc trạng thái">
+                        <i class="ri-filter-3-fill text-blue-400"></i>
+                        <span>Trạng thái</span>
+                        <span id="filter-badge-count"
+                            class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
+                        <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+                    </button>
+
+                    <div id="filter-dropdown-menu" class="glass-dropdown-menu">
+                        <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc
+                            theo
+                            trạng thái</div>
+                        <div id="filter-list-container">
+                        </div>
                     </div>
                 </div>
+
+                <div class="glass-divider"></div>
+
+                <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
+                    <i class="ri-layout-line text-lg"></i>
+                </button>
             </div>
 
-            <div class="glass-divider"></div>
-
-            <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
-                <i class="ri-layout-line text-lg"></i>
-            </button>
-        </div>
-
-        <!-- CENTER SEARCH (Responsive) -->
-        <div class="flex-1 px-8 flex justify-center">
-            <div class="relative group w-full max-w-[600px]">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+            <!-- CENTER SEARCH (Responsive) -->
+            <div class="flex-1 px-8 flex justify-center">
+                <div class="relative group w-full max-w-[600px]">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                    </div>
+                    <!-- w-full to fill max-w-[600px] container -->
+                    <input type="text" placeholder="Tìm kiếm tài khoản..."
+                        class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
+                        oninput="onQuickFilterChanged()">
                 </div>
-                <!-- w-full to fill max-w-[600px] container -->
-                <input type="text" placeholder="Tìm kiếm tài khoản..."
-                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
-                    oninput="onQuickFilterChanged()">
+            </div>
+
+            <!-- RIGHT CONTROLS -->
+            <div class="flex items-center shrink-0">
+                <button class="glass-btn-border" data-tooltip="Cài đặt" onclick="openSettingsModal()">
+                    <i class="ri-settings-3-line text-lg"></i>
+                </button>
             </div>
         </div>
 
-        <!-- RIGHT CONTROLS -->
-        <div class="flex items-center shrink-0">
-            <button class="glass-btn-border" data-tooltip="Cài đặt" onclick="openSettingsModal()">
-                <i class="ri-settings-3-line text-lg"></i>
-            </button>
-        </div>
-    </div>
-
-    <div id="dashboard-view" class="flex flex-col flex-1 w-full min-h-0">
         <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
 
         <div class="footer-pro">
