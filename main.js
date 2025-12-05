@@ -8,7 +8,8 @@ function createWindow() {
         frame: false, // Frameless window
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            webviewTag: true,
             // preload: path.join(__dirname, 'preload.js')
         }
     })

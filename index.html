@@ -20,29 +20,11 @@
     <div id="titlebar">
         <div class="titlebar-drag-region">
         </div>
-        <div class="tabs-container">
-            <div class="tab active">
+        <div class="tabs-container" id="tabs-container">
+            <div class="tab active" onclick="TabManager.switchToDashboard()" id="tab-dashboard">
                 <div class="tab-content">
-                    <i class="ri-facebook-circle-fill text-blue-400"></i>
+                    <i class="ri-dashboard-fill text-blue-400"></i>
                     <span class="tab-title">Dashboard</span>
-                </div>
-            </div>
-            <div class="tab">
-                <div class="tab-content">
-                    <i class="ri-flow-chart"></i>
-                    <span class="tab-title">Tab 1</span>
-                </div>
-            </div>
-            <div class="tab">
-                <div class="tab-content">
-                    <i class="ri-folder-user-fill"></i>
-                    <span class="tab-title">Tab 2</span>
-                </div>
-            </div>
-            <div class="tab">
-                <div class="tab-content">
-                    <i class="ri-global-line"></i>
-                    <span class="tab-title">Tab 3</span>
                 </div>
             </div>
         </div>
@@ -115,28 +97,36 @@
         </div>
     </div>
 
-    <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
+    <div id="dashboard-view" class="flex flex-col flex-1 w-full min-h-0">
+        <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
 
-    <div class="footer-pro">
-        <div class="stat-pill group cursor-default glass-btn-border">
-            <div>
-                <span class="stat-label">Tổng:</span>
-                <span id="total-rows" class="stat-value text-slate-200">0</span>
-            </div>
-            <div class="footer-divider"></div>
-            <div>
-                <span class="stat-label transition-colors">Chọn:</span>
-                <span id="selected-rows" class="stat-value text-slate-200">0</span>
-            </div>
-            <div class="footer-divider"></div>
-            <div>
-                <span class="stat-label transition-colors">Vùng:</span>
-                <span id="range-rows" class="stat-value text-slate-200">0</span>
+        <div class="footer-pro">
+            <div class="stat-pill group cursor-default glass-btn-border">
+                <div>
+                    <span class="stat-label">Tổng:</span>
+                    <span id="total-rows" class="stat-value text-slate-200">0</span>
+                </div>
+                <div class="footer-divider"></div>
+                <div>
+                    <span class="stat-label transition-colors">Chọn:</span>
+                    <span id="selected-rows" class="stat-value text-slate-200">0</span>
+                </div>
+                <div class="footer-divider"></div>
+                <div>
+                    <span class="stat-label transition-colors">Vùng:</span>
+                    <span id="range-rows" class="stat-value text-slate-200">0</span>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="webview-container" class="flex-1 w-full min-h-0 hidden relative">
+    </div>
+
     <div id="context-menu">
+        <div class="menu-item" onclick="menuAction('openBrowser')">
+            <i class="ri-earth-fill text-emerald-400"></i> Mở trình duyệt (Login)
+        </div>
         <div id="menu-select-range" class="menu-item" onclick="menuAction('selectRange')">
             <i class="ri-checkbox-multiple-fill text-purple-400"></i> Chọn vùng bôi đen
         </div>
