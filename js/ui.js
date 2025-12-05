@@ -423,7 +423,7 @@ const TabManager = {
         });
     },
 
-    createTab: function (accountData) {
+    createTab: async function (accountData) {
         const tabId = 'tab-' + accountData.uid;
 
         if (this.tabs[tabId]) {
@@ -431,7 +431,26 @@ const TabManager = {
             return;
         }
 
-        // 1. Tạo Button (Giữ nguyên)
+        // 1. Gọi Main Process để mở Puppeteer Browser
+        showToast(`Đang khởi động Browser cho ${accountData.name}...`, 'info');
+        try {
+            const result = await ipcRenderer.invoke('puppeteer-start', {
+                uid: accountData.uid,
+                proxy: accountData.proxy,
+                userAgent: accountData.userAgent
+            });
+
+            if (!result.success) {
+                showToast(`Lỗi mở browser: ${result.msg}`, 'error');
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+            showToast(`Lỗi kết nối IPC: ${err.message}`, 'error');
+            return;
+        }
+
+        // 2. Tạo Button (Giữ nguyên)
         const tabBtn = document.createElement('div');
         tabBtn.className = 'tab';
         tabBtn.id = `btn-${tabId}`;
@@ -447,46 +466,25 @@ const TabManager = {
         tabBtn.onclick = () => this.switchToTab(tabId);
         document.getElementById('tabs-container').appendChild(tabBtn);
 
-        // 2. Tạo Wrapper chứa Webview
+        // 3. Tạo Wrapper chứa Webview Controller (via.html)
         const viewWrapper = document.createElement('div');
         viewWrapper.id = `view-${tabId}`;
-
-        // --- SỬA ĐỔI Ở ĐÂY ---
-        // Không dùng 'hidden' hay 'flex' nữa. Dùng class stacking mới.
         viewWrapper.className = 'tab-view-wrapper tab-view-hidden';
 
-        // 3. Webview Headless (Chạy ngầm)
-        const headlessWv = document.createElement('webview');
-        headlessWv.src = 'https://www.facebook.com';
-        headlessWv.partition = `persist:${accountData.uid}`;
-        // Style ẩn hoàn toàn
-        Object.assign(headlessWv.style, { width: '0', height: '0', position: 'absolute', visibility: 'hidden' });
-
-        // Fake UA
-        const userAgent = accountData.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-        headlessWv.setAttribute('useragent', userAgent);
-
-        // 4. Webview UI (Giao diện Demo)
         const uiWv = document.createElement('webview');
-        uiWv.src = 'demo.html';
-        uiWv.className = 'w-full h-full bg-slate-900'; // Thêm bg-slate-900 cho chắc
+        uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`; // Pass tabId via URL
+        uiWv.className = 'w-full h-full bg-slate-900';
+        // Correct way to enable node integration in webview
+        uiWv.setAttribute('nodeintegration', 'true');
+        uiWv.setAttribute('webpreferences', 'contextIsolation=no');
 
-        viewWrapper.appendChild(headlessWv);
         viewWrapper.appendChild(uiWv);
         document.getElementById('webview-container').appendChild(viewWrapper);
-
-        // --- Proxy Logic (Giữ nguyên) ---
-        if (accountData.proxy) {
-            headlessWv.addEventListener('dom-ready', () => {
-                headlessWv.getWebContents().session.setProxy({ proxyRules: accountData.proxy }).catch(console.error);
-            });
-        }
 
         this.tabs[tabId] = {
             id: tabId,
             data: accountData,
             viewWrapper: viewWrapper,
-            headlessWv: headlessWv,
             uiWv: uiWv
         };
 
@@ -520,8 +518,12 @@ const TabManager = {
         });
     },
 
-    closeTab: function (tabId) {
+    closeTab: async function (tabId) {
         if (!this.tabs[tabId]) return;
+
+        // Gọi IPC đóng browser
+        ipcRenderer.invoke('puppeteer-close', tabId).catch(console.error);
+
         this.tabs[tabId].viewWrapper.remove();
         document.getElementById(`btn-${tabId}`).remove();
         delete this.tabs[tabId];
