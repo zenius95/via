@@ -467,7 +467,7 @@ const TabManager = {
         });
     },
 
-    createTab: async function (accountData) {
+    createTab: function (accountData) {
         const tabId = 'tab-' + accountData.uid;
 
         if (this.tabs[tabId]) {
@@ -475,28 +475,7 @@ const TabManager = {
             return;
         }
 
-        // 1. Gọi Main Process để mở Puppeteer Browser
-        const isHeadless = accountData.headless || false;
-        showToast(`Đang khởi động Browser (${isHeadless ? 'Headless' : 'GUI'}) cho ${accountData.name}...`, 'info');
-        try {
-            const result = await ipcRenderer.invoke('puppeteer-start', {
-                uid: accountData.uid,
-                proxy: accountData.proxy,
-                userAgent: accountData.userAgent,
-                headless: isHeadless
-            });
-
-            if (!result.success) {
-                showToast(`Lỗi mở browser: ${result.msg}`, 'error');
-                return;
-            }
-        } catch (err) {
-            console.error(err);
-            showToast(`Lỗi kết nối IPC: ${err.message}`, 'error');
-            return;
-        }
-
-        // 2. Tạo Button (Giữ nguyên)
+        // 1. Create Button immediately
         const tabBtn = document.createElement('div');
         tabBtn.className = 'tab';
         tabBtn.id = `btn-${tabId}`;
@@ -520,21 +499,35 @@ const TabManager = {
 
         document.getElementById('tabs-container').appendChild(tabBtn);
 
-        // 3. Tạo Wrapper chứa Webview Controller (via.html)
+        // 2. Create Wrapper & Loading State
         const viewWrapper = document.createElement('div');
         viewWrapper.id = `view-${tabId}`;
         viewWrapper.className = 'tab-view-wrapper tab-view-hidden';
 
+        // Loading Overlay
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = `loading-${tabId}`;
+        loadingDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-50';
+        loadingDiv.innerHTML = `
+            <div class="flex flex-col items-center animate-pulse">
+                 <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                 <div class="text-blue-400 font-medium text-sm">Đang khởi động Browser...</div>
+                 <div class="text-slate-500 text-xs mt-2">ID: ${accountData.uid}</div>
+            </div>
+        `;
+        viewWrapper.appendChild(loadingDiv);
+
+        // Webview (initially hidden)
         const uiWv = document.createElement('webview');
-        uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`; // Pass tabId via URL
-        uiWv.className = 'w-full h-full bg-slate-900';
+        uiWv.className = 'w-full h-full bg-slate-900 hidden';
         // Correct way to enable node integration in webview
         uiWv.setAttribute('nodeintegration', 'true');
         uiWv.setAttribute('webpreferences', 'contextIsolation=no');
-
         viewWrapper.appendChild(uiWv);
+
         document.getElementById('webview-container').appendChild(viewWrapper);
 
+        // 3. Register Tab
         this.tabs[tabId] = {
             id: tabId,
             data: accountData,
@@ -542,8 +535,55 @@ const TabManager = {
             uiWv: uiWv
         };
 
+        // Switch to new tab immediately
         this.switchToTab(tabId);
-        showToast(`Đã mở: ${accountData.name}`, 'success');
+
+        // 4. Start Browser Process in Background
+        const isHeadless = accountData.headless || false;
+
+        ipcRenderer.invoke('puppeteer-start', {
+            uid: accountData.uid,
+            proxy: accountData.proxy,
+            userAgent: accountData.userAgent,
+            headless: isHeadless
+        }).then(result => {
+            if (result.success) {
+                // Success: Remove loading, show webview, load URL
+                loadingDiv.remove();
+                uiWv.classList.remove('hidden');
+                uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`;
+            } else {
+                // Error: Show error in loading div
+                loadingDiv.innerHTML = `
+                    <div class="flex flex-col items-center text-center p-6">
+                        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                            <i class="ri-error-warning-fill text-3xl text-red-500"></i>
+                        </div>
+                        <h3 class="text-red-400 font-bold text-lg mb-2">Khởi động thất bại</h3>
+                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${result.msg}</p>
+                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                            Đóng Tab
+                        </button>
+                    </div>
+                `;
+            }
+        }).catch(err => {
+            console.error(err);
+            if (document.getElementById(`loading-${tabId}`)) { // Check if tab still exists
+                loadingDiv.innerHTML = `
+                    <div class="flex flex-col items-center text-center p-6">
+                         <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                            <i class="ri-plug-line text-3xl text-red-500"></i>
+                        </div>
+                        <h3 class="text-red-400 font-bold text-lg mb-2">Lỗi kết nối IPC</h3>
+                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${err.message}</p>
+                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                            Đóng Tab
+                        </button>
+                    </div>
+                `;
+            }
+        });
     },
 
     switchToTab: function (tabId) {
