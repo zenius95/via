@@ -502,7 +502,7 @@ const TabManager = {
         tabBtn.id = `btn-${tabId}`;
         tabBtn.innerHTML = `
             <div class="tab-content">
-                <img src="${accountData.avatar || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full mr-2 border border-slate-600">
+                <img src="${accountData.avatar || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full border border-slate-600">
                 <span class="tab-title max-w-[100px] overflow-hidden text-ellipsis">${accountData.name || accountData.uid}</span>
             </div>
             <div class="tab-close-btn" onclick="event.stopPropagation(); TabManager.closeTab('${tabId}')">
