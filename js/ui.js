@@ -79,38 +79,9 @@ function closeColumnModal() {
     setTimeout(() => { colModal.classList.add('hidden'); }, 200);
 }
 
-// --- SETTINGS MODAL ---
-const settingsModal = document.getElementById('settings-modal');
+// --- SETTINGS MODAL (MOVED TO TAB) ---
+// Functions moved to setting.html / internal logic
 
-function openSettingsModal() {
-    settingsModal.classList.remove('hidden');
-    requestAnimationFrame(() => {
-        settingsModal.classList.remove('opacity-0');
-        settingsModal.querySelector('.relative').classList.replace('scale-95', 'scale-100');
-    });
-}
-
-function closeSettingsModal() {
-    settingsModal.classList.add('opacity-0');
-    settingsModal.querySelector('.relative').classList.replace('scale-100', 'scale-95');
-    setTimeout(() => { settingsModal.classList.add('hidden'); }, 200);
-}
-
-function switchSettingsTab(tabName) {
-    // 1. Update Sidebar
-    document.querySelectorAll('.settings-nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.getAttribute('onclick')?.includes(`'${tabName}'`)) {
-            item.classList.add('active');
-        }
-    });
-
-    // 2. Update Content
-    document.querySelectorAll('.setting-tab-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    document.getElementById(`setting-tab-${tabName}`).classList.remove('hidden');
-}
 
 function handleDragStart(e) {
     dragSrcEl = this;
@@ -615,8 +586,10 @@ const TabManager = {
     closeTab: async function (tabId) {
         if (!this.tabs[tabId]) return;
 
-        // Gọi IPC đóng browser
-        ipcRenderer.invoke('puppeteer-close', tabId).catch(console.error);
+        // Gọi IPC đóng browser (chỉ nếu là tab account)
+        if (tabId.startsWith('tab-') && tabId !== 'settings') {
+            ipcRenderer.invoke('puppeteer-close', tabId).catch(console.error);
+        }
 
         this.tabs[tabId].viewWrapper.remove();
         document.getElementById(`btn-${tabId}`).remove();
@@ -625,5 +598,55 @@ const TabManager = {
         if (this.activeTabId === tabId) {
             this.switchToDashboard();
         }
+    },
+
+    openSettingsTab: function () {
+        const tabId = 'settings';
+
+        if (this.tabs[tabId]) {
+            this.switchToTab(tabId);
+            return;
+        }
+
+        // 1. Create Button
+        const tabBtn = document.createElement('div');
+        tabBtn.className = 'tab';
+        tabBtn.id = `btn-${tabId}`;
+        tabBtn.innerHTML = `
+            <div class="tab-content">
+                <i class="ri-settings-3-fill text-slate-400"></i>
+                <span class="tab-title">Cài đặt</span>
+            </div>
+            <div class="tab-close-btn" onclick="event.stopPropagation(); TabManager.closeTab('${tabId}')">
+                <i class="ri-close-line"></i>
+            </div>
+        `;
+        tabBtn.onclick = () => this.switchToTab(tabId);
+        document.getElementById('tabs-container').appendChild(tabBtn);
+
+        // 2. Create Wrapper
+        const viewWrapper = document.createElement('div');
+        viewWrapper.id = `view-${tabId}`;
+        viewWrapper.className = 'tab-view-wrapper tab-view-hidden'; // Start hidden
+
+        // Webview
+        const uiWv = document.createElement('webview');
+        uiWv.src = 'setting.html';
+        uiWv.className = 'w-full h-full bg-transparent';
+        uiWv.setAttribute('nodeintegration', 'true');
+        uiWv.setAttribute('webpreferences', 'contextIsolation=no');
+
+        viewWrapper.appendChild(uiWv);
+        document.getElementById('webview-container').appendChild(viewWrapper);
+
+        // 3. Register & Switch
+        this.tabs[tabId] = {
+            id: tabId,
+            data: { name: 'Cài đặt' },
+            viewWrapper: viewWrapper,
+            uiWv: uiWv
+        };
+
+        this.switchToTab(tabId);
     }
 };

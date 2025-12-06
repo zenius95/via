@@ -92,7 +92,7 @@
 
             <!-- RIGHT CONTROLS -->
             <div class="flex items-center shrink-0">
-                <button class="glass-btn-border" data-tooltip="Cài đặt" onclick="openSettingsModal()">
+                <button class="glass-btn-border" data-tooltip="Cài đặt" onclick="TabManager.openSettingsTab()">
                     <i class="ri-settings-3-line text-lg"></i>
                 </button>
             </div>
@@ -240,138 +240,7 @@
         </div>
     </div>
 
-    <div id="settings-modal"
-        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-opacity duration-200">
-        <div class="relative w-full max-w-[1000px] h-[600px] transform scale-95 transition-transform duration-200 p-4">
-            <div class="glass-modal-box w-full h-full flex flex-col">
-                <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="ri-settings-3-fill text-blue-400"></i> Cài đặt hệ thống
-                    </h2>
-                    <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white transition-colors">
-                        <i class="ri-close-line text-xl"></i>
-                    </button>
-                </div>
 
-                <div class="flex flex-1 min-h-0">
-                    <!-- Sidebar -->
-                    <div class="w-[200px] border-r border-white/10 p-3 space-y-1 overflow-y-auto">
-                        <div class="settings-nav-item active" onclick="switchSettingsTab('general')">
-                            <i class="ri-equalizer-line"></i> Chung
-                        </div>
-                        <div class="settings-nav-item" onclick="switchSettingsTab('proxy')">
-                            <i class="ri-route-line"></i> Proxy
-                        </div>
-                        <div class="settings-nav-item" onclick="switchSettingsTab('account')">
-                            <i class="ri-user-settings-line"></i> Tài khoản
-                        </div>
-                        <div class="settings-nav-item" onclick="switchSettingsTab('display')">
-                            <i class="ri-palette-line"></i> Hiển thị
-                        </div>
-                        <div class="h-px bg-white/10 my-2 mx-2"></div>
-                        <div class="settings-nav-item text-red-400 hover:!bg-red-500/10 hover:!text-red-300">
-                            <i class="ri-refresh-line"></i> Reset App
-                        </div>
-                    </div>
-
-                    <!-- Content -->
-                    <div class="flex-1 p-6 overflow-y-auto custom-scrollbar bg-black/10">
-
-                        <!-- TAB: GENERAL -->
-                        <div id="setting-tab-general" class="setting-tab-content">
-                            <h3
-                                class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
-                                Cấu hình chung</h3>
-
-                            <div class="space-y-4">
-                                <div
-                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
-                                    <div>
-                                        <div class="text-sm font-medium text-slate-200">Khởi động cùng Windows</div>
-                                        <div class="text-xs text-slate-500 mt-1">Tự động chạy ứng dụng khi bật máy</div>
-                                    </div>
-                                    <div
-                                        class="relative inline-block w-10 h-5 transition duration-200 ease-in-out bg-slate-700/50 rounded-full cursor-pointer group">
-                                        <input type="checkbox" class="absolute w-5 h-5 opacity-0 cursor-pointer peer" />
-                                        <span
-                                            class="absolute left-0 w-5 h-5 transition duration-200 ease-in-out transform bg-slate-400 rounded-full shadow peer-checked:translate-x-5 peer-checked:bg-blue-500"></span>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
-                                    <div>
-                                        <div class="text-sm font-medium text-slate-200">Thông báo Desktop</div>
-                                        <div class="text-xs text-slate-500 mt-1">Hiển thị thông báo ở góc màn hình</div>
-                                    </div>
-                                    <div
-                                        class="relative inline-block w-10 h-5 transition duration-200 ease-in-out rounded-full cursor-pointer bg-blue-500/20">
-                                        <span
-                                            class="absolute left-0 w-5 h-5 translate-x-5 transform bg-blue-500 rounded-full shadow"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TAB: PROXY -->
-                        <div id="setting-tab-proxy" class="setting-tab-content hidden">
-                            <h3
-                                class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
-                                Cấu hình Proxy</h3>
-                            <div class="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
-                                <i class="ri-flashlight-line text-blue-400 text-3xl mb-2 block"></i>
-                                <span class="text-sm text-blue-300">Tính năng đang phát triển</span>
-                            </div>
-                        </div>
-
-                        <!-- TAB: ACCOUNT -->
-                        <div id="setting-tab-account" class="setting-tab-content hidden">
-                            <h3
-                                class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
-                                Quản lý Tài khoản</h3>
-                            <div class="p-4 rounded-lg bg-white/5 border border-white/5 mb-4">
-                                <label class="block text-xs font-medium text-slate-400 mb-1">Đường dẫn dữ liệu
-                                    Profile</label>
-                                <div class="flex gap-2">
-                                    <input type="text" value="C:\Users\Admin\ViaData\Profiles" readonly
-                                        class="glass-input-style flex-1 px-3 py-1.5 rounded text-xs">
-                                    <button class="glass-btn-border px-3"><i class="ri-folder-open-line"></i></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TAB: DISPLAY -->
-                        <div id="setting-tab-display" class="setting-tab-content hidden">
-                            <h3
-                                class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
-                                Giao diện</h3>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div
-                                    class="border border-blue-500/50 rounded-lg p-2 bg-blue-500/10 text-center cursor-pointer">
-                                    <div class="h-10 bg-[#0f172a] rounded mb-2 border border-blue-500/30"></div>
-                                    <span class="text-xs text-blue-300 font-bold">Dark Blue</span>
-                                </div>
-                                <div
-                                    class="border border-white/10 rounded-lg p-2 bg-white/5 text-center cursor-pointer opacity-50">
-                                    <div class="h-10 bg-[#171717] rounded mb-2 border border-white/10"></div>
-                                    <span class="text-xs text-slate-400">Midnight</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="px-6 py-4 border-t border-white/10 bg-black/20 flex justify-end gap-3 shrink-0">
-                    <button onclick="closeSettingsModal()"
-                        class="btn-glass-secondary px-4 py-2 rounded-lg text-sm font-medium">Đóng</button>
-                    <button onclick="closeSettingsModal(); showToast('Đã lưu cấu hình', 'success')"
-                        class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all">Lưu
-                        thay đổi</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="toast"
         class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
