@@ -32,137 +32,82 @@
         <div class="w-[240px] border-r border-white/10 p-4 space-y-1 bg-slate-900/50">
             <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-3">Hệ thống</h2>
 
-            <div class="settings-nav-item active" onclick="switchSettingsTab('general')">
-                <i class="ri-equalizer-line"></i> Chung
-            </div>
-            <div class="settings-nav-item" onclick="switchSettingsTab('proxy')">
-                <i class="ri-route-line"></i> Proxy
-            </div>
-            <div class="settings-nav-item" onclick="switchSettingsTab('account')">
-                <i class="ri-user-settings-line"></i> Tài khoản
-            </div>
-            <div class="settings-nav-item" onclick="switchSettingsTab('display')">
-                <i class="ri-palette-line"></i> Hiển thị
+            <div class="settings-nav-item active" onclick="switchSettingsTab('browser')">
+                <i class="ri-global-line"></i> Trình duyệt
             </div>
 
             <div class="h-px bg-white/10 my-4 mx-2"></div>
-
-            <div class="settings-nav-item text-red-400 hover:!bg-red-500/10 hover:!text-red-300">
-                <i class="ri-refresh-line"></i> Reset App
-            </div>
         </div>
 
         <!-- Content -->
         <div class="flex-1 p-8 overflow-y-auto custom-scrollbar bg-black/20">
 
-            <!-- TAB: GENERAL -->
-            <div id="setting-tab-general" class="setting-tab-content max-w-3xl">
+            <!-- TAB: BROWSER -->
+            <div id="setting-tab-browser" class="setting-tab-content max-w-3xl">
                 <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div class="p-2 rounded-lg bg-blue-500/20 text-blue-400"><i class="ri-equalizer-fill"></i></div>
-                    Cấu hình chung
+                    <div class="p-2 rounded-lg bg-pink-500/20 text-pink-400"><i class="ri-global-fill"></i></div>
+                    Cấu hình Trình duyệt
                 </h3>
 
-                <div class="space-y-4">
-                    <div
-                        class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-                        <div>
-                            <div class="text-base font-medium text-slate-200">Khởi động cùng Windows</div>
-                            <div class="text-sm text-slate-500 mt-1">Tự động chạy ứng dụng khi bật máy</div>
-                        </div>
-                        <div
-                            class="relative inline-block w-12 h-6 transition duration-200 ease-in-out bg-slate-700/50 rounded-full cursor-pointer group">
-                            <input type="checkbox" class="absolute w-6 h-6 opacity-0 cursor-pointer peer" />
-                            <span
-                                class="absolute left-0 w-6 h-6 transition duration-200 ease-in-out transform bg-slate-400 rounded-full shadow peer-checked:translate-x-6 peer-checked:bg-blue-500"></span>
-                        </div>
-                    </div>
-
-                    <div
-                        class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-                        <div>
-                            <div class="text-base font-medium text-slate-200">Thông báo Desktop</div>
-                            <div class="text-sm text-slate-500 mt-1">Hiển thị thông báo ở góc màn hình</div>
-                        </div>
-                        <div
-                            class="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer bg-blue-500/20">
-                            <span
-                                class="absolute left-0 w-6 h-6 translate-x-6 transform bg-blue-500 rounded-full shadow"></span>
+                <div class="space-y-6">
+                    <!-- Chrome Path -->
+                    <div class="p-5 rounded-xl bg-white/5 border border-white/10">
+                        <label class="block text-base font-medium text-slate-200 mb-2">Đường dẫn Chrome (Executable
+                            Path)</label>
+                        <div class="text-xs text-slate-500 mb-3">Để trống để tự động tìm kiếm trên máy tính.</div>
+                        <div class="flex gap-2">
+                            <input type="text" id="inp-chrome-path"
+                                placeholder="C:\Program Files\Google\Chrome\Application\chrome.exe"
+                                class="glass-input-style flex-1 px-4 py-2.5 rounded-lg text-sm bg-black/20 text-slate-200 font-mono border-slate-700 focus:border-pink-500">
+                            <button onclick="selectChromePath()"
+                                class="glass-btn-border px-4 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                                <i class="ri-folder-open-line text-lg"></i>
+                                <span class="text-sm font-medium">Chọn file</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- TAB: PROXY -->
-            <div id="setting-tab-proxy" class="setting-tab-content hidden max-w-3xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div class="p-2 rounded-lg bg-orange-500/20 text-orange-400"><i class="ri-route-fill"></i></div>
-                    Cấu hình Proxy
-                </h3>
-                <div
-                    class="p-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center flex flex-col items-center justify-center min-h-[300px]">
-                    <i class="ri-flashlight-line text-blue-400 text-5xl mb-4 block"></i>
-                    <h4 class="text-lg font-bold text-blue-300 mb-2">Tính năng đang phát triển</h4>
-                    <p class="text-slate-400 max-w-md">Chúng tôi đang làm việc chăm chỉ để mang đến tính năng quản lý
-                        Proxy mạnh mẽ nhất cho bạn.</p>
-                </div>
-            </div>
-
-            <!-- TAB: ACCOUNT -->
-            <div id="setting-tab-account" class="setting-tab-content hidden max-w-3xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400"><i class="ri-user-settings-fill"></i>
-                    </div>
-                    Quản lý Tài khoản
-                </h3>
-
-                <div class="p-5 rounded-xl bg-white/5 border border-white/10 mb-4">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Đường dẫn dữ liệu Profile</label>
-                    <div class="flex gap-2">
-                        <input type="text" value="C:\Users\Admin\ViaData\Profiles" readonly
-                            class="glass-input-style flex-1 px-4 py-2.5 rounded-lg text-sm bg-black/20 text-slate-400 font-mono">
-                        <button class="glass-btn-border px-4 py-2 rounded-lg hover:bg-white/10"><i
-                                class="ri-folder-open-line text-lg"></i></button>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><i class="ri-information-line"></i>
-                        Dữ liệu trình duyệt của các tài khoản được lưu tại đây.</p>
-                </div>
-            </div>
-
-            <!-- TAB: DISPLAY -->
-            <div id="setting-tab-display" class="setting-tab-content hidden max-w-3xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div class="p-2 rounded-lg bg-purple-500/20 text-purple-400"><i class="ri-palette-fill"></i></div>
-                    Giao diện
-                </h3>
-
-                <div class="grid grid-cols-3 gap-4">
-                    <div
-                        class="border-2 border-blue-500 rounded-xl p-3 bg-blue-500/10 text-center cursor-pointer relative overflow-hidden group">
-                        <div class="absolute top-2 right-2 text-blue-500"><i
-                                class="ri-checkbox-circle-fill text-xl"></i></div>
-                        <div
-                            class="h-24 bg-[#0f172a] rounded-lg mb-3 border border-blue-500/30 shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center">
-                            <span class="text-3xl">🌑</span>
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Max Threads -->
+                        <div class="p-5 rounded-xl bg-white/5 border border-white/10">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-base font-medium text-slate-200">Số luồng mở Tab</label>
+                                <span class="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded">Concurrency</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-3">Số lượng tab được phép khởi động cùng lúc.</div>
+                            <input type="number" id="inp-max-threads" value="2" min="1" max="50"
+                                class="glass-input-style w-full px-4 py-2.5 rounded-lg text-sm bg-black/20 text-slate-200 font-bold border-slate-700 focus:border-pink-500">
                         </div>
-                        <span class="text-sm text-blue-300 font-bold block">Dark Blue</span>
-                    </div>
 
-                    <div
-                        class="border border-white/10 rounded-xl p-3 bg-white/5 text-center cursor-pointer relative overflow-hidden group hover:border-white/30 transition-all">
-                        <div
-                            class="h-24 bg-[#171717] rounded-lg mb-3 border border-white/10 shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center grayscale opacity-50">
-                            <span class="text-3xl">⚫</span>
+                        <!-- Delay -->
+                        <div class="p-5 rounded-xl bg-white/5 border border-white/10">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-base font-medium text-slate-200">Delay mở Tab (giây)</label>
+                                <span class="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded">Throttle</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-3">Thời gian chờ giữa mỗi lần mở tab mới.</div>
+                            <input type="number" id="inp-launch-delay" value="1" min="0" max="60"
+                                class="glass-input-style w-full px-4 py-2.5 rounded-lg text-sm bg-black/20 text-slate-200 font-bold border-slate-700 focus:border-pink-500">
                         </div>
-                        <span class="text-sm text-slate-400 font-medium block">Midnight</span>
                     </div>
                 </div>
             </div>
 
         </div>
+
+        <div
+            class="px-6 py-4 border-t border-white/10 bg-black/20 flex justify-end gap-3 shrink-0 absolute bottom-0 right-0 w-full backdrop-blur-md">
+            <button onclick="saveSettings()"
+                class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all transform hover:scale-105 active:scale-95">
+                <i class="ri-save-3-line mr-1"></i> Lưu thay đổi
+            </button>
+        </div>
     </div>
 
     <!-- Script for internal tab switching -->
     <script>
+        const { ipcRenderer } = require('electron');
+
         function switchSettingsTab(tabName) {
             // 1. Update Sidebar
             document.querySelectorAll('.settings-nav-item').forEach(item => {
@@ -178,6 +123,50 @@
             });
             document.getElementById(`setting-tab-${tabName}`).classList.remove('hidden');
         }
+
+        // LOAD SETTINGS
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const settings = await ipcRenderer.invoke('get-settings');
+                if (settings) {
+                    if (settings.chromePath) document.getElementById('inp-chrome-path').value = settings.chromePath;
+                    if (settings.maxThreads) document.getElementById('inp-max-threads').value = settings.maxThreads;
+                    if (settings.launchDelay) document.getElementById('inp-launch-delay').value = settings.launchDelay;
+
+                    console.log('Settings loaded:', settings);
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        });
+
+        async function selectChromePath() {
+            try {
+                const path = await ipcRenderer.invoke('select-chrome-path');
+                if (path) {
+                    document.getElementById('inp-chrome-path').value = path;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Lỗi khi chọn file: ' + e.message);
+            }
+        }
+
+        async function saveSettings() {
+            const data = {
+                chromePath: document.getElementById('inp-chrome-path').value.trim(),
+                maxThreads: document.getElementById('inp-max-threads').value,
+                launchDelay: document.getElementById('inp-launch-delay').value
+            };
+
+            try {
+                await ipcRenderer.invoke('save-settings', data);
+                alert('Đã lưu cấu hình thành công!');
+            } catch (e) {
+                alert('Lỗi lưu cấu hình: ' + e.message);
+            }
+        }
+
     </script>
 </body>
 

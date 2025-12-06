@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const puppeteer = require('puppeteer-core')
 const fs = require('fs')
+const db = require('./js/database') // Import database module
 
 // Store active browser instances: Map<tabId, { browser, page, uid }>
 const browserInstances = new Map()
@@ -78,6 +79,26 @@ function createWindow() {
         win.webContents.send('window-unmaximized')
     })
 
+    // --- SETTINGS PC ---
+    ipcMain.handle('get-settings', async () => {
+        return await db.getSettings();
+    });
+
+    ipcMain.handle('save-settings', async (event, data) => {
+        return await db.saveSettings(data);
+    });
+
+    ipcMain.handle('select-chrome-path', async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'Executables', extensions: ['exe'] }]
+        });
+        if (!result.canceled && result.filePaths.length > 0) {
+            return result.filePaths[0];
+        }
+        return null;
+    });
+
     // --- PUPPETEER HANDLERS ---
 
     ipcMain.handle('puppeteer-start', async (event, data) => {
@@ -88,7 +109,15 @@ function createWindow() {
             return { success: true, msg: 'Browser already running' }
         }
 
-        const executablePath = findChrome()
+        // Get config from DB
+        const settings = await db.getSettings();
+        let executablePath = settings.chromePath;
+
+        if (!executablePath || !fs.existsSync(executablePath)) {
+            console.log("Configured Chrome path invalid or empty, auto-detecting...");
+            executablePath = findChrome()
+        }
+
         if (!executablePath) {
             return { success: false, msg: 'Chrome not found' }
         }

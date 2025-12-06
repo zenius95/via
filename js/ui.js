@@ -79,10 +79,6 @@ function closeColumnModal() {
     setTimeout(() => { colModal.classList.add('hidden'); }, 200);
 }
 
-// --- SETTINGS MODAL (MOVED TO TAB) ---
-// Functions moved to setting.html / internal logic
-
-
 function handleDragStart(e) {
     dragSrcEl = this;
     e.dataTransfer.effectAllowed = 'move';
@@ -207,8 +203,6 @@ function menuAction(action) {
             TabManager.createTab(acc);
         });
     }
-
-
 }
 
 // --- COLUMN MENU LOGIC (UPDATED) ---
@@ -223,11 +217,10 @@ function showColumnMenu(event, colId) {
     }
 
     // 1. UPDATE MENU TEXT DYNAMICALLY
-    // Lấy trạng thái cột hiện tại
     const col = gridApi.getColumn(colId);
     if (col) {
         // -- Pin Button --
-        const isPinned = col.isPinned(); // true/false or 'left'/'right'
+        const isPinned = col.isPinned();
         const pinBtn = document.getElementById('col-menu-pin');
         if (pinBtn) {
             pinBtn.innerHTML = isPinned
@@ -237,8 +230,6 @@ function showColumnMenu(event, colId) {
 
         // -- Mask Button (Che thông tin) --
         const maskBtn = document.getElementById('col-menu-mask');
-        // Check biến maskedColumns (giả sử maskedColumns là biến global bên grid.js)
-        // Nếu không access được trực tiếp, ta có thể dùng window.maskedColumns hoặc check logic khác
         if (maskBtn && typeof maskedColumns !== 'undefined') {
             const isMasked = maskedColumns.has(colId);
             maskBtn.innerHTML = isMasked
@@ -248,7 +239,6 @@ function showColumnMenu(event, colId) {
     }
 
     // 2. POSITION & SHOW
-    // FIX: Update class name to 'custom-header-action-btn'
     const btn = event.target.closest('.custom-header-action-btn');
     if (btn) {
         const rect = btn.getBoundingClientRect();
@@ -414,6 +404,105 @@ function toggleStatusFilter(status, event) {
     if (gridApi) gridApi.onFilterChanged();
 }
 
+// --- LAUNCH QUEUE MANAGER ---
+const LaunchQueue = {
+    queue: [],
+    activeLaunches: 0,
+    maxConcurrent: 2, // Default
+    delayMs: 1000,   // Default
+    isProcessing: false,
+
+    async init() {
+        try {
+            const settings = await ipcRenderer.invoke('get-settings');
+            if (settings) {
+                this.maxConcurrent = parseInt(settings.maxThreads) || 2;
+                this.delayMs = (parseInt(settings.launchDelay) || 1) * 1000;
+                console.log(`Queue Init: Max=${this.maxConcurrent}, Delay=${this.delayMs}ms`);
+            }
+        } catch (e) { console.error('Queue Init Error:', e); }
+    },
+
+    addToQueue(task) {
+        this.queue.push(task);
+        this.process();
+    },
+
+    async process() {
+        if (this.isProcessing) return;
+        this.isProcessing = true;
+
+        while (this.queue.length > 0 && this.activeLaunches < this.maxConcurrent) {
+            const task = this.queue.shift();
+            this.activeLaunches++;
+
+            this.runTask(task).then(() => {
+                this.activeLaunches--;
+                setTimeout(() => {
+                    this.process();
+                }, this.delayMs);
+            });
+        }
+
+        this.isProcessing = false;
+    },
+
+    async runTask(task) {
+        const { accountData, tabId, loadingDiv, uiWv } = task;
+
+        try {
+            if (!document.getElementById(`view-${tabId}`)) return;
+
+            const isHeadless = accountData.headless || false;
+            const result = await ipcRenderer.invoke('puppeteer-start', {
+                uid: accountData.uid,
+                proxy: accountData.proxy,
+                userAgent: accountData.userAgent,
+                headless: isHeadless
+            });
+
+            if (result.success) {
+                if (document.getElementById(`loading-${tabId}`)) loadingDiv.remove();
+                uiWv.classList.remove('hidden');
+                uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`;
+            } else {
+                if (document.getElementById(`loading-${tabId}`)) {
+                    loadingDiv.innerHTML = `
+                        <div class="flex flex-col items-center text-center p-6">
+                            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                                <i class="ri-error-warning-fill text-3xl text-red-500"></i>
+                            </div>
+                            <h3 class="text-red-400 font-bold text-lg mb-2">Khởi động thất bại</h3>
+                            <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${result.msg}</p>
+                            <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                                Đóng Tab
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            if (document.getElementById(`loading-${tabId}`)) {
+                loadingDiv.innerHTML = `
+                    <div class="flex flex-col items-center text-center p-6">
+                         <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                            <i class="ri-plug-line text-3xl text-red-500"></i>
+                        </div>
+                        <h3 class="text-red-400 font-bold text-lg mb-2">Lỗi kết nối IPC</h3>
+                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${err.message}</p>
+                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                            Đóng Tab
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+};
+
+LaunchQueue.init();
+
 
 const TabManager = {
     tabs: {},
@@ -427,7 +516,6 @@ const TabManager = {
         document.getElementById('tab-dashboard').classList.add('active');
 
         // UI Views
-        // Dashboard dùng display:none cũ cũng được vì nó nhẹ
         document.getElementById('dashboard-view').classList.remove('hidden');
         document.getElementById('webview-container').classList.add('hidden');
 
@@ -484,6 +572,7 @@ const TabManager = {
                  <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
                  <div class="text-blue-400 font-medium text-sm">Đang khởi động Browser...</div>
                  <div class="text-slate-500 text-xs mt-2">ID: ${accountData.uid}</div>
+                 <div class="text-slate-600 text-[10px] mt-1">Đang chờ hàng đợi...</div>
             </div>
         `;
         viewWrapper.appendChild(loadingDiv);
@@ -491,7 +580,6 @@ const TabManager = {
         // Webview (initially hidden)
         const uiWv = document.createElement('webview');
         uiWv.className = 'w-full h-full bg-slate-900 hidden';
-        // Correct way to enable node integration in webview
         uiWv.setAttribute('nodeintegration', 'true');
         uiWv.setAttribute('webpreferences', 'contextIsolation=no');
         viewWrapper.appendChild(uiWv);
@@ -509,51 +597,12 @@ const TabManager = {
         // Switch to new tab immediately
         this.switchToTab(tabId);
 
-        // 4. Start Browser Process in Background
-        const isHeadless = accountData.headless || false;
-
-        ipcRenderer.invoke('puppeteer-start', {
-            uid: accountData.uid,
-            proxy: accountData.proxy,
-            userAgent: accountData.userAgent,
-            headless: isHeadless
-        }).then(result => {
-            if (result.success) {
-                // Success: Remove loading, show webview, load URL
-                loadingDiv.remove();
-                uiWv.classList.remove('hidden');
-                uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`;
-            } else {
-                // Error: Show error in loading div
-                loadingDiv.innerHTML = `
-                    <div class="flex flex-col items-center text-center p-6">
-                        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-                            <i class="ri-error-warning-fill text-3xl text-red-500"></i>
-                        </div>
-                        <h3 class="text-red-400 font-bold text-lg mb-2">Khởi động thất bại</h3>
-                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${result.msg}</p>
-                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
-                            Đóng Tab
-                        </button>
-                    </div>
-                `;
-            }
-        }).catch(err => {
-            console.error(err);
-            if (document.getElementById(`loading-${tabId}`)) { // Check if tab still exists
-                loadingDiv.innerHTML = `
-                    <div class="flex flex-col items-center text-center p-6">
-                         <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-                            <i class="ri-plug-line text-3xl text-red-500"></i>
-                        </div>
-                        <h3 class="text-red-400 font-bold text-lg mb-2">Lỗi kết nối IPC</h3>
-                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${err.message}</p>
-                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
-                            Đóng Tab
-                        </button>
-                    </div>
-                `;
-            }
+        // 4. PUSH TO QUEUE
+        LaunchQueue.addToQueue({
+            accountData,
+            tabId,
+            loadingDiv,
+            uiWv
         });
     },
 
