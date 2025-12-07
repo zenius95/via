@@ -60,6 +60,24 @@ function removeCustomColumn(index) {
     renderCustomColumns();
 }
 
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        document.getElementById('import-textarea').value = e.target.result;
+        showToast(`Đã tải nội dung từ ${file.name}`);
+        // Reset input so same file can be selected again if needed
+        input.value = '';
+    };
+    reader.onerror = function () {
+        showToast('Lỗi khi đọc file', 'error');
+    };
+    reader.readAsText(file);
+}
+
+
 function updateCustomColumn(index, value) {
     customColumns[index] = value;
     renderCustomColumns(); // Optional: re-render if colors change based on value
@@ -388,8 +406,8 @@ function processImportData() {
             email: email,
             cookie: cookie,
             token: token,
-            processStatus: '',
-            processMessage: ''
+            processStatus: 'READY',
+            processMessage: 'Chọn chức năng để chạy'
         };
 
         // --- SEPARATE NEW VS DUPLICATE ---
@@ -457,6 +475,20 @@ function confirmDuplicateImport() {
 function finishImport(rowsToAdd, skippedCount, isMerge = false) {
     if (rowsToAdd.length > 0 && gridApi) {
         gridApi.applyTransaction({ add: rowsToAdd });
+
+        // Save to Database
+        // Only save to DB if these are genuinely new rows (not duplicates being merged)
+        // The `isMerge` flag indicates if duplicates were included in `rowsToAdd`.
+        // If `isMerge` is false, it means `rowsToAdd` are all new accounts.
+        // If `isMerge` is true, `rowsToAdd` contains both new and duplicate accounts.
+        // In this case, we only want to save the `pendingNewRows` to the DB.
+        const rowsToSaveToDb = isMerge ? pendingNewRows : rowsToAdd;
+
+        if (rowsToSaveToDb.length > 0) {
+            window.api.send('db:add-accounts', rowsToSaveToDb).then(() => {
+                console.log('Saved new accounts to DB');
+            }).catch(err => console.error('Failed to save accounts', err));
+        }
     }
 
     let msg = `Đã thêm ${rowsToAdd.length} tài khoản.`;
@@ -583,7 +615,18 @@ function menuAction(action) {
     if (action === 'delete') {
         if (selectedData.length === 0) return;
         showConfirmDialog("Xác nhận xóa", `Bạn có muốn xóa ${selectedData.length} tài khoản?`, () => {
+            // 1. Remove from Grid
             gridApi.applyTransaction({ remove: selectedData });
+
+            // 2. Remove from Database
+            const uidsToDelete = selectedData.map(row => row.uid);
+            window.api.send('db:delete-accounts', uidsToDelete).then(res => {
+                console.log('Deleted from DB:', res);
+            }).catch(err => {
+                console.error('Delete failed:', err);
+                showToast('Lỗi khi xóa trong DB', 'error');
+            });
+
             showToast(`Đã xóa ${selectedData.length} tài khoản`, "success");
         });
 
@@ -629,12 +672,21 @@ function menuAction(action) {
 let currentTargetColId = null;
 
 function showColumnMenu(event, colId) {
-    currentTargetColId = colId;
     const menu = document.getElementById('column-menu');
     if (!menu) {
         console.error("LỖI: Chưa có <div id='column-menu'> trong file HTML Bro ơi!");
         return;
     }
+
+    // CHECK IF ALREADY OPENED FOR THIS COLUMN
+    if (menu.style.display === 'block' && currentTargetColId === colId && menu.classList.contains('active')) {
+        menu.classList.remove('active');
+        menu.style.display = 'none';
+        currentTargetColId = null;
+        return;
+    }
+
+    currentTargetColId = colId;
 
     // 1. UPDATE MENU TEXT DYNAMICALLY
     // Lấy trạng thái cột hiện tại
@@ -670,8 +722,11 @@ function showColumnMenu(event, colId) {
         menu.style.top = (rect.bottom + 5) + 'px';
         menu.style.display = 'block';
 
+        // Reset animation
         menu.classList.remove('active');
-        requestAnimationFrame(() => menu.classList.add('active'));
+        // Force reflow
+        void menu.offsetWidth;
+        menu.classList.add('active');
     }
 }
 

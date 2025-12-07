@@ -1,6 +1,29 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 
+// IPC Handlers
+const database = require('./js/database');
+
+ipcMain.handle('db:get-accounts', async () => {
+    return await database.getAllAccounts();
+});
+
+ipcMain.handle('db:add-accounts', async (event, accounts) => {
+    return await database.insertAccounts(accounts);
+});
+
+ipcMain.handle('db:update-account', async (event, account) => {
+    return await database.updateAccount(account);
+});
+
+ipcMain.handle('db:delete-accounts', async (event, uids) => {
+    return await database.deleteAccounts(uids);
+});
+
+// Settings Handlers (Existing?)
+// Ensure IPC handlers are registered before app ready or inside createWindow if using webContents?
+// Usually defined at top level.
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 1200,
@@ -8,8 +31,8 @@ function createWindow() {
         frame: false, // Frameless window
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
-            // preload: path.join(__dirname, 'preload.js')
+            contextIsolation: false,
+            preload: path.join(__dirname, 'preload.js')
         }
     })
 

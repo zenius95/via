@@ -279,6 +279,17 @@
                                 <i
                                     class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                             </div>
+
+                            <div class="w-px h-6 bg-white/10 mx-2"></div>
+
+                            <!-- File Input -->
+                            <input type="file" id="import-file-input" class="hidden" accept=".txt"
+                                onchange="handleFileSelect(this)">
+                            <button onclick="document.getElementById('import-file-input').click()"
+                                class="glass-btn-border px-3 py-1.5 h-[38px] text-slate-300 hover:text-white flex items-center gap-2 group">
+                                <i class="ri-folder-open-line text-lg group-hover:text-blue-400 transition-colors"></i>
+                                <span class="text-sm">Chọn file .txt</span>
+                            </button>
                         </div>
 
                         <div id="custom-format-controls" class="flex flex-col gap-2 hidden animate-fade-in-down">

@@ -185,8 +185,21 @@ body {
 }
 
 .ag-theme-alpine-dark .ag-cell {
+    display: block;
+    /* Changed from flex to block for overflow to work */
+    line-height: 55px;
+    /* Match row height roughly or align vertical */
+    padding-top: 10px;
+    /* Adjust as needed or use flex with min-w-0 properly? Let's use block for safety first as 3rd attempt failed */
+    /* actually block might break alignment of badge? Badge uses inline-flex. */
+    /* Let's try sticking to flex but force min-width on THE CELL? */
+    /* No, flex parent, child flex-1 min-w-0 works IF parent has width. */
+    /* The problem might be padding or some other container. */
+    /* Resetting back to flex but adding rule for inner div */
     display: flex;
     align-items: center;
+    overflow: hidden;
+    /* Ensure cell cuts off content */
 }
 
 .ag-theme-alpine-dark .ag-row {
@@ -214,7 +227,15 @@ body {
     top: 15px;
     bottom: 15px;
     height: initial;
-    width: 6px;
+    width: 3px;
+}
+
+.ag-pinned-right-header .ag-ltr .ag-header-cell-resize {
+    right: -3px;
+}
+
+.ag-ltr .ag-header-cell-resize {
+    right: 3px;
 }
 
 .ag-root-wrapper {

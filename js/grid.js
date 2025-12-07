@@ -33,13 +33,26 @@ class CustomHeader {
 
         // 2. Sort Icon
         const sortIcon = document.createElement('span');
+        sortIcon.className = 'custom-sort-icon ml-1.5 text-xs text-blue-400'; // Initial class
         sortIcon.innerHTML = '';
+
+        const updateSortIcon = () => {
+            const sortState = params.column.getSort();
+            if (sortState === 'asc') sortIcon.innerHTML = '<i class="ri-sort-asc"></i>';
+            else if (sortState === 'desc') sortIcon.innerHTML = '<i class="ri-sort-desc"></i>';
+            else sortIcon.innerHTML = ''; // Or empty?
+        };
+
         if (params.enableSorting && this.colId !== 'process') {
             this.eGui.addEventListener('click', (e) => {
                 if (!e.target.closest('.custom-header-action-btn')) {
                     params.progressSort();
                 }
             });
+            // Initial check
+            updateSortIcon();
+            // Listen for changes
+            params.column.addEventListener('sortChanged', updateSortIcon);
         }
 
         // 3. Action Button
@@ -142,7 +155,9 @@ function restoreProcessColDef() {
 const textCellRenderer = (params) => {
     if (params.data && params.data.isLoading) return `<div class="skeleton h-3 w-32"></div>`;
     if (maskedColumns.has(params.colDef.colId)) return `<span class="masked-data">*******</span>`;
-    return `<span class="${params.colDef.cellStyleClass || ''}">${params.value}</span>`;
+    // Added overflow-hidden text-ellipsis whitespace-nowrap flex-1 block
+    const val = params.value || '';
+    return `<div class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${params.colDef.cellStyleClass || ''}" title="${val}">${val}</div>`;
 };
 
 const columnDefs = [
@@ -174,7 +189,7 @@ const columnDefs = [
         },
         getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.data.name + ' ' + params.data.uid); }
     },
-    { headerName: "UID", field: "uid", colId: 'uidRaw', cellRenderer: textCellRenderer },
+    { headerName: "UID", field: "uid", colId: 'uidRaw', cellRenderer: textCellRenderer, editable: false },
     { headerName: "Mật khẩu", field: "password", width: 120, colId: 'password', cellRenderer: textCellRenderer },
     { headerName: "Mã 2FA", field: "twoFa", colId: 'twoFa', cellRenderer: textCellRenderer },
     { headerName: "Email", field: "email", colId: 'email', cellRenderer: textCellRenderer },
@@ -193,6 +208,7 @@ const columnDefs = [
 
             if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
             else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
+            else if (status === 'READY') { badgeClass += 'badge-neutral text-slate-400 bg-slate-500/10 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; } // READY distinct style
             else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; }
 
             // RENDER DỰA TRÊN TRẠNG THÁI
@@ -204,6 +220,7 @@ const columnDefs = [
                 // Thêm margin cho icon
                 if (status === 'RUNNING') iconHtml = '<i class="ri-loader-4-line icon-spin text-xs mr-1"></i>';
                 else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
+                else if (status === 'READY') iconHtml = '<i class="ri-hourglass-line text-xs mr-1"></i>';
                 else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
 
                 return `<div class="process-cell"><span class="${badgeClass}">${iconHtml}${status}</span><span class="process-msg">${params.data.processMessage}</span></div>`;
@@ -287,6 +304,7 @@ const gridOptions = {
         resizable: true,
         sortable: true,
         filter: false,
+        editable: true, // Enable editing
         suppressHeaderMenuButton: true,
         headerComponent: CustomHeader,
         lockPinned: true,
@@ -300,6 +318,16 @@ const gridOptions = {
         if (typeof updateFilterCounts === 'function') updateFilterCounts();
     },
     onSelectionChanged: updateFooterCount, onRangeSelectionChanged: updateFooterCount,
+
+    // AUTO-SAVE ON EDIT
+    onCellValueChanged: (params) => {
+        // params.data contains the updated row data
+        // params.colDef.field contains the field that changed
+        if (params.data && params.data.uid) {
+            console.log('Auto-saving account:', params.data.uid);
+            window.api.send('db:update-account', params.data);
+        }
+    },
 
     // BẮT SỰ KIỆN RESIZE ĐỂ LƯU CHIỀU RỘNG MỚI
     onColumnResized: (params) => {
