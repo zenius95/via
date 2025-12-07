@@ -17,7 +17,7 @@ function generateData(count) {
             password: "Password@" + Math.floor(Math.random() * 1000),
             twoFa: "JBSWY3DPEHPK3PXP",
             email: `user_account_${i}@hotmail.com`,
-            emailPass: "EmailPass123!",
+            emailPassword: "emailPassword123!",
             recoveryEmail: `recover_${i}@getnada.com`,
             cookie: `c_user=${uid};xs=...`,
             processStatus: procStatuses[Math.floor(Math.random() * procStatuses.length)],

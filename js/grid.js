@@ -100,16 +100,16 @@ function toggleProcessColumn() {
     if (processState.collapsed) {
         // [THU GỌN]
         // Lưu chiều rộng hiện tại TRƯỚC KHI thu gọn (nếu nó đang > 110px)
-        if (currentWidth > 130) {
+        if (currentWidth > 150) {
             processState.savedWidth = currentWidth;
         }
 
         // Set width bé & Khóa resize
-        gridApi.setColumnWidths([{ key: 'process', newWidth: 130 }], true);
+        gridApi.setColumnWidths([{ key: 'process', newWidth: 150 }], true);
         col.getColDef().resizable = false;
         col.getColDef().suppressSizeToFit = true;
-        col.getColDef().minWidth = 130;
-        col.getColDef().maxWidth = 130;
+        col.getColDef().minWidth = 150;
+        col.getColDef().maxWidth = 150;
     } else {
         // [MỞ RỘNG]
         // Lấy lại chiều rộng đã lưu (hoặc mặc định 220)
@@ -118,7 +118,7 @@ function toggleProcessColumn() {
         gridApi.setColumnWidths([{ key: 'process', newWidth: widthToRestore }], true);
         col.getColDef().resizable = true;
         col.getColDef().suppressSizeToFit = false; // Reset size to fit suppression
-        col.getColDef().minWidth = 130;
+        col.getColDef().minWidth = 150;
         col.getColDef().maxWidth = null; // Bỏ giới hạn
     }
 
@@ -137,15 +137,15 @@ function restoreProcessColDef() {
         // Nếu đang ở trạng thái thu gọn, ép lại các thuộc tính khóa
         col.getColDef().resizable = false;
         col.getColDef().suppressSizeToFit = true;
-        col.getColDef().minWidth = 130;
-        col.getColDef().maxWidth = 130;
+        col.getColDef().minWidth = 150;
+        col.getColDef().maxWidth = 150;
         // Đảm bảo width là 100
-        gridApi.setColumnWidths([{ key: 'process', newWidth: 130 }], true);
+        gridApi.setColumnWidths([{ key: 'process', newWidth: 150 }], true);
     } else {
         // Nếu đang mở rộng
         col.getColDef().resizable = true;
         col.getColDef().suppressSizeToFit = false; // Reset this too
-        col.getColDef().minWidth = 130;
+        col.getColDef().minWidth = 150;
         col.getColDef().maxWidth = null;
         // Width sẽ được restoreGridState lo, hoặc user đã resize
     }
@@ -164,7 +164,7 @@ const textCellRenderer = (params) => {
 
 const columnDefs = [
     {
-        headerName: "Trạng thái", field: "status", minWidth: 120, colId: 'status',
+        headerName: "Trạng thái", field: "status", colId: 'status',
         cellRenderer: (params) => {
             if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-4 w-20 rounded"></div></div>`;
             if (maskedColumns.has('status')) return `<span class="masked-data">*******</span>`;
@@ -194,7 +194,9 @@ const columnDefs = [
     { headerName: "UID", field: "uid", colId: 'uidRaw', cellRenderer: textCellRenderer, editable: false },
     { headerName: "Mật khẩu", field: "password", width: 120, colId: 'password', cellRenderer: textCellRenderer },
     { headerName: "Mã 2FA", field: "twoFa", colId: 'twoFa', cellRenderer: textCellRenderer },
-    { headerName: "Email", field: "email", colId: 'email', cellRenderer: textCellRenderer },
+    { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
+    { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
+    { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',
@@ -310,6 +312,7 @@ const gridOptions = {
         suppressHeaderMenuButton: true,
         headerComponent: CustomHeader,
         lockPinned: true,
+        minWidth: 180, // Prevent header truncation
         getQuickFilterText: (p) => p.value ? removeVietnameseTones(p.value.toString()) : ''
     },
     rowHeight: 56, headerHeight: 48, pagination: false, animateRows: true, tooltipShowDelay: 0,

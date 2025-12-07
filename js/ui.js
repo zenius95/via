@@ -34,6 +34,7 @@ const COL_TYPES = {
     'email_pass': { label: 'Pass Email', color: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
     'cookie': { label: 'Cookie', color: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
     'token': { label: 'Token', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
+    'email_recover': { label: 'Email KP', color: 'bg-teal-500/20 text-teal-300 border-teal-500/30' },
     'ignored': { label: 'Bỏ qua', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30 italic decoration-line-through' },
 };
 
@@ -339,7 +340,8 @@ function processImportData() {
         let password = '';
         let twoFa = '';
         let email = '';
-        let emailPass = '';
+        let emailPassword = '';
+        let emailRecover = '';
         let cookie = '';
         let token = '';
 
@@ -353,24 +355,19 @@ function processImportData() {
                     else if (type === 'password') password = val;
                     else if (type === '2fa') twoFa = val;
                     else if (type === 'email') email = val;
-                    else if (type === 'email_pass') emailPass = val;
+                    else if (type === 'email_pass') emailPassword = val;
+                    else if (type === 'email_recover') emailRecover = val;
                     else if (type === 'cookie') cookie = val;
                     else if (type === 'token') token = val;
                 });
-            } else {
-                // If custom but no columns defined, fallback or skip? Let's treat as partial auto but usually user should define cols.
-                // For now, if no cols, treat as error or do nothing? User said "Tự động" for auto.
-                // If Custom is selected but empty, we might just fail to parse anything useful efficiently.
-                // Let's just default to UID if it looks like one, else nothing.
             }
-
         } else {
             // --- HEURISTIC PARSING (AUTO) ---
-            // 1. UID: Cột đầu tiên nếu là số, hoặc tìm trong c_user
+            // 1. UID & Pass: Cột đầu tiên là UID, cột 2 là Pass
             uid = cols[0].trim();
-            // ... (keep existing heuristics for fallback in auto mode)
             password = cols[1] ? cols[1].trim() : '';
 
+            // Handle c_user fallback for UID
             if (isNaN(uid) || !uid) {
                 const cookieIndex = cols.findIndex(c => c.includes('c_user='));
                 if (cookieIndex !== -1) {
@@ -379,12 +376,59 @@ function processImportData() {
                 }
             }
 
-            let emailIndex = cols.findIndex(c => c.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi));
-            if (emailIndex !== -1) {
-                email = cols[emailIndex].trim();
-                if (cols[emailIndex + 1]) emailPass = cols[emailIndex + 1].trim();
+            // 2. TIM KIẾM EMAIL (New Logic)
+            /*
+             * Logic:
+             * - Duyệt qua từng cột để tìm Email.
+             * - Nếu là (gmail, hotmail, outlook, yahoo) -> Là EMAIL CHÍNH.
+             *      -> Cột bên phải (ngay sau nó) là EMAIL PASS.
+             * - Tất cả email còn lại -> EMAIL KHÔI PHỤC (nối nhau bằng | hoặc lấy cái đầu tiên?)
+             *   (User update: "Tất cả các email còn lại được tính là email khôi phục")
+             */
+
+            const MAIN_DOMAINS = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
+            let foundMainEmail = false;
+            let recoveryEmails = [];
+
+            // Scan all columns for emails
+            for (let i = 0; i < cols.length; i++) {
+                const col = cols[i].trim();
+                const emailMatch = col.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i);
+
+                if (emailMatch) {
+                    const currentEmail = emailMatch[0];
+                    const domain = currentEmail.split('@')[1].toLowerCase();
+
+                    // Check if it is a main email candidate
+                    if (!foundMainEmail && MAIN_DOMAINS.includes(domain)) {
+                        email = currentEmail;
+                        foundMainEmail = true;
+
+                        // Check password next to it
+                        if (cols[i + 1]) {
+                            // Simple heuristic: if next col is NOT another email (or maybe it IS the password even if it looks weird)
+                            // User requirement: "bên phải Email chính sau dấu | sẽ luôn là Email Password"
+                            // So we take it blindly.
+                            emailPassword = cols[i + 1].trim();
+                            // Skip next iteration? No, loop continues, but we should be careful not to treat emailPassword as email if it happens to be one (unlikely for pass)
+                            // Actually if emailPassword is an email, it would be caught by regex in next loop.
+                            // But since we consumed it as pass, we probably shouldn't treat it as recovery email?
+                            // Let's increment i to skip scanning emailPassword as an email candidate?
+                            // User said "Start with Main, Right is Pass". If Pass is also an email (weird), it's a pass.
+                            i++;
+                        }
+                    } else {
+                        // It's a recovery email (or main email found already)
+                        recoveryEmails.push(currentEmail);
+                    }
+                }
             }
 
+            // Join recovery emails if multiple? Let's just take the first one or join them?
+            // DB has single text field. Let's join by | if multiple.
+            emailRecover = recoveryEmails.join(' | ');
+
+            // 3. OTHER FIELDS
             const twofaIndex = cols.findIndex(c => c.replace(/\s/g, '').length === 32 && !c.includes('@'));
             if (twofaIndex !== -1) twoFa = cols[twofaIndex].trim();
 
@@ -404,6 +448,8 @@ function processImportData() {
             password: password,
             twoFa: twoFa,
             email: email,
+            emailPassword: emailPassword,
+            emailRecover: emailRecover,
             cookie: cookie,
             token: token,
             processStatus: 'READY',

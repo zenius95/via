@@ -35,7 +35,8 @@ class Database {
                 password TEXT,
                 twoFa TEXT,
                 email TEXT,
-                emailPass TEXT,
+                emailPassword TEXT,
+                emailRecover TEXT,
                 cookie TEXT,
                 token TEXT,
                 status TEXT,
@@ -48,6 +49,19 @@ class Database {
                 processMessage TEXT
             )
         `);
+
+        // Migration: Check if emailRecover exists
+        this.db.all("PRAGMA table_info(accounts)", (err, rows) => {
+            if (!err && rows) {
+                const hasRecover = rows.some(r => r.name === 'emailRecover');
+                if (!hasRecover) {
+                    this.db.run("ALTER TABLE accounts ADD COLUMN emailRecover TEXT", (err) => {
+                        if (err) console.error('Migration add emailRecover failed', err);
+                        else console.log('Migrated DB: Added emailRecover column');
+                    });
+                }
+            }
+        });
     }
 
     getAllAccounts() {
@@ -63,13 +77,13 @@ class Database {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
-                    uid, password, twoFa, email, emailPass, cookie, token, 
+                    uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
                     status, name, avatar, proxy, user_agent, notes, processStatus, processMessage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             stmt.run(
-                account.uid, account.password, account.twoFa, account.email, account.emailPass,
+                account.uid, account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
                 account.processStatus || '', account.processMessage || '',
@@ -86,9 +100,9 @@ class Database {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
-                    uid, password, twoFa, email, emailPass, cookie, token, 
+                    uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
                     status, name, avatar, proxy, user_agent, notes, processStatus, processMessage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             this.db.serialize(() => {
@@ -96,7 +110,7 @@ class Database {
                 accounts.forEach(account => {
                     console.log('Inserting Account:', account.uid, 'Status:', account.status, 'Process:', account.processStatus);
                     stmt.run(
-                        account.uid, account.password, account.twoFa, account.email, account.emailPass,
+                        account.uid, account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                         account.cookie, account.token, account.status, account.name, account.avatar,
                         account.proxy || '', account.user_agent || '', account.notes || '',
                         account.processStatus || '', account.processMessage || '',
@@ -118,14 +132,14 @@ class Database {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
                 UPDATE accounts SET 
-                    password = ?, twoFa = ?, email = ?, emailPass = ?, cookie = ?, token = ?, 
+                    password = ?, twoFa = ?, email = ?, emailPassword = ?, emailRecover = ?, cookie = ?, token = ?, 
                     status = ?, name = ?, avatar = ?, proxy = ?, user_agent = ?, notes = ?, 
                     processStatus = ?, processMessage = ?
                 WHERE uid = ?
             `);
 
             stmt.run(
-                account.password, account.twoFa, account.email, account.emailPass,
+                account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
                 account.processStatus || '', account.processMessage || '',
