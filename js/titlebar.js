@@ -1,4 +1,3 @@
-console.log('!!! TITLEBAR JS LOADED !!!');
 const { ipcRenderer } = require('electron')
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -111,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // IPC Listener for creating tabs
     ipcRenderer.on('create-tab', (event, tabData) => {
-        console.log('Renderer: create-tab', tabData); // Debug log
         // Check if tab already exists
         if (tabData.id) {
             // Find by ID in dataset

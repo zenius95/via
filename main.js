@@ -1,4 +1,3 @@
-console.log('!!! NEW MAIN JS LOADED !!!');
 const { app, BrowserWindow, ipcMain, BrowserView } = require('electron')
 const path = require('path')
 
@@ -44,11 +43,8 @@ function createView(id, url) {
 }
 
 ipcMain.on('switch-view', (event, id) => {
-    console.log('Main: switch-view', id);
     if (views[id] && mainWindow) {
         // Detach old, attach new
-        // Note: setBrowserView(null) not strictly needed if replacing, but clean.
-        // mainWindow.setBrowserView(null); 
         mainWindow.setBrowserView(views[id]);
         activeViewId = id;
 
@@ -57,8 +53,6 @@ ipcMain.on('switch-view', (event, id) => {
 
         // Focus
         views[id].webContents.focus();
-    } else {
-        console.error('Main: View not found', id);
     }
 });
 
@@ -71,16 +65,8 @@ ipcMain.on('close-view', (event, id) => {
             mainWindow.setBrowserView(null);
             activeViewId = null;
         }
-        // Destroy
-        // views[id].webContents.destroy(); // Optional, let GC handle if dereferenced? 
-        // Better to explicitly destroy to free resources.
-        try {
-            // view.destroy() is not a method on BrowserView, it's garbage collected when not attached?
-            // Actually BrowserView doesn't have destroy(). 
-            // webContents.destroy() exists but risky.
-            // Just removing reference and setting null logic is safe.
-            // But we should ensure it's detached.
-        } catch (e) { console.error(e) }
+        // Destroy (optional, but good for cleanup)
+        // views[id].webContents.destroy(); 
 
         delete views[id];
     }
@@ -102,12 +88,6 @@ ipcMain.handle('open-settings-tab', async (event) => {
             id: id,
             active: true // Tell renderer to activate immediately
         });
-
-        // Also manually switch on main side? 
-        // Renderer will send 'switch-view' when it processes 'create-tab' (if we program it to), 
-        // OR we can switch here directly?
-        // Better: Renderer drives the UI state. Renderer receives 'create-tab', adds it, calls activateTab -> sends 'switch-view'.
-        // This ensures UI and Main are in sync.
     }
 });
 

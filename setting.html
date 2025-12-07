@@ -9,21 +9,517 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/titlebar.css">
     <style>
         body {
-            background: transparent;
+            background-color: #0f172a;
+            /* Match body bg */
+            color: #e2e8f0;
+            user-select: none;
             overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        }
+
+        /* Custom sidebar active state */
+        .sidebar-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-left-color: #3b82f6;
             color: #fff;
+        }
+
+        .setting-section {
+            display: none;
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .setting-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3b82f6;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #3b82f6;
+        }
+
+        /* Custom Titlebar Override */
+        #titlebar {
+            /* border-bottom restored */
+            background: transparent !important;
         }
     </style>
 </head>
 
-<body class="p-8">
-    <h1 class="text-2xl font-bold mb-4">Cài đặt hệ thống</h1>
-    <p class="text-slate-300">Tính năng đang phát triển...</p>
+<body class="flex flex-col h-screen">
+
+    <!-- Main Container -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Sidebar -->
+        <div class="w-64 bg-slate-900/50 border-r border-white/5 flex flex-col pt-6 pb-4 backdrop-blur-sm">
+            <div class="px-6 mb-6">
+                <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest mb-2">Danh mục</div>
+            </div>
+
+            <div class="flex flex-col gap-1 px-3">
+                <button
+                    class="sidebar-item active group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    onclick="switchTab('general')">
+                    <i class="ri-equalizer-line text-lg w-5"></i>
+                    Chung
+                </button>
+                <button
+                    class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    onclick="switchTab('browser')">
+                    <i class="ri-chrome-fill text-lg w-5"></i>
+                    Cấu hình Browser
+                </button>
+                <button
+                    class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    onclick="switchTab('proxy')">
+                    <i class="ri-shield-keyhole-line text-lg w-5"></i>
+                    Proxy & Mạng
+                </button>
+                <button
+                    class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    onclick="switchTab('data')">
+                    <i class="ri-database-2-line text-lg w-5"></i>
+                    Dữ liệu
+                </button>
+            </div>
+
+            <div class="mt-auto px-4">
+                <div
+                    class="p-4 rounded-xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-white/10 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-blue-500/5 blur-xl group-hover:bg-blue-500/10 transition-colors">
+                    </div>
+                    <div class="relative flex items-center gap-3 mb-2">
+                        <div
+                            class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                            <i class="ri-vip-crown-fill text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-white">Pro Version</div>
+                            <div class="text-[10px] text-slate-400 font-mono">v2.5.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-900/30 p-8 shadow-inner">
+
+            <!-- SECTION : GENERAL -->
+            <div id="section-general" class="setting-section active max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-8 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]"></span>
+                    Cài đặt chung
+                </h2>
+
+                <div class="space-y-6">
+                    <!-- Language Card -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Ngôn ngữ hiển thị</h3>
+                                <p class="text-xs text-slate-500 mt-1">Chọn ngôn ngữ cho giao diện phần mềm</p>
+                            </div>
+                            <div class="relative w-48">
+                                <select
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer">
+                                    <option value="vi" class="bg-slate-800">Tiếng Việt</option>
+                                    <option value="en" class="bg-slate-800">English</option>
+                                </select>
+                                <i
+                                    class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance Card -->
+                    <div
+                        class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg divide-y divide-white/5">
+                        <div class="pb-4">
+                            <h3 class="text-sm font-semibold text-slate-200 mb-1">Giao diện</h3>
+                            <p class="text-xs text-slate-500">Tùy chỉnh trải nghiệm hình ảnh của bạn</p>
+                        </div>
+
+                        <div class="flex items-center justify-between py-4">
+                            <div>
+                                <div class="text-sm text-slate-300 font-medium">Chế độ tối (Dark Mode)</div>
+                                <div class="text-xs text-slate-500 mt-0.5">Sử dụng giao diện tối màu giúp bảo vệ mắt
+                                </div>
+                            </div>
+                            <!-- Toggle Switch -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-4">
+                            <div>
+                                <div class="text-sm text-slate-300 font-medium">Hiệu ứng mờ (Glassmorphism)</div>
+                                <div class="text-xs text-slate-500 mt-0.5">Bật hiệu ứng trong suốt cho các panel (Tốn
+                                    GPU)</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Notification -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Âm thanh thông báo</h3>
+                                <p class="text-xs text-slate-500 mt-1">Phát âm thanh khi hoàn thành tác vụ</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION : BROWSER -->
+            <div id="section-browser" class="setting-section max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-8 bg-orange-500 rounded-full shadow-[0_0_10px_#f97316]"></span>
+                    Cấu hình Browser
+                </h2>
+
+                <div class="space-y-6">
+                    <!-- Path Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i class="ri-folder-open-fill text-orange-400"></i> Đường dẫn thực thi
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Chrome
+                                    Executable Path</label>
+                                <div class="flex gap-2">
+                                    <input type="text"
+                                        placeholder="C:\Program Files\Google\Chrome\Application\chrome.exe"
+                                        class="glass-input-style flex-1 rounded-lg px-4 py-2.5 text-sm w-full focus:border-orange-500/50">
+                                    <button
+                                        class="px-4 py-2 glass-btn-border hover:bg-orange-500/10 hover:border-orange-500/30 text-slate-300 transition-colors rounded-lg">
+                                        <i class="ri-folder-open-line mr-1"></i> Browse
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
+                                    <i class="ri-information-line"></i> Để trống để tự động nhận diện
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i class="ri-speed-fill text-orange-400"></i> Hiệu suất & Luồng
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Số luồng (Threads)</label>
+                                    <span
+                                        class="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20"
+                                        id="thread-value">5</span>
+                                </div>
+                                <input type="range" min="1" max="20" value="5"
+                                    class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                    oninput="document.getElementById('thread-value').innerText = this.value">
+                                <div class="flex justify-between mt-2 text-[10px] text-slate-600">
+                                    <span>1</span>
+                                    <span>20</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Delay mở tab</label>
+                                    <span
+                                        class="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20"
+                                        id="delay-value">2s</span>
+                                </div>
+                                <input type="range" min="1" max="10" value="2"
+                                    class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                    oninput="document.getElementById('delay-value').innerText = this.value + 's'">
+                                <div class="flex justify-between mt-2 text-[10px] text-slate-600">
+                                    <span>1s</span>
+                                    <span>10s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Window Config -->
+                    <div
+                        class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 flex items-center justify-between shadow-lg">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-200">Headless Mode</h3>
+                            <p class="text-xs text-slate-500 mt-1">Chạy ẩn browser (Giúp tiết kiệm tài nguyên nhưng khó
+                                debug)</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION : PROXY -->
+            <div id="section-proxy" class="setting-section max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_#a855f7]"></span>
+                    Proxy & Kết nối
+                </h2>
+
+                <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 mb-6 shadow-lg">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-4">Loại Proxy Mặc định</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label
+                            class="cursor-pointer border border-white/10 bg-slate-900/40 p-5 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all flex flex-col items-center gap-3 group relative overflow-hidden">
+                            <input type="radio" name="proxy-type" checked class="hidden peer">
+                            <div
+                                class="w-5 h-5 rounded-full border border-slate-500 peer-checked:bg-purple-500 peer-checked:border-purple-500 absolute top-4 right-4 ring-offset-2 ring-offset-[#0f172a] transition-all">
+                            </div>
+                            <div class="p-3 rounded-full bg-slate-800 group-hover:bg-purple-500/20 transition-colors">
+                                <i
+                                    class="ri-global-line text-2xl text-slate-400 group-hover:text-purple-400 peer-checked:text-purple-400"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-300 group-hover:text-white">HTTP/HTTPS</span>
+                            <div
+                                class="absolute inset-0 border-2 border-transparent peer-checked:border-purple-500/50 rounded-xl pointer-events-none">
+                            </div>
+                        </label>
+
+                        <label
+                            class="cursor-pointer border border-white/10 bg-slate-900/40 p-5 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all flex flex-col items-center gap-3 group relative overflow-hidden">
+                            <input type="radio" name="proxy-type" class="hidden peer">
+                            <div
+                                class="w-5 h-5 rounded-full border border-slate-500 peer-checked:bg-purple-500 peer-checked:border-purple-500 absolute top-4 right-4 ring-offset-2 ring-offset-[#0f172a] transition-all">
+                            </div>
+                            <div class="p-3 rounded-full bg-slate-800 group-hover:bg-purple-500/20 transition-colors">
+                                <i
+                                    class="ri-shield-keyhole-fill text-2xl text-slate-400 group-hover:text-purple-400 peer-checked:text-purple-400"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-300 group-hover:text-white">SOCKS5</span>
+                            <div
+                                class="absolute inset-0 border-2 border-transparent peer-checked:border-purple-500/50 rounded-xl pointer-events-none">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-4">Kiểm tra kết nối</h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">URL
+                                Check IP</label>
+                            <div class="relative">
+                                <i class="ri-link absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" value="https://api.ipify.org?format=json"
+                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-purple-500/50">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2">Dùng để kiểm tra IP khi mở profile mới.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION : DATA -->
+            <div id="section-data" class="setting-section max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
+                    Quản lý dữ liệu
+                </h2>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Backup Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 flex items-center justify-between hover:bg-slate-800/60 hover:border-emerald-500/30 transition-all cursor-pointer group shadow-lg"
+                        onclick="showToast('Đang tạo bản sao lưu...', 'success')">
+                        <div class="flex items-center gap-5">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                <i class="ri-download-cloud-2-fill text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-sm font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
+                                    Sao lưu dữ liệu</h3>
+                                <p class="text-xs text-slate-500 mt-1">Xuất toàn bộ database ra file .json hoặc .sql</p>
+                            </div>
+                        </div>
+                        <i
+                            class="ri-arrow-right-s-line text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 flex items-center justify-between hover:bg-slate-800/60 hover:border-blue-500/30 transition-all cursor-pointer group shadow-lg"
+                        onclick="showToast('Tính năng đang phát triển', 'warning')">
+                        <div class="flex items-center gap-5">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                                <i class="ri-upload-cloud-2-fill text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
+                                    Khôi phục dữ liệu</h3>
+                                <p class="text-xs text-slate-500 mt-1">Nhập lại dữ liệu từ bản sao lưu trước đó</p>
+                            </div>
+                        </div>
+                        <i
+                            class="ri-arrow-right-s-line text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-colors cursor-pointer group flex items-center justify-between"
+                        onclick="if(confirm('CẢNH BÁO: Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa toàn bộ dữ liệu?')) showToast('Đã xóa dữ liệu thành công', 'success')">
+                        <div class="flex items-center gap-4">
+                            <i class="ri-alarm-warning-fill text-red-500 text-xl group-hover:animate-pulse"></i>
+                            <div>
+                                <h3 class="text-sm font-bold text-red-400">Vùng nguy hiểm</h3>
+                                <p class="text-xs text-red-400/70 mt-0.5">Xóa toàn bộ dữ liệu và reset về mặc định</p>
+                            </div>
+                        </div>
+                        <button
+                            class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 group-hover:bg-red-500 group-hover:text-white transition-all">RESET</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-8 right-8 px-5 py-4 rounded-xl shadow-2xl transform translate-y-40 z-50 flex items-center gap-4 border backdrop-blur-xl min-w-[320px] transition-all duration-300">
+        <div id="toast-icon-container" class="p-2 rounded-full"></div>
+        <div class="flex flex-col">
+            <span id="toast-title" class="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">Thông
+                báo</span>
+            <span id="toast-msg" class="text-sm font-medium">Nội dung thông báo</span>
+        </div>
+    </div>
+
+    <script>
+        // Init Tabs
+        document.addEventListener('DOMContentLoaded', () => {
+            // Default tab
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Update Sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active', 'text-slate-200', 'bg-white/5');
+                item.classList.add('text-slate-400');
+            });
+
+            // Find active button
+            const activeBtn = event.currentTarget;
+            activeBtn.classList.add('active', 'text-slate-200', 'bg-white/5');
+            activeBtn.classList.remove('text-slate-400');
+
+            // Update Content
+            document.querySelectorAll('.setting-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const target = document.getElementById('section-' + tabId);
+            target.classList.add('active');
+
+            // Add slight slide up animation
+            target.style.animation = 'none';
+            target.offsetHeight; /* trigger reflow */
+            target.style.animation = 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+
+        // Toast Logic
+        let toastTimeout;
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMsg = document.getElementById('toast-msg');
+
+            clearTimeout(toastTimeout);
+
+            // Reset classes
+            toast.className = 'fixed bottom-8 right-8 px-5 py-4 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transform z-50 flex items-center gap-4 border backdrop-blur-xl min-w-[320px] transition-all duration-300';
+            iconContainer.innerHTML = '';
+
+            let colorClass = '';
+
+            if (type === 'success') {
+                colorClass = 'border-emerald-500/20 bg-emerald-900/80';
+                toastTitle.classList.add('text-emerald-400');
+                iconContainer.className = 'p-2 rounded-full bg-emerald-500/20';
+                iconContainer.innerHTML = '<i class="ri-checkbox-circle-fill text-xl text-emerald-400"></i>';
+            } else if (type === 'warning') {
+                colorClass = 'border-amber-500/20 bg-amber-900/80';
+                toastTitle.classList.add('text-amber-400');
+                iconContainer.className = 'p-2 rounded-full bg-amber-500/20';
+                iconContainer.innerHTML = '<i class="ri-alert-fill text-xl text-amber-400"></i>';
+            } else {
+                colorClass = 'border-blue-500/20 bg-blue-900/80';
+                toastTitle.classList.add('text-blue-400');
+                iconContainer.className = 'p-2 rounded-full bg-blue-500/20';
+                iconContainer.innerHTML = '<i class="ri-information-fill text-xl text-blue-400"></i>';
+            }
+
+            toast.classList.add(...colorClass.split(' '));
+            toastMsg.innerText = msg;
+            toastMsg.className = 'text-sm font-medium text-white';
+
+            // Show
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-40', 'opacity-0');
+            });
+
+            // Hide after 3s
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-40', 'opacity-0');
+            }, 3000);
+        }
+
+    </script>
 </body>
 
 </html>
