@@ -230,9 +230,11 @@ body {
     width: 3px;
 }
 
-.ag-pinned-right-header .ag-ltr .ag-header-cell-resize {
-    right: -3px;
+.ag-pinned-right-header .ag-header-cell-resize {
+    right: auto;
+    left: 7px;
 }
+
 
 .ag-ltr .ag-header-cell-resize {
     right: 3px;
@@ -268,6 +270,7 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+    padding-left: 10px;
 }
 
 /* Button style cho cả Menu và Collapse */

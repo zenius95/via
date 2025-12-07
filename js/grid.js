@@ -100,7 +100,7 @@ function toggleProcessColumn() {
     if (processState.collapsed) {
         // [THU GỌN]
         // Lưu chiều rộng hiện tại TRƯỚC KHI thu gọn (nếu nó đang > 110px)
-        if (currentWidth > 110) {
+        if (currentWidth > 130) {
             processState.savedWidth = currentWidth;
         }
 
@@ -117,6 +117,7 @@ function toggleProcessColumn() {
 
         gridApi.setColumnWidths([{ key: 'process', newWidth: widthToRestore }], true);
         col.getColDef().resizable = true;
+        col.getColDef().suppressSizeToFit = false; // Reset size to fit suppression
         col.getColDef().minWidth = 130;
         col.getColDef().maxWidth = null; // Bỏ giới hạn
     }
@@ -143,6 +144,7 @@ function restoreProcessColDef() {
     } else {
         // Nếu đang mở rộng
         col.getColDef().resizable = true;
+        col.getColDef().suppressSizeToFit = false; // Reset this too
         col.getColDef().minWidth = 130;
         col.getColDef().maxWidth = null;
         // Width sẽ được restoreGridState lo, hoặc user đã resize
