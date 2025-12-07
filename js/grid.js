@@ -232,7 +232,9 @@ const columnDefs = [
             if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
             else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
             else if (status === 'READY') { badgeClass += 'badge-neutral text-slate-400 bg-slate-500/10 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; } // READY distinct style
-            else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; }
+            else if (status === 'RETRY') { badgeClass += 'badge-warning'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
+            else if (status === 'ERROR') { badgeClass += 'badge-danger'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
+            else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; } // SUCCESS or others
 
             // RENDER DỰA TRÊN TRẠNG THÁI
             if (processState.collapsed) {
@@ -244,6 +246,8 @@ const columnDefs = [
                 if (status === 'RUNNING') iconHtml = '<i class="ri-loader-4-line icon-spin text-xs mr-1"></i>';
                 else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
                 else if (status === 'READY') iconHtml = '<i class="ri-hourglass-line text-xs mr-1"></i>';
+                else if (status === 'RETRY') iconHtml = '<i class="ri-restart-line icon-spin text-xs mr-1"></i>';
+                else if (status === 'ERROR') iconHtml = '<i class="ri-error-warning-line text-xs mr-1"></i>';
                 else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
 
                 return `<div class="process-cell"><span class="${badgeClass}">${iconHtml}${status}</span><span class="process-msg">${params.data.processMessage}</span></div>`;

@@ -102,6 +102,36 @@ ipcMain.handle('db:delete-folder', async (event, id) => await database.deleteFol
 ipcMain.handle('db:update-folder', async (event, args) => await database.updateFolder(args.id, args.newName, args.newColor, args.oldName));
 ipcMain.handle('db:update-account-folder', async (event, args) => await database.updateAccountFolder(args.uids, args.folderName));
 
+// --- SETTINGS IPC ---
+ipcMain.handle('db:get-settings', async () => await database.getSettings());
+ipcMain.handle('db:save-settings', async (event, settings) => await database.saveSettings(settings));
+
+ipcMain.handle('main:get-chrome-path', async () => {
+    const fs = require('fs');
+    const commonPaths = [
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+        process.env.LOCALAPPDATA + "\\Google\\Chrome\\Application\\chrome.exe"
+    ];
+
+    for (const p of commonPaths) {
+        if (fs.existsSync(p)) return p;
+    }
+    return '';
+});
+
+ipcMain.handle('dialog:open-file', async () => {
+    const { dialog } = require('electron');
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile'],
+        filters: [{ name: 'Executables', extensions: ['exe'] }, { name: 'All Files', extensions: ['*'] }]
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+        return result.filePaths[0];
+    }
+    return null;
+});
+
 // Bounds Helper
 const TITLEBAR_HEIGHT = 48;
 function updateViewBounds() {

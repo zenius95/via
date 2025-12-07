@@ -228,16 +228,16 @@
                                     class="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">Chrome
                                     Executable Path</label>
                                 <div class="flex gap-2">
-                                    <input type="text"
-                                        placeholder="C:\Program Files\Google\Chrome\Application\chrome.exe"
+                                    <input type="text" id="input-chrome-path"
+                                        placeholder="Để trống để tự động nhận diện..."
                                         class="glass-input-style flex-1 rounded-lg px-4 py-2.5 text-sm w-full focus:border-orange-500/50">
-                                    <button
+                                    <button onclick="browseChromePath()"
                                         class="px-4 py-2 glass-btn-border hover:bg-orange-500/10 hover:border-orange-500/30 text-slate-300 transition-colors rounded-lg">
                                         <i class="ri-folder-open-line mr-1"></i> Browse
                                     </button>
                                 </div>
                                 <p class="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
-                                    <i class="ri-information-line"></i> Để trống để tự động nhận diện
+                                    <i class="ri-information-line"></i> Để trống ứng dụng sẽ tự động tìm kiếm trong máy
                                 </p>
                             </div>
                         </div>
@@ -253,33 +253,37 @@
                             <div>
                                 <div class="flex justify-between mb-3">
                                     <label class="text-xs font-medium text-slate-400">Số luồng (Threads)</label>
-                                    <span
-                                        class="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20"
-                                        id="thread-value">5</span>
                                 </div>
-                                <input type="range" min="1" max="20" value="5"
-                                    class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                                    oninput="document.getElementById('thread-value').innerText = this.value">
-                                <div class="flex justify-between mt-2 text-[10px] text-slate-600">
-                                    <span>1</span>
-                                    <span>20</span>
-                                </div>
+                                <input type="number" id="input-max-threads" min="1" max="50" value="3"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Số lượng tab mở cùng lúc</div>
                             </div>
 
                             <div>
                                 <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-medium text-slate-400">Delay mở tab</label>
-                                    <span
-                                        class="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20"
-                                        id="delay-value">2s</span>
+                                    <label class="text-xs font-medium text-slate-400">Delay mở tab (giây)</label>
                                 </div>
-                                <input type="range" min="1" max="10" value="2"
-                                    class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                                    oninput="document.getElementById('delay-value').innerText = this.value + 's'">
-                                <div class="flex justify-between mt-2 text-[10px] text-slate-600">
-                                    <span>1s</span>
-                                    <span>10s</span>
+                                <input type="number" id="input-launch-delay" min="1" max="60" value="2"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Thời gian chờ giữa các lần mở tab</div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Timeout (giây)</label>
                                 </div>
+                                <input type="number" id="input-timeout" min="0" max="3600" value="0"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">0 = Không giới hạn thời gian</div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Số lần thử lại (Retry)</label>
+                                </div>
+                                <input type="number" id="input-retry-count" min="0" max="10" value="0"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Tự động chạy lại khi gặp lỗi</div>
                             </div>
                         </div>
                     </div>
@@ -293,7 +297,7 @@
                                 debug)</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer">
+                            <input type="checkbox" id="input-headless" class="sr-only peer">
                             <div
                                 class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner">
                             </div>
@@ -438,6 +442,7 @@
         </div>
     </div>
 
+    <script src="js/setting.js"></script>
     <script>
         // Init Tabs
         document.addEventListener('DOMContentLoaded', () => {
