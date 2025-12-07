@@ -71,6 +71,19 @@ class Database {
                 }
             }
 
+            // Migration: Check profiles table for browser_version
+            this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
+                if (!err && rows && rows.length > 0) {
+                    const hasBrowserVer = rows.some(r => r.name === 'browser_version');
+                    if (!hasBrowserVer) {
+                        this.db.run("ALTER TABLE profiles ADD COLUMN browser_version TEXT", (err) => {
+                            if (err) console.error('Migration add browser_version failed', err);
+                            else console.log('Migrated DB: Added browser_version to profiles');
+                        });
+                    }
+                }
+            });
+
             // Migration: Check if 'folders' table has 'color' column
             this.db.all("PRAGMA table_info(folders)", (err, rows) => {
                 if (!err && rows) {
@@ -90,6 +103,21 @@ class Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE,
                 color TEXT
+            )
+        `);
+
+            // Profiles Table
+            this.db.run(`
+            CREATE TABLE IF NOT EXISTS profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                os TEXT,
+                browser TEXT,
+                browser_version TEXT,
+                user_agent TEXT,
+                screen_resolution TEXT,
+                notes TEXT,
+                created_at TEXT
             )
         `);
         });
@@ -334,6 +362,65 @@ class Database {
             const placeholders = uids.map(() => '?').join(',');
             const params = [folderName, ...uids];
             this.db.run(`UPDATE accounts SET folder = ? WHERE uid IN (${placeholders})`, params, function (err) {
+                if (err) reject(err);
+                else resolve(this.changes);
+            });
+        });
+    }
+
+    // --- PROFILE METHODS ---
+
+    getProfiles() {
+        return new Promise((resolve, reject) => {
+            this.db.all("SELECT * FROM profiles ORDER BY id DESC", [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    }
+
+    addProfile(profile) {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare(`
+                INSERT INTO profiles (name, os, browser, browser_version, user_agent, screen_resolution, notes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            const createdAt = new Date().toISOString();
+            stmt.run(
+                profile.name, profile.os, profile.browser, profile.browser_version || '', profile.user_agent,
+                profile.screen_resolution || '1920x1080', profile.notes || '', createdAt,
+                function (err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                }
+            );
+            stmt.finalize();
+        });
+    }
+
+    updateProfile(profile) {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare(`
+                UPDATE profiles SET 
+                    name = ?, os = ?, browser = ?, browser_version = ?, user_agent = ?, 
+                    screen_resolution = ?, notes = ?
+                WHERE id = ?
+            `);
+            stmt.run(
+                profile.name, profile.os, profile.browser, profile.browser_version || '', profile.user_agent,
+                profile.screen_resolution, profile.notes, profile.id,
+                function (err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+            stmt.finalize();
+        });
+    }
+
+    deleteProfile(id) {
+        return new Promise((resolve, reject) => {
+            this.db.run("DELETE FROM profiles WHERE id = ?", [id], function (err) {
                 if (err) reject(err);
                 else resolve(this.changes);
             });

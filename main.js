@@ -106,6 +106,12 @@ ipcMain.handle('db:update-account-folder', async (event, args) => await database
 ipcMain.handle('db:get-settings', async () => await database.getSettings());
 ipcMain.handle('db:save-settings', async (event, settings) => await database.saveSettings(settings));
 
+// --- PROFILE IPC ---
+ipcMain.handle('db:get-profiles', async () => await database.getProfiles());
+ipcMain.handle('db:add-profile', async (event, profile) => await database.addProfile(profile));
+ipcMain.handle('db:update-profile', async (event, profile) => await database.updateProfile(profile));
+ipcMain.handle('db:delete-profile', async (event, id) => await database.deleteProfile(id));
+
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');
 ipcMain.handle('process:run-profile', async (event, { account, config }) => {

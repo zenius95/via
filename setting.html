@@ -10,6 +10,10 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/titlebar.css">
+    <!-- Select2 & jQuery -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -17,6 +21,62 @@
             color: #e2e8f0;
             user-select: none;
             overflow: hidden;
+        }
+
+        /* Select2 Customization for Glassmorphism */
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container .select2-selection--single {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            height: 42px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e2e8f0 !important;
+            /* text-slate-200 to ensure visibility */
+            padding-left: 2.75rem !important;
+            /* Space for icon ~44px */
+            font-size: 0.875rem;
+            line-height: 40px !important;
+            /* Vertically center */
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+            right: 8px;
+        }
+
+        .select2-dropdown {
+            background-color: #1e293b !important;
+            /* bg-slate-800 */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #d1d5db;
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+        }
+
+        .select2-search__field {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 0.25rem;
+        }
+
+        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: rgba(59, 130, 246, 0.5);
+            /* blue-500/50 */
+            color: white;
+        }
+
+        .select2-container--default .select2-results__option--selected {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Custom sidebar active state */
@@ -517,7 +577,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast"
         class="fixed bottom-8 right-8 px-5 py-4 rounded-xl shadow-2xl transform translate-y-40 z-50 flex items-center gap-4 border backdrop-blur-xl min-w-[320px] transition-all duration-300">
         <div id="toast-icon-container" class="p-2 rounded-full"></div>
@@ -528,7 +587,142 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div id="modal-profile" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeProfileModal()">
+        </div>
+
+        <!-- Modal Content -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                <h3 id="modal-title" class="text-xl font-bold text-white">Thêm mới Profile</h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-white transition-colors"><i
+                        class="ri-close-line text-2xl"></i></button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <form id="form-profile" onsubmit="handleProfileSubmit(event)" class="space-y-5">
+                    <input type="hidden" id="profile-id">
+
+                    <!-- Basic Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Tên
+                                Profile <span class="text-red-500">*</span></label>
+                            <input type="text" id="profile-name" required
+                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm focus:border-blue-500/50"
+                                placeholder="Nhập tên gợi nhớ...">
+                        </div>
+
+                        <!-- OS Selection -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Hệ
+                                điều hành</label>
+                            <div class="relative">
+                                <i
+                                    class="ri-computer-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
+                                <select id="profile-os"
+                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                    <option value="Windows">Windows</option>
+                                    <option value="macOS">macOS</option>
+                                    <option value="Linux">Linux</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Browser Selection -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Trình
+                                duyệt</label>
+                            <div class="relative">
+                                <i
+                                    class="ri-chrome-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
+                                <select id="profile-browser"
+                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                    <option value="Chrome">Chrome</option>
+                                    <option value="Firefox">Firefox</option>
+                                    <option value="Edge">Microsoft Edge</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Browser Version -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Phiên
+                                bản</label>
+                            <div class="relative">
+                                <i
+                                    class="ri-price-tag-3-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
+                                <select id="profile-browser-ver"
+                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                    <option value="120">Version 120 (Latest)</option>
+                                    <option value="119">Version 119</option>
+                                    <option value="118">Version 118</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Screen Resolution -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Độ
+                                phân giải</label>
+                            <div class="relative">
+                                <i
+                                    class="ri-aspect-ratio-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
+                                <select id="profile-resolution"
+                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                    <option value="1920x1080">1920 x 1080</option>
+                                    <option value="1366x768">1366 x 768</option>
+                                    <option value="1440x900">1440 x 900</option>
+                                    <option value="1280x720">1280 x 720</option>
+                                    <option value="2560x1440">2560 x 1440</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Agent Readonly -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">User Agent
+                                (Auto-Generated)</label>
+                            <span
+                                class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Preview</span>
+                        </div>
+                        <div class="relative">
+                            <textarea id="profile-ua" rows="2" readonly
+                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/50 cursor-not-allowed resize-none border-dashed"
+                                placeholder="Mozilla/5.0..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Ghi
+                            chú</label>
+                        <textarea id="profile-notes" rows="2"
+                            class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm focus:border-blue-500/50"
+                            placeholder="Nhập ghi chú cho profile này..."></textarea>
+                    </div>
+
+                    <div class="pt-4 flex justify-end gap-3 border-t border-white/5">
+                        <button type="button" onclick="closeProfileModal()"
+                            class="px-5 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors text-sm font-medium">Hủy
+                            bỏ</button>
+                        <button type="submit"
+                            class="px-8 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20 transition-all text-sm font-bold flex items-center gap-2">
+                            <i class="ri-save-line"></i> Lưu Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="js/setting.js"></script>
+    <script src="js/profile_manager.js"></script>
     <script>
         // Init Tabs
         document.addEventListener('DOMContentLoaded', () => {
