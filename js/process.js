@@ -43,9 +43,26 @@ async function startProcess() {
             PROCESS_CONFIG.delay = (parseInt(settings.launchDelay) || 2) * 1000;
             PROCESS_CONFIG.retry = parseInt(settings.retryCount) || 0;
             PROCESS_CONFIG.timeout = parseInt(settings.timeout) || 0;
+            PROCESS_CONFIG.chromePath = settings.chromePath || ''; // LOAD CHROME PATH
 
             console.log('Loaded Config:', PROCESS_CONFIG);
         }
+
+        // Validate Chrome Path
+        if (!PROCESS_CONFIG.chromePath) {
+            console.log('Chrome Path missing, attempting auto-detect...');
+            const detectedPath = await window.api.send('main:get-chrome-path');
+            if (detectedPath) {
+                PROCESS_CONFIG.chromePath = detectedPath;
+                // Optional: Save back to DB? 
+                // For now, just use it for this session.
+                // Or better: Let user know.
+            } else {
+                showToast('Chưa cấu hình đường dẫn Chrome! Vui lòng vào Cài đặt.', 'error');
+                return;
+            }
+        }
+
     } catch (err) {
         console.error('Failed to load process config', err);
     }
@@ -157,21 +174,27 @@ async function runThread(node) {
 
             // Action Promise
             const actionPromise = (async () => {
-                // --- SIMULATION LOGIC ---
-                await sleep(1000 + Math.random() * 2000);
                 if (forceStop) throw new Error('Stopped');
 
                 // GUARD: Only update if this attempt is still active
                 if (node.data.activeAttemptId === attemptId) {
-                    updateNodeStatus(node, 'RUNNING', 'Đang đăng nhập...');
+                    updateNodeStatus(node, 'RUNNING', 'Đang mở trình duyệt...');
                 }
 
-                await sleep(2000 + Math.random() * 3000);
+                // Call IPC
+                const result = await window.api.send('process:run-profile', {
+                    account: node.data,
+                    config: PROCESS_CONFIG
+                });
+
                 if (forceStop) throw new Error('Stopped');
 
-                // 80% chance failure for demo to make sure we see Errors
-                const isSuccess = Math.random() > 0.8;
-                if (!isSuccess) throw new Error('Checkpoint');
+                if (result && result.status === 'ERROR') {
+                    throw new Error(result.message);
+                }
+
+                // Success - Message from automation
+                return result ? result.message : 'Hoàn thành';
             })();
 
             // Wrap logic in race

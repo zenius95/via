@@ -14,7 +14,9 @@ const api = {
             'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder',
             'open-settings-tab', 'switch-view',
             // Settings Channels
-            'db:get-settings', 'db:save-settings', 'main:get-chrome-path', 'dialog:open-file'
+            'db:get-settings', 'db:save-settings', 'main:get-chrome-path', 'dialog:open-file',
+            // Automation Channels
+            'process:run-profile'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);

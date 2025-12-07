@@ -106,6 +106,12 @@ ipcMain.handle('db:update-account-folder', async (event, args) => await database
 ipcMain.handle('db:get-settings', async () => await database.getSettings());
 ipcMain.handle('db:save-settings', async (event, settings) => await database.saveSettings(settings));
 
+// --- AUTOMATION IPC ---
+const automation = require('./js/automation');
+ipcMain.handle('process:run-profile', async (event, { account, config }) => {
+    return await automation.runProfile(account, config);
+});
+
 ipcMain.handle('main:get-chrome-path', async () => {
     const fs = require('fs');
     const commonPaths = [
