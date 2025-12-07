@@ -143,12 +143,12 @@ function getBrowserIcon(browser) {
 function switchProfileTab(tab) {
     // Buttons
     document.getElementById('tab-btn-basic').className = tab === 'basic'
-        ? 'py-2 px-4 text-sm font-medium border-b-2 border-blue-500 text-blue-400 focus:outline-none transition-colors'
-        : 'py-2 px-4 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition-colors';
+        ? 'font-medium py-2 px-6 text-sm text-blue-400 border-b-2 border-blue-500 flex items-center gap-2'
+        : 'font-medium py-2 px-6 text-sm text-slate-400 border-b-2 border-transparent flex items-center gap-2';
 
     document.getElementById('tab-btn-advanced').className = tab === 'advanced'
-        ? 'py-2 px-4 text-sm font-medium border-b-2 border-blue-500 text-blue-400 focus:outline-none transition-colors'
-        : 'py-2 px-4 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition-colors';
+        ? 'font-medium py-2 px-6 text-sm text-blue-400 border-b-2 border-blue-500 flex items-center gap-2'
+        : 'font-medium py-2 px-6 text-sm text-slate-400 border-b-2 border-transparent flex items-center gap-2';
 
     // Content
     if (tab === 'basic') {
@@ -208,31 +208,78 @@ function openProfileModal(profile = null) {
     modal.classList.remove('hidden');
 
     // Destroy previous instances if they exist (using robust data check)
-    const $selects = $('#profile-os, #profile-browser, #profile-browser-ver, #profile-resolution');
-    $selects.each(function () {
-        if ($(this).data('select2')) {
-            $(this).select2('destroy');
+    // Destroy previous instances if they exist
+    const advSelects = [
+        'adv-webrtc', 'adv-canvas', 'adv-webgl-image', 'adv-webgl-meta',
+        'adv-audio', 'adv-media', 'adv-clientrects', 'adv-concurrency',
+        'adv-memory', 'adv-geo-mode', 'adv-timezone', 'adv-language'
+    ];
+    const allSelects = ['profile-os', 'profile-browser', 'profile-browser-ver', 'profile-resolution', ...advSelects];
+
+    allSelects.forEach(id => {
+        const $el = $(`#${id}`);
+        if ($el.hasClass('select2-hidden-accessible')) {
+            $el.select2('destroy');
         }
     });
 
-    // Initialize Select2 (Non-searchable)
-    $('#profile-os, #profile-browser, #profile-resolution').select2({
+    // Format function for Icons
+    function formatOption(state) {
+        if (!state.id) return state.text;
+        const icons = {
+            'Windows': 'ri-windows-fill text-blue-400',
+            'macOS': 'ri-apple-fill text-slate-200',
+            'Linux': 'ri-ubuntu-fill text-orange-400',
+            'Android': 'ri-android-fill text-green-400',
+            'iOS': 'ri-apple-fill text-slate-200',
+
+            'Chrome': 'ri-chrome-fill text-green-400',
+            'Firefox': 'ri-firefox-fill text-orange-500',
+            'Edge': 'ri-edge-fill text-blue-600',
+            'Opera': 'ri-opera-fill text-red-500',
+            'Safari': 'ri-safari-fill text-blue-500'
+        };
+
+        const key = state.element ? state.element.value : state.id;
+        const iconClass = icons[key];
+
+        if (iconClass) {
+            return $(`<span class="flex items-center"><i class="${iconClass} text-lg mr-2"></i>${state.text}</span>`);
+        }
+        return state.text;
+    }
+
+    // Initialize Select2 with Icons (OS, Browser)
+    $('#profile-os, #profile-browser').select2({
         minimumResultsForSearch: Infinity,
-        dropdownParent: $('#modal-profile')
+        dropdownParent: $('#modal-profile'),
+        templateResult: formatOption,
+        templateSelection: formatOption
     });
 
-    // Initialize Select2 (Searchable - Version)
+    // Initialize Select2 (Static Icons via CSS)
     $('#profile-browser-ver').select2({
-        dropdownParent: $('#modal-profile')
+        dropdownParent: $('#modal-profile'),
+        containerCssClass: ':all:' // Inherit select-with-icon
     });
 
-    // Re-bind events for Select2 (using jQuery)
-    $('#profile-os, #profile-browser, #profile-browser-ver').off('change').on('change', function () {
-        // FORCE SELECT2 TO UPDATE TEXT (Fix for stubborn UI)
-        const text = $(this).find('option:selected').text();
-        const $container = $(this).siblings('.select2-container');
-        $container.find('.select2-selection__rendered').text(text);
+    $('#profile-resolution').select2({
+        minimumResultsForSearch: Infinity,
+        dropdownParent: $('#modal-profile'),
+        containerCssClass: ':all:'
+    });
 
+    // Initialize Advanced Selects
+    advSelects.forEach(id => {
+        $(`#${id}`).select2({
+            minimumResultsForSearch: 10, // Show search if > 10 options
+            dropdownParent: $('#modal-profile'),
+            containerCssClass: ':all:'
+        });
+    });
+
+    // Re-bind events for Select2
+    $('#profile-os, #profile-browser, #profile-browser-ver').off('change').on('change', function () {
         generateUserAgent();
     });
 

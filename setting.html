@@ -39,12 +39,14 @@
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             color: #e2e8f0 !important;
-            /* text-slate-200 to ensure visibility */
-            padding-left: 2.75rem !important;
-            /* Space for icon ~44px */
+            padding-left: 0.75rem !important;
             font-size: 0.875rem;
             line-height: 40px !important;
-            /* Vertically center */
+        }
+
+        /* Class to add padding when a static icon is present (e.g. Resolution, Version) */
+        .select2-container.select-with-icon .select2-selection--single .select2-selection__rendered {
+            padding-left: 2.75rem !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -604,15 +606,19 @@
             </div>
 
             <div class="overflow-y-auto custom-scrollbar flex-1 flex flex-col">
-                <div class="flex gap-4 border-b border-white/10 shrink-0">
-                    <button type="button" onclick="switchProfileTab('basic')" id="tab-btn-basic"
-                        class="py-2 px-6 text-sm font-medium border-b-2 border-blue-500 text-blue-400 focus:outline-none transition-colors">
-                        Cơ bản
-                    </button>
-                    <button type="button" onclick="switchProfileTab('advanced')" id="tab-btn-advanced"
-                        class="py-2 px-6 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition-colors">
-                        Nâng cao
-                    </button>
+                <div>
+                    <div class="flex items-center border-b border-white/10 px-6">
+                        <button type="button" onclick="switchProfileTab('basic')" id="tab-btn-basic"
+                            class="py-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 flex items-center px-3">
+                            <i class="ri-file-list-2-fill text-lg"></i>
+                            Cơ bản
+                        </button>
+                        <button type="button" onclick="switchProfileTab('advanced')" id="tab-btn-advanced"
+                            class="py-3 text-sm font-medium text-slate-400 border-b-2 border-transparent flex items-center px-3">
+                            <i class="ri-equalizer-line text-lg"></i>
+                            Nâng cao
+                        </button>
+                    </div>
                 </div>
 
                 <form id="form-profile" onsubmit="handleProfileSubmit(event)"
@@ -637,10 +643,8 @@
                                 <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Hệ
                                     điều hành</label>
                                 <div class="relative">
-                                    <i
-                                        class="ri-computer-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                     <select id="profile-os"
-                                        class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                        class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm appearance-none cursor-pointer">
                                         <option value="Windows">Windows</option>
                                         <option value="macOS">macOS</option>
                                         <option value="Linux">Linux</option>
@@ -654,13 +658,13 @@
                                     class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Trình
                                     duyệt</label>
                                 <div class="relative">
-                                    <i
-                                        class="ri-chrome-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                     <select id="profile-browser"
-                                        class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                        class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm appearance-none cursor-pointer">
                                         <option value="Chrome">Chrome</option>
                                         <option value="Firefox">Firefox</option>
                                         <option value="Edge">Microsoft Edge</option>
+                                        <option value="Opera">Opera</option>
+                                        <option value="Safari">Safari</option>
                                     </select>
                                 </div>
                             </div>
@@ -674,7 +678,7 @@
                                     <i
                                         class="ri-price-tag-3-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                     <select id="profile-browser-ver"
-                                        class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                        class="glass-input-style select-with-icon w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
                                         <option value="120">Version 120 (Latest)</option>
                                         <option value="119">Version 119</option>
                                         <option value="118">Version 118</option>
@@ -690,7 +694,7 @@
                                     <i
                                         class="ri-aspect-ratio-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                     <select id="profile-resolution"
-                                        class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
+                                        class="glass-input-style select-with-icon w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
                                         <option value="1920x1080">1920 x 1080</option>
                                         <option value="1366x768">1366 x 768</option>
                                         <option value="1440x900">1440 x 900</option>
