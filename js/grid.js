@@ -4,7 +4,7 @@ const LS_KEY = 'ag_grid_column_state_v1';
 const LS_PROCESS_KEY = 'via_process_col_state_v1'; // Key mới lưu trạng thái cột process
 
 let saveTimeout;
-let maskedColumns = new Set(); 
+let maskedColumns = new Set();
 
 // --- KHỞI TẠO TRẠNG THÁI TỪ LOCAL STORAGE ---
 // Mặc định: chưa thu gọn, chiều rộng lưu trữ là 220
@@ -19,44 +19,44 @@ class CustomHeader {
     init(params) {
         this.params = params;
         this.colId = params.column.getColId();
-        
+
         this.eGui = document.createElement('div');
         this.eGui.className = 'custom-header-container';
-        
+
         // 1. Label
         const label = document.createElement('span');
         label.className = 'custom-header-label';
-        
+
         // Kiểm tra trạng thái từ biến global processState
         const isCollapsed = (this.colId === 'process' && processState.collapsed);
         label.innerHTML = params.displayName;
-        
+
         // 2. Sort Icon
         const sortIcon = document.createElement('span');
-        sortIcon.innerHTML = ''; 
-        if (params.enableSorting && this.colId !== 'process') { 
-             this.eGui.addEventListener('click', (e) => {
-                 if(!e.target.closest('.custom-header-action-btn')){
+        sortIcon.innerHTML = '';
+        if (params.enableSorting && this.colId !== 'process') {
+            this.eGui.addEventListener('click', (e) => {
+                if (!e.target.closest('.custom-header-action-btn')) {
                     params.progressSort();
-                 }
-             });
+                }
+            });
         }
-        
+
         // 3. Action Button
         const actionBtn = document.createElement('div');
-        actionBtn.className = 'custom-header-action-btn'; 
-        
+        actionBtn.className = 'custom-header-action-btn';
+
         if (this.colId === 'process') {
             const iconClass = isCollapsed ? 'ri-expand-left-line' : 'ri-contract-right-line';
             const tooltip = isCollapsed ? 'Mở rộng' : 'Thu gọn';
-            
+
             actionBtn.innerHTML = `<i class="${iconClass} text-lg text-blue-400"></i>`;
             actionBtn.title = tooltip;
             actionBtn.onclick = (e) => {
                 e.stopPropagation();
                 toggleProcessColumn();
             };
-        } 
+        }
         else {
             actionBtn.innerHTML = '<i class="ri-more-2-fill text-lg"></i>';
             actionBtn.onclick = (e) => {
@@ -73,7 +73,7 @@ class CustomHeader {
     }
 
     getGui() { return this.eGui; }
-    destroy() {}
+    destroy() { }
 }
 
 // --- LOGIC TOGGLE CỘT PROCESS ---
@@ -90,9 +90,9 @@ function toggleProcessColumn() {
         if (currentWidth > 110) {
             processState.savedWidth = currentWidth;
         }
-        
+
         // Set width bé & Khóa resize
-        gridApi.setColumnWidths([{ key: 'process', newWidth: 130 }], true); 
+        gridApi.setColumnWidths([{ key: 'process', newWidth: 130 }], true);
         col.getColDef().resizable = false;
         col.getColDef().suppressSizeToFit = true;
         col.getColDef().minWidth = 130;
@@ -101,7 +101,7 @@ function toggleProcessColumn() {
         // [MỞ RỘNG]
         // Lấy lại chiều rộng đã lưu (hoặc mặc định 220)
         const widthToRestore = processState.savedWidth || 300;
-        
+
         gridApi.setColumnWidths([{ key: 'process', newWidth: widthToRestore }], true);
         col.getColDef().resizable = true;
         col.getColDef().minWidth = 130;
@@ -109,7 +109,7 @@ function toggleProcessColumn() {
     }
 
     saveProcessState(); // Lưu trạng thái mới vào localStorage
-    
+
     gridApi.refreshHeader();
     gridApi.refreshCells({ columns: ['process'], force: true });
 }
@@ -123,10 +123,10 @@ function restoreProcessColDef() {
         // Nếu đang ở trạng thái thu gọn, ép lại các thuộc tính khóa
         col.getColDef().resizable = false;
         col.getColDef().suppressSizeToFit = true;
-        col.getColDef().minWidth = 100;
-        col.getColDef().maxWidth = 100;
+        col.getColDef().minWidth = 130;
+        col.getColDef().maxWidth = 130;
         // Đảm bảo width là 100
-        gridApi.setColumnWidths([{ key: 'process', newWidth: 100 }], true); 
+        gridApi.setColumnWidths([{ key: 'process', newWidth: 130 }], true);
     } else {
         // Nếu đang mở rộng
         col.getColDef().resizable = true;
@@ -153,10 +153,14 @@ const columnDefs = [
             if (maskedColumns.has('status')) return `<span class="masked-data">*******</span>`;
 
             const status = params.value;
+            if (!status) return ''; // Bỏ trống nếu không có trạng thái
+
             let badgeClass = 'badge-base '; let label = status;
             if (status === 'LIVE') { badgeClass += 'badge-success'; label = 'HOẠT ĐỘNG'; }
             else if (status === 'DIE') { badgeClass += 'badge-danger'; label = 'VÔ HIỆU'; }
-            else { badgeClass += 'badge-warning'; label = 'CHECKPOINT'; }
+            else if (status === 'CHECKPOINT') { badgeClass += 'badge-warning'; label = 'CHECKPOINT'; }
+            else if (status === 'UNCHECKED') { badgeClass += 'badge-neutral'; label = 'Chưa check'; }
+
             return `<div class="h-full flex items-center"><span class="${badgeClass}"><span class="dot-pulse"></span>${label}</span></div>`;
         },
     },
@@ -182,9 +186,11 @@ const columnDefs = [
             if (maskedColumns.has('process')) return `<span class="masked-data">*******</span>`;
 
             const status = params.value;
-            let badgeClass = 'badge-base '; 
+            if (!status) return '';
+
+            let badgeClass = 'badge-base ';
             let iconHtml = '';
-            
+
             if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
             else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
             else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; }
@@ -199,7 +205,7 @@ const columnDefs = [
                 if (status === 'RUNNING') iconHtml = '<i class="ri-loader-4-line icon-spin text-xs mr-1"></i>';
                 else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
                 else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
-                
+
                 return `<div class="process-cell"><span class="${badgeClass}">${iconHtml}${status}</span><span class="process-msg">${params.data.processMessage}</span></div>`;
             }
         },
@@ -209,13 +215,15 @@ const columnDefs = [
 
 // --- GRID EVENTS & LOGIC ---
 
+function generateSkeletonData(count) { return Array(count).fill({ isLoading: true }); }
+
 function updateFooterCount() {
     if (!gridApi) return;
     document.getElementById('total-rows').innerText = gridApi.getDisplayedRowCount();
     document.getElementById('selected-rows').innerText = gridApi.getSelectedRows().length;
     const ranges = gridApi.getCellRanges();
     let uniqueRows = new Set();
-    if (ranges) ranges.forEach(range => { const s = Math.min(range.startRow.rowIndex, range.endRow.rowIndex); const e = Math.max(range.startRow.rowIndex, range.endRow.rowIndex); for(let i=s; i<=e; i++) uniqueRows.add(i); });
+    if (ranges) ranges.forEach(range => { const s = Math.min(range.startRow.rowIndex, range.endRow.rowIndex); const e = Math.max(range.startRow.rowIndex, range.endRow.rowIndex); for (let i = s; i <= e; i++) uniqueRows.add(i); });
     document.getElementById('range-rows').innerText = uniqueRows.size;
 }
 
@@ -243,15 +251,15 @@ function resetGridState() {
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem(LS_PROCESS_KEY); // Reset cả state process
     processState = { collapsed: false, savedWidth: 220 }; // Reset biến nhớ
-    
+
     gridApi.resetColumnState();
     restoreProcessColDef(); // Áp dụng lại
     showToast('Đã khôi phục giao diện mặc định', 'info');
 }
 
 function resetGridStateInModal() {
-    resetGridState(); 
-    openColumnConfig(); 
+    resetGridState();
+    openColumnConfig();
 }
 
 function saveColumnConfig() {
@@ -275,44 +283,44 @@ function onQuickFilterChanged() {
 const gridOptions = {
     theme: "legacy", suppressContextMenu: true, enableRangeSelection: true,
     columnDefs: columnDefs, rowData: generateSkeletonData(15),
-    defaultColDef: { 
-        resizable: true, 
-        sortable: true, 
-        filter: false, 
+    defaultColDef: {
+        resizable: true,
+        sortable: true,
+        filter: false,
         suppressHeaderMenuButton: true,
-        headerComponent: CustomHeader, 
-        lockPinned: true, 
-        getQuickFilterText: (p) => p.value ? removeVietnameseTones(p.value.toString()) : '' 
+        headerComponent: CustomHeader,
+        lockPinned: true,
+        getQuickFilterText: (p) => p.value ? removeVietnameseTones(p.value.toString()) : ''
     },
     rowHeight: 56, headerHeight: 48, pagination: false, animateRows: true, tooltipShowDelay: 0,
     rowSelection: { mode: 'multiRow', enableClickSelection: false },
     onCellContextMenu: (params) => { if (params.data && !params.data.isLoading) showContextMenu(params.event); },
-    onModelUpdated: () => { 
+    onModelUpdated: () => {
         updateFooterCount();
-        if(typeof updateFilterCounts === 'function') updateFilterCounts(); 
-    }, 
+        if (typeof updateFilterCounts === 'function') updateFilterCounts();
+    },
     onSelectionChanged: updateFooterCount, onRangeSelectionChanged: updateFooterCount,
-    
+
     // BẮT SỰ KIỆN RESIZE ĐỂ LƯU CHIỀU RỘNG MỚI
     onColumnResized: (params) => {
         onGridStateChanged(); // Lưu state chung
-        
+
         // Nếu resize cột process KHI ĐANG MỞ RỘNG -> Lưu width mới
         if (params.column && params.column.getColId() === 'process' && params.finished) {
             if (!processState.collapsed) {
-                 const currentW = params.column.getActualWidth();
-                 // Chỉ lưu nếu chiều rộng hợp lý (tránh trường hợp đang collapse mà bị resize nhầm)
-                 if (currentW > 110) {
-                     processState.savedWidth = currentW;
-                     saveProcessState();
-                 }
+                const currentW = params.column.getActualWidth();
+                // Chỉ lưu nếu chiều rộng hợp lý (tránh trường hợp đang collapse mà bị resize nhầm)
+                if (currentW > 110) {
+                    processState.savedWidth = currentW;
+                    saveProcessState();
+                }
             }
         }
     },
 
     onColumnMoved: onGridStateChanged, onColumnVisible: onGridStateChanged, onSortChanged: onGridStateChanged, onColumnPinned: onGridStateChanged,
-    
-    onGridReady: (params) => { 
+
+    onGridReady: (params) => {
         restoreGridState();    // 1. Restore các cột chung
         restoreProcessColDef(); // 2. Restore logic riêng của cột process
     },
@@ -320,7 +328,7 @@ const gridOptions = {
     // --- EXTERNAL FILTER LOGIC ---
     isExternalFilterPresent: () => {
         if (typeof selectedStatuses === 'undefined') return false;
-        return selectedStatuses.size < 3; 
+        return selectedStatuses.size < 3;
     },
     doesExternalFilterPass: (node) => {
         if (!node.data || node.data.isLoading) return true;

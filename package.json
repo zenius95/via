@@ -20,5 +20,8 @@
   "homepage": "https://github.com/zenius95/via#readme",
   "devDependencies": {
     "electron": "^39.2.5"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.7"
   }
 }

@@ -95,7 +95,7 @@
         </div>
 
         <!-- CENTER SEARCH (Responsive) -->
-        <div class="flex-1 px-8 flex justify-center">
+        <div class="flex-1 px-4 flex justify-center">
             <div class="relative group w-full max-w-[600px]">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
@@ -109,6 +109,10 @@
 
         <!-- RIGHT CONTROLS -->
         <div class="flex items-center shrink-0">
+            <button class="glass-btn-border mr-2" onclick="openImportModal()" data-tooltip="Nhập tài khoản">
+                <i class="ri-file-add-line text-lg text-emerald-400"></i>
+                <span class="ml-1 text-sm font-medium">Nhập via</span>
+            </button>
             <button class="glass-btn-border" data-tooltip="Cài đặt">
                 <i class="ri-settings-3-line text-lg"></i>
             </button>
@@ -241,6 +245,101 @@
                     <button onclick="saveColumnConfig()"
                         class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all flex items-center gap-1">
                         <i class="ri-save-3-line"></i> Lưu lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="import-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[900px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col h-[600px]">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-file-add-line text-emerald-400"></i> Nhập danh sách tài khoản
+                    </h3>
+                    <button onclick="closeImportModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="px-6 py-4 border-b border-white/5 bg-black/20 flex flex-col gap-3">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center gap-4">
+                            <label
+                                class="text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Chế
+                                độ:</label>
+                            <div class="relative">
+                                <select id="import-format-select" onchange="toggleImportMode()"
+                                    class="bg-black/30 border border-white/10 text-white text-sm rounded-lg pl-3 pr-10 py-2 focus:ring-2 focus:ring-emerald-500/50 focus:outline-none w-[200px] appearance-none cursor-pointer hover:bg-black/40 transition-colors">
+                                    <option value="auto" class="bg-[#1a1b1e]">Tự động nhận diện</option>
+                                    <option value="custom" class="bg-[#1a1b1e]">Tùy chỉnh</option>
+                                </select>
+                                <i
+                                    class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div id="custom-format-controls" class="flex flex-col gap-2 hidden animate-fade-in-down">
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div id="custom-columns-container" class="flex flex-wrap items-center gap-2">
+                                    <!-- Columns will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col">
+                    <textarea id="import-textarea"
+                        class="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 focus:bg-black/30 transition-all resize-none font-mono"
+                        placeholder="Dán danh sách tài khoản vào đây..."></textarea>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeImportModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Hủy bỏ
+                    </button>
+                    <button onclick="processImportData()"
+                        class="px-6 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="ri-download-cloud-2-line"></i> Nhập dữ liệu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="duplicate-modal"
+        class="fixed inset-0 z-[10001] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[600px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col h-[500px]">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-alert-fill text-amber-500"></i> Xác nhận trùng lặp
+                    </h3>
+                    <button onclick="closeDuplicateModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col">
+                    <p class="text-slate-300 mb-2 text-sm">Các tài khoản sau đã tồn tại trong hệ thống:</p>
+                    <textarea id="duplicate-textarea" readonly
+                        class="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-xs text-amber-100/80 focus:outline-none focus:bg-black/30 transition-all resize-none font-mono"></textarea>
+                    <p class="text-slate-400 mt-2 text-xs italic">Bạn có muốn tiếp tục thêm các tài khoản này không?</p>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeDuplicateModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Bỏ tài khoản trùng
+                    </button>
+                    <button onclick="confirmDuplicateImport()"
+                        class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        Vẫn thêm
                     </button>
                 </div>
             </div>

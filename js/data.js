@@ -26,5 +26,3 @@ function generateData(count) {
     }
     return data;
 }
-
-function generateSkeletonData(count) { return Array(count).fill({ isLoading: true }); }
