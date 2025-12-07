@@ -61,106 +61,99 @@
 
     <div class="glass-toolbar">
         <!-- LEFT CONTROLS -->
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center shrink-0 mr-3">
             <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
                 <i class="ri-play-fill text-lg"></i>
                 <span class="ml-1">Bắt đầu</span>
             </button>
+        </div>
 
-            <div class="glass-divider"></div>
+        <div class="glass-divider mr-3"></div>
 
-            <div class="relative z-50">
-                <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
-                    data-tooltip="Lọc trạng thái">
-                    <i class="ri-filter-3-fill text-blue-400"></i>
-                    <span id="filter-badge-count"
-                        class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
-                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
-                </button>
-
-                <div id="filter-dropdown-menu" class="glass-dropdown-menu">
-                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
-                        trạng thái</div>
-                    <div id="filter-list-container">
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-divider"></div>
-
-            <div class="relative z-50">
-                <button id="folder-dropdown-btn" class="glass-btn-border" onclick="toggleFolderDropdown()"
-                    data-tooltip="Quản lý thư mục">
-                    <i class="ri-folder-3-fill text-amber-400"></i>
-                    <span>Thư mục</span>
-                    <span id="folder-badge-count"
-                        class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-amber-500/20">All</span>
-                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
-                </button>
-
-                <div id="folder-dropdown-menu" class="glass-dropdown-menu" style="min-width: 220px;">
-                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc & Quản
-                        lý
-                    </div>
-
-                    <!-- New Folder Input (Redesigned) -->
-                    <div class="px-2 pb-2 border-b border-white/10 mb-2 mt-1">
-                        <div class="relative group">
-                            <input type="text" id="new-folder-input" placeholder="Tạo mới..."
-                                class="glass-input-style w-full pl-8 pr-8 py-1.5 text-xs rounded-md focus:border-amber-500/50 transition-all"
-                                onkeydown="if(event.key === 'Enter') createNewFolder()">
-                            <i class="ri-add-line absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
-
-                            <button onclick="createNewFolder()"
-                                class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded text-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
-                                <i class="ri-arrow-right-s-line"></i>
-                            </button>
-                        </div>
-
-                        <!-- Color Selection -->
-                        <div class="flex items-center gap-1.5 mt-2 px-1 justify-between" id="folder-color-selector">
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
-                                data-color="slate" onclick="selectFolderColor(this, 'slate')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="red" onclick="selectFolderColor(this, 'red')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="orange" onclick="selectFolderColor(this, 'orange')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="amber" onclick="selectFolderColor(this, 'amber')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="emerald" onclick="selectFolderColor(this, 'emerald')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="cyan" onclick="selectFolderColor(this, 'cyan')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="blue" onclick="selectFolderColor(this, 'blue')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="purple" onclick="selectFolderColor(this, 'purple')"></button>
-                            <button
-                                class="w-3.5 h-3.5 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
-                                data-color="pink" onclick="selectFolderColor(this, 'pink')"></button>
-                        </div>
-                        <input type="hidden" id="selected-folder-color" value="slate">
-                    </div>
-
-                    <div id="folder-list-container" class="max-h-[200px] overflow-y-auto custom-scrollbar">
-                        <!-- Folders injected here -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-divider"></div>
-
-            <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
-                <i class="ri-layout-line text-lg"></i>
+        <div class="relative z-50 mr-3">
+            <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
+                data-tooltip="Lọc trạng thái">
+                <i class="ri-filter-3-fill text-blue-400"></i>
+                <span id="filter-badge-count"
+                    class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
+                <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
             </button>
+
+            <div id="filter-dropdown-menu" class="glass-dropdown-menu">
+                <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
+                    trạng thái</div>
+                <div id="filter-list-container">
+                </div>
+            </div>
+        </div>
+
+        <div class="relative z-50">
+
+            <button id="folder-dropdown-btn" class="glass-btn-border" onclick="toggleFolderDropdown()"
+                data-tooltip="Quản lý thư mục">
+                <i class="ri-folder-3-fill text-amber-400"></i>
+                <span>Thư mục</span>
+                <span id="folder-badge-count"
+                    class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-amber-500/20">All</span>
+                <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+            </button>
+
+            <div id="folder-dropdown-menu" class="glass-dropdown-menu" style="min-width: 220px;">
+                <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc & Quản
+                    lý
+                </div>
+
+                <!-- New Folder Input (Redesigned) -->
+                <div class="px-2 pb-2 border-b border-white/10 mb-2 mt-1">
+                    <div class="relative group">
+                        <input type="text" id="new-folder-input" placeholder="Tạo mới..."
+                            class="glass-input-style w-full pl-8 pr-8 py-1.5 text-xs rounded-md focus:border-amber-500/50 transition-all"
+                            onkeydown="if(event.key === 'Enter') createNewFolder()">
+                        <i class="ri-add-line absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+
+                        <button onclick="createNewFolder()"
+                            class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded text-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+                            <i class="ri-arrow-right-s-line"></i>
+                        </button>
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div class="flex items-center gap-1.5 mt-2 px-1 justify-between" id="folder-color-selector">
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
+                            data-color="slate" onclick="selectFolderColor(this, 'slate')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="red" onclick="selectFolderColor(this, 'red')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="orange" onclick="selectFolderColor(this, 'orange')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="amber" onclick="selectFolderColor(this, 'amber')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="emerald" onclick="selectFolderColor(this, 'emerald')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="cyan" onclick="selectFolderColor(this, 'cyan')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="blue" onclick="selectFolderColor(this, 'blue')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="purple" onclick="selectFolderColor(this, 'purple')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="pink" onclick="selectFolderColor(this, 'pink')"></button>
+                    </div>
+                    <input type="hidden" id="selected-folder-color" value="slate">
+                </div>
+
+                <div id="folder-list-container" class="max-h-[200px] overflow-y-auto custom-scrollbar">
+                    <!-- Folders injected here -->
+                </div>
+            </div>
         </div>
 
         <!-- CENTER SEARCH (Responsive) -->
@@ -178,12 +171,15 @@
 
         <!-- RIGHT CONTROLS -->
         <div class="flex items-center shrink-0">
-            <button class="glass-btn-border mr-2" onclick="openImportModal()" data-tooltip="Nhập tài khoản">
+            <button class="glass-btn-border mr-3" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
+                <i class="ri-layout-line text-lg"></i>
+            </button>
+            <button class="glass-btn-border mr-3" data-tooltip="Cài đặt">
+                <i class="ri-settings-3-line text-lg"></i>
+            </button>
+            <button class="glass-btn-border" onclick="openImportModal()" data-tooltip="Nhập tài khoản">
                 <i class="ri-file-add-line text-lg text-emerald-400"></i>
                 <span class="ml-1 text-sm font-medium">Nhập via</span>
-            </button>
-            <button class="glass-btn-border" data-tooltip="Cài đặt">
-                <i class="ri-settings-3-line text-lg"></i>
             </button>
         </div>
     </div>
@@ -429,6 +425,83 @@
                     <button onclick="confirmDuplicateImport()"
                         class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
                         Vẫn thêm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT FOLDER MODAL -->
+    <div id="edit-folder-modal"
+        class="fixed inset-0 z-[10001] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[400px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-edit-2-fill text-blue-400"></i> Chỉnh sửa thư mục
+                    </h3>
+                    <button onclick="closeEditFolderModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 flex flex-col gap-4">
+                    <input type="hidden" id="edit-folder-id">
+                    <input type="hidden" id="edit-folder-old-name">
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Tên thư
+                            mục</label>
+                        <input type="text" id="edit-folder-name"
+                            class="glass-input-style w-full px-4 py-2 text-sm rounded-lg focus:border-blue-500/50 transition-all"
+                            placeholder="Nhập tên thư mục...">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Màu
+                            sắc</label>
+                        <div class="flex items-center gap-2 flex-wrap" id="edit-folder-color-selector">
+                            <!-- Will generate via JS or static similar to create -->
+                            <button
+                                class="w-6 h-6 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
+                                data-color="slate" onclick="selectEditFolderColor(this, 'slate')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="red" onclick="selectEditFolderColor(this, 'red')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="orange" onclick="selectEditFolderColor(this, 'orange')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="amber" onclick="selectEditFolderColor(this, 'amber')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="emerald" onclick="selectEditFolderColor(this, 'emerald')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="cyan" onclick="selectEditFolderColor(this, 'cyan')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="blue" onclick="selectEditFolderColor(this, 'blue')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="purple" onclick="selectEditFolderColor(this, 'purple')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="pink" onclick="selectEditFolderColor(this, 'pink')"></button>
+                        </div>
+                        <input type="hidden" id="edit-folder-color-value">
+                    </div>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeEditFolderModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Hủy
+                    </button>
+                    <button onclick="saveEditFolder()"
+                        class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="ri-save-3-fill"></i> Lưu thay đổi
                     </button>
                 </div>
             </div>

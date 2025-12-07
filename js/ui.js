@@ -1090,6 +1090,9 @@ function renderFolderDropdown() {
         div.innerHTML = `
             <i class="ri-folder-fill ${isActive ? 'text-white' : colorClass} mr-2"></i>
             <span class="flex-1 truncate ${isActive ? 'font-bold text-white' : ''}">${folder.name}</span>
+            <button onclick="openEditFolderModal(${folder.id}, event)" class="opacity-0 group-hover:opacity-100 p-1 hover:text-blue-400 transition-opacity mr-1">
+                <i class="ri-edit-2-line text-xs"></i>
+            </button>
             <button onclick="deleteFolder(${folder.id}, event)" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity">
                 <i class="ri-delete-bin-line text-xs"></i>
             </button>
@@ -1097,6 +1100,103 @@ function renderFolderDropdown() {
         div.onclick = () => filterByFolder(folder.name);
         container.appendChild(div);
     });
+}
+
+function openEditFolderModal(id, e) {
+    if (e) e.stopPropagation();
+    const folder = folders.find(f => f.id === id);
+    if (!folder) return;
+
+    document.getElementById('edit-folder-id').value = folder.id;
+    document.getElementById('edit-folder-old-name').value = folder.name;
+    document.getElementById('edit-folder-name').value = folder.name;
+
+    // Set color
+    const color = folder.color || 'slate';
+    document.getElementById('edit-folder-color-value').value = color;
+
+    // Update UI highlights
+    const container = document.getElementById('edit-folder-color-selector');
+    container.querySelectorAll('button').forEach(b => {
+        if (b.dataset.color === color) {
+            b.classList.add('ring-2', 'ring-offset-1', 'ring-offset-[#0f172a]', 'ring-white/50');
+        } else {
+            b.classList.remove('ring-2', 'ring-offset-1', 'ring-offset-[#0f172a]', 'ring-white/50');
+        }
+    });
+
+    const m = document.getElementById('edit-folder-modal');
+    m.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        m.classList.remove('opacity-0');
+        m.querySelector('div.relative').classList.replace('scale-95', 'scale-100');
+    });
+
+    // Close dropdown
+    const menu = document.getElementById('folder-dropdown-menu');
+    if (menu) menu.classList.remove('show');
+}
+
+function closeEditFolderModal() {
+    const m = document.getElementById('edit-folder-modal');
+    m.classList.add('opacity-0');
+    m.querySelector('div.relative').classList.replace('scale-100', 'scale-95');
+    setTimeout(() => { m.classList.add('hidden'); }, 300);
+}
+
+function selectEditFolderColor(btn, color) {
+    const container = document.getElementById('edit-folder-color-selector');
+    container.querySelectorAll('button').forEach(b => {
+        b.classList.remove('ring-2', 'ring-offset-1', 'ring-offset-[#0f172a]', 'ring-white/50');
+    });
+    btn.classList.add('ring-2', 'ring-offset-1', 'ring-offset-[#0f172a]', 'ring-white/50');
+    document.getElementById('edit-folder-color-value').value = color;
+}
+
+async function saveEditFolder() {
+    const id = parseInt(document.getElementById('edit-folder-id').value);
+    const oldName = document.getElementById('edit-folder-old-name').value;
+    const newName = document.getElementById('edit-folder-name').value.trim();
+    const newColor = document.getElementById('edit-folder-color-value').value;
+
+    if (!newName) {
+        showToast('Tên thư mục không được để trống', 'error');
+        return;
+    }
+
+    if (newName !== oldName && folders.some(f => f.name.toLowerCase() === newName.toLowerCase())) {
+        showToast('Tên thư mục đã tồn tại', 'error');
+        return;
+    }
+
+    try {
+        await window.api.send('db:update-folder', { id, newName, newColor, oldName });
+        showToast('Đã cập nhật thư mục');
+        closeEditFolderModal();
+
+        // If filtering by this folder, update filter name if changed
+        if (currentFolderFilter === oldName) {
+            currentFolderFilter = newName;
+            // Update badge text right away? 
+            // filterByFolder logic updates it, but we might want just re-rendering to handle it.
+        }
+
+        await loadFolders(); // Reload folders and refresh grid items
+
+        // If name changed, we need to ensure grid rows (which store 'folder' string) are updated.
+        // loadFolders calls grid refresh, but local grid data 'folder' property is still oldName!
+        if (newName !== oldName && gridApi) {
+            gridApi.forEachNode(node => {
+                if (node.data.folder === oldName) {
+                    node.setDataValue('folder', newName); // This triggers refresh too
+                }
+            });
+        }
+
+    } catch (err) {
+        showToast('Lỗi cập nhật thư mục', 'error');
+        console.error(err);
+    }
 }
 
 function renderFolderCtxMenu() {

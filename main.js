@@ -30,6 +30,9 @@ ipcMain.handle('db:add-folder', async (event, name, color) => {
 ipcMain.handle('db:delete-folder', async (event, id) => {
     return await database.deleteFolder(id);
 });
+ipcMain.handle('db:update-folder', async (event, { id, newName, newColor, oldName }) => {
+    return await database.updateFolder(id, newName, newColor, oldName);
+});
 ipcMain.handle('db:update-account-folder', async (event, { uids, folderName }) => {
     return await database.updateAccountFolder(uids, folderName);
 });

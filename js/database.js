@@ -262,6 +262,37 @@ class Database {
         });
     }
 
+    updateFolder(id, newName, newColor, oldName) {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                this.db.run("BEGIN TRANSACTION");
+
+                // Update Folder Info
+                this.db.run("UPDATE folders SET name = ?, color = ? WHERE id = ?", [newName, newColor, id], (err) => {
+                    if (err) {
+                        this.db.run("ROLLBACK");
+                        return reject(err);
+                    }
+                });
+
+                // Cascade Update to Accounts if name changed
+                if (newName !== oldName) {
+                    this.db.run("UPDATE accounts SET folder = ? WHERE folder = ?", [newName, oldName], (err) => {
+                        if (err) {
+                            this.db.run("ROLLBACK");
+                            return reject(err);
+                        }
+                    });
+                }
+
+                this.db.run("COMMIT", (err) => {
+                    if (err) reject(err);
+                    else resolve(true);
+                });
+            });
+        });
+    }
+
     addFolder(name, color) {
         return new Promise((resolve, reject) => {
             this.db.run("INSERT INTO folders (name, color) VALUES (?, ?)", [name, color], function (err) {
