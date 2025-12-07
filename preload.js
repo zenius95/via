@@ -5,10 +5,10 @@ const { contextBridge, ipcRenderer } = require('electron');
 // But valid electron pattern usually prefers contextIsolation: true.
 // Given the user config (nodeIntegration: true, contextIsolation: false), we can manually assign.
 
-window.api = {
+const api = {
     send: (channel, ...args) => {
         // Allow specific channels
-        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-account-folder', 'db:update-folder'];
+        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder'];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
         }
@@ -21,3 +21,13 @@ window.api = {
         }
     }
 };
+
+if (process.contextIsolated) {
+    try {
+        contextBridge.exposeInMainWorld('api', api);
+    } catch (error) {
+        console.error(error);
+    }
+} else {
+    window.api = api;
+}

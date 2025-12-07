@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, BrowserView } = require('electron')
 const path = require('path')
 
 // IPC Handlers
@@ -55,6 +55,61 @@ function createWindow() {
 
     win.loadFile('index.html')
     win.setMenu(null) // Remove default menu
+
+    // --- BROWSER VIEW SETUP ---
+    const view = new BrowserView({
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    })
+
+    win.setBrowserView(view)
+
+    // Calculate bounds: Titlebar height is approx 40px
+    const TITLEBAR_HEIGHT = 48;
+
+    function updateViewBounds() {
+        const { width, height } = win.getBounds() // Window size (including frame if any, but frameless here)
+        // With frame:false, getBounds = content size roughly. 
+        // We want to fill the rest of the window.
+        // Electron documentation says setBounds is relative to window's client area.
+        view.setBounds({ x: 0, y: TITLEBAR_HEIGHT, width: width, height: height - TITLEBAR_HEIGHT })
+    }
+
+    view.webContents.loadFile('account.html')
+
+    // Initial bounds
+    // We might need to wait for 'show' or 'ready-to-show' mainly
+    win.once('ready-to-show', () => {
+        updateViewBounds();
+        win.show();
+    })
+
+    // Default show is false usually? No, it's true by default.
+    // If we rely on default show, update bounds immediately.
+    updateViewBounds();
+
+    // Update on resize
+    win.on('resize', updateViewBounds)
+    win.on('maximize', updateViewBounds)
+    win.on('unmaximize', updateViewBounds)
+
+    // win.webContents.openDevTools()
+    // view.webContents.openDevTools({ mode: 'detach' })
+
+    // Handler for BrowserView shortcuts (DevTools F12, Reload Ctrl+R)
+    view.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12') {
+            view.webContents.toggleDevTools({ mode: 'detach' });
+            event.preventDefault();
+        }
+        if (input.control && input.key.toLowerCase() === 'r') {
+            view.webContents.reload();
+            event.preventDefault();
+        }
+    });
 
     // win.webContents.openDevTools()
 

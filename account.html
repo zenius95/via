@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tài Khoản - Pro Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/styles/ag-grid.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/styles/ag-theme-alpine-dark.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Special override for independent view */
+        body {
+            background: transparent;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <div class="glass-toolbar">
+        <!-- LEFT CONTROLS -->
+        <div class="flex items-center shrink-0 mr-3">
+            <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
+                <i class="ri-play-fill text-lg"></i>
+                <span class="ml-1">Bắt đầu</span>
+            </button>
+        </div>
+
+        <div class="glass-divider mr-3"></div>
+
+        <div class="relative z-50 mr-3">
+            <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
+                data-tooltip="Lọc trạng thái">
+                <i class="ri-filter-3-fill text-blue-400"></i>
+                <span id="filter-badge-count"
+                    class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
+                <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+            </button>
+
+            <div id="filter-dropdown-menu" class="glass-dropdown-menu">
+                <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
+                    trạng thái</div>
+                <div id="filter-list-container">
+                </div>
+            </div>
+        </div>
+
+        <div class="relative z-50">
+
+            <button id="folder-dropdown-btn" class="glass-btn-border" onclick="toggleFolderDropdown()"
+                data-tooltip="Quản lý thư mục">
+                <i class="ri-folder-3-fill text-amber-400"></i>
+                <span>Thư mục</span>
+                <span id="folder-badge-count"
+                    class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-amber-500/20">All</span>
+                <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+            </button>
+
+            <div id="folder-dropdown-menu" class="glass-dropdown-menu" style="min-width: 220px;">
+                <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc & Quản
+                    lý
+                </div>
+
+                <!-- New Folder Input (Redesigned) -->
+                <div class="px-2 pb-2 border-b border-white/10 mb-2 mt-1">
+                    <div class="relative group">
+                        <input type="text" id="new-folder-input" placeholder="Tạo mới..."
+                            class="glass-input-style w-full pl-8 pr-8 py-1.5 text-xs rounded-md focus:border-amber-500/50 transition-all"
+                            onkeydown="if(event.key === 'Enter') createNewFolder()">
+                        <i class="ri-add-line absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+
+                        <button onclick="createNewFolder()"
+                            class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded text-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+                            <i class="ri-arrow-right-s-line"></i>
+                        </button>
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div class="flex items-center gap-1.5 mt-2 px-1 justify-between" id="folder-color-selector">
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
+                            data-color="slate" onclick="selectFolderColor(this, 'slate')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="red" onclick="selectFolderColor(this, 'red')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="orange" onclick="selectFolderColor(this, 'orange')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="amber" onclick="selectFolderColor(this, 'amber')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="emerald" onclick="selectFolderColor(this, 'emerald')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="cyan" onclick="selectFolderColor(this, 'cyan')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="blue" onclick="selectFolderColor(this, 'blue')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="purple" onclick="selectFolderColor(this, 'purple')"></button>
+                        <button
+                            class="w-3.5 h-3.5 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
+                            data-color="pink" onclick="selectFolderColor(this, 'pink')"></button>
+                    </div>
+                    <input type="hidden" id="selected-folder-color" value="slate">
+                </div>
+
+                <div id="folder-list-container" class="max-h-[200px] overflow-y-auto custom-scrollbar">
+                    <!-- Folders injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER SEARCH (Responsive) -->
+        <div class="flex-1 px-4 flex justify-center">
+            <div class="relative group w-full max-w-[600px]">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                </div>
+                <!-- w-full to fill max-w-[600px] container -->
+                <input type="text" placeholder="Tìm kiếm tài khoản..."
+                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
+                    oninput="onQuickFilterChanged()">
+            </div>
+        </div>
+
+        <!-- RIGHT CONTROLS -->
+        <div class="flex items-center shrink-0">
+            <button class="glass-btn-border mr-3" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
+                <i class="ri-layout-line text-lg"></i>
+            </button>
+            <button class="glass-btn-border mr-3" data-tooltip="Cài đặt">
+                <i class="ri-settings-3-line text-lg"></i>
+            </button>
+            <button class="glass-btn-border" onclick="openImportModal()" data-tooltip="Nhập tài khoản">
+                <i class="ri-file-add-line text-lg text-emerald-400"></i>
+                <span class="ml-1 text-sm font-medium">Nhập via</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
+
+    <div class="footer-pro">
+        <div class="stat-pill group cursor-default glass-btn-border">
+            <div>
+                <span class="stat-label">Tổng:</span>
+                <span id="total-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Chọn:</span>
+                <span id="selected-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Vùng:</span>
+                <span id="range-rows" class="stat-value text-slate-200">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div id="menu-select-range" class="menu-item" onclick="menuAction('selectRange')">
+            <i class="ri-checkbox-multiple-fill text-purple-400"></i> Chọn vùng bôi đen
+        </div>
+        <div class="menu-item">
+            <i class="ri-share-forward-line text-blue-400"></i> Xuất dữ liệu
+            <i class="ri-arrow-right-s-line ml-auto text-lg text-slate-500"></i>
+            <div class="submenu">
+                <div class="menu-item" onclick="menuAction('exportExcel')">
+                    <i class="ri-file-excel-2-fill text-emerald-400"></i> Xuất Excel
+                </div>
+                <div class="menu-item" onclick="menuAction('exportCsv')">
+                    <i class="ri-file-text-fill text-sky-400"></i> Xuất CSV
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <i class="ri-folder-transfer-line text-amber-400"></i> Chuyển thư mục
+            <i class="ri-arrow-right-s-line ml-auto text-lg text-slate-500"></i>
+            <div class="submenu" id="ctx-menu-folders">
+                <!-- Folders injected here -->
+                <div class="menu-item italic text-slate-500 text-xs">Đang tải...</div>
+            </div>
+        </div>
+        <div class="h-px bg-white/10 my-1 mx-2"></div>
+        <div class="menu-item group hover:!bg-red-500/10" onclick="menuAction('delete')">
+            <i class="ri-delete-bin-line text-red-400 group-hover:text-red-300"></i>
+            <span class="text-red-400 group-hover:text-red-300">Xóa tài khoản</span>
+            <span
+                class="ml-auto text-xs text-slate-500 font-mono border border-slate-600 rounded px-1 group-hover:border-red-500/30 group-hover:text-red-300">Del</span>
+        </div>
+    </div>
+
+    <div id="column-menu" class="glass-dropdown-menu"
+        style="width: 200px; display: none; position: fixed; z-index: 9999;">
+        <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Thao tác cột</div>
+
+        <div id="col-menu-hide" class="menu-item" onclick="colMenuAction('hide')">
+            <i class="ri-eye-off-line text-slate-400"></i> Ẩn cột này
+        </div>
+
+        <div id="col-menu-copy" class="menu-item" onclick="colMenuAction('copy')">
+            <i class="ri-file-copy-line text-blue-400"></i> Copy nội dung
+        </div>
+
+        <div id="col-menu-pin" class="menu-item" onclick="colMenuAction('pin')">
+            <i class="ri-pushpin-2-line text-amber-400"></i> Ghim cột
+        </div>
+
+        <div class="h-px bg-white/10 my-1 mx-2"></div>
+
+        <div id="col-menu-mask" class="menu-item" onclick="colMenuAction('mask')">
+            <i class="ri-eye-close-line text-red-400"></i> Che thông tin
+        </div>
+    </div>
+
+    <div id="confirm-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[400px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box">
+                <div class="p-8 text-center">
+                    <div class="flex flex-col items-center gap-5">
+                        <div
+                            class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            <i class="ri-alarm-warning-fill text-3xl text-red-500 drop-shadow-md"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="modal-title" class="text-xl font-bold text-white mb-2 tracking-tight">Xóa dữ liệu?
+                            </h3>
+                            <p id="modal-msg" class="text-slate-300 text-sm leading-relaxed">Hành động này sẽ xóa vĩnh
+                                viễn dữ liệu khỏi hệ thống và không thể khôi phục.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-center gap-3">
+                        <button onclick="closeConfirmModal()"
+                            class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                            Hủy bỏ
+                        </button>
+                        <button id="modal-confirm-btn"
+                            class="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-900/40 transition-all transform hover:-translate-y-0.5">
+                            Xác nhận xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="col-config-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-opacity duration-200">
+        <div class="relative w-full max-w-[380px] transform scale-95 transition-transform duration-200 p-4">
+            <div class="glass-modal-box flex flex-col max-h-[80vh]">
+                <div class="px-5 py-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="ri-layout-column-line text-blue-400"></i> Tùy chỉnh cột
+                    </h3>
+                    <div class="text-[10px] text-slate-400 bg-white/5 px-2 py-1 rounded border border-white/5">Kéo thả
+                        để xếp</div>
+                </div>
+
+                <div id="col-config-list" class="p-3 overflow-y-auto flex-1 space-y-2 custom-scrollbar"></div>
+
+                <div class="p-4 border-t border-white/10 bg-black/20 flex items-center gap-3">
+                    <button onclick="resetGridStateInModal()"
+                        class="px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mr-auto flex items-center gap-1">
+                        <i class="ri-restart-line"></i> Reset
+                    </button>
+
+                    <button onclick="closeColumnModal()"
+                        class="btn-glass-secondary px-4 py-2 rounded-lg text-xs font-medium">Đóng</button>
+                    <button onclick="saveColumnConfig()"
+                        class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all flex items-center gap-1">
+                        <i class="ri-save-3-line"></i> Lưu lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="import-modal"
+        class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[900px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col h-[600px]">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-file-add-line text-emerald-400"></i> Nhập danh sách tài khoản
+                    </h3>
+                    <button onclick="closeImportModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="px-6 py-4 border-b border-white/5 bg-black/20 flex flex-col gap-3">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center gap-4">
+                            <label
+                                class="text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Chế
+                                độ:</label>
+                            <div class="relative">
+                                <select id="import-format-select" onchange="toggleImportMode()"
+                                    class="bg-black/30 border border-white/10 text-white text-sm rounded-lg pl-3 pr-10 py-2 focus:ring-2 focus:ring-emerald-500/50 focus:outline-none w-[200px] appearance-none cursor-pointer hover:bg-black/40 transition-colors">
+                                    <option value="auto" class="bg-[#1a1b1e]">Tự động nhận diện</option>
+                                    <option value="custom" class="bg-[#1a1b1e]">Tùy chỉnh</option>
+                                </select>
+                                <i
+                                    class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                            </div>
+
+                            <div class="w-px h-6 bg-white/10 mx-2"></div>
+
+                            <!-- File Input -->
+                            <input type="file" id="import-file-input" class="hidden" accept=".txt"
+                                onchange="handleFileSelect(this)">
+                            <button onclick="document.getElementById('import-file-input').click()"
+                                class="glass-btn-border px-3 py-1.5 h-[38px] text-slate-300 hover:text-white flex items-center gap-2 group">
+                                <i class="ri-folder-open-line text-lg group-hover:text-blue-400 transition-colors"></i>
+                                <span class="text-sm">Chọn file .txt</span>
+                            </button>
+                        </div>
+
+                        <div id="custom-format-controls" class="flex flex-col gap-2 hidden animate-fade-in-down">
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div id="custom-columns-container" class="flex flex-wrap items-center gap-2">
+                                    <!-- Columns will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col">
+                    <textarea id="import-textarea"
+                        class="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 focus:bg-black/30 transition-all resize-none font-mono"
+                        placeholder="Dán danh sách tài khoản vào đây..."></textarea>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeImportModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Hủy bỏ
+                    </button>
+                    <button onclick="processImportData()"
+                        class="px-6 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="ri-download-cloud-2-line"></i> Nhập dữ liệu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="duplicate-modal"
+        class="fixed inset-0 z-[10001] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[600px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col h-[500px]">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-alert-fill text-amber-500"></i> Xác nhận trùng lặp
+                    </h3>
+                    <button onclick="closeDuplicateModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col">
+                    <p class="text-slate-300 mb-2 text-sm">Các tài khoản sau đã tồn tại trong hệ thống:</p>
+                    <textarea id="duplicate-textarea" readonly
+                        class="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-xs text-amber-100/80 focus:outline-none focus:bg-black/30 transition-all resize-none font-mono"></textarea>
+                    <p class="text-slate-400 mt-2 text-xs italic">Bạn có muốn tiếp tục thêm các tài khoản này không?</p>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeDuplicateModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Bỏ tài khoản trùng
+                    </button>
+                    <button onclick="confirmDuplicateImport()"
+                        class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        Vẫn thêm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT FOLDER MODAL -->
+    <div id="edit-folder-modal"
+        class="fixed inset-0 z-[10001] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[400px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box">
+                <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-edit-2-fill text-blue-400"></i> Chỉnh sửa thư mục
+                    </h3>
+                    <button onclick="closeEditFolderModal()" class="text-slate-400 hover:text-white transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 flex flex-col gap-4">
+                    <input type="hidden" id="edit-folder-id">
+                    <input type="hidden" id="edit-folder-old-name">
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Tên thư
+                            mục</label>
+                        <input type="text" id="edit-folder-name"
+                            class="glass-input-style w-full px-4 py-2 text-sm rounded-lg focus:border-blue-500/50 transition-all"
+                            placeholder="Nhập tên thư mục...">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Màu
+                            sắc</label>
+                        <div class="flex items-center gap-2 flex-wrap" id="edit-folder-color-selector">
+                            <button
+                                class="w-6 h-6 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
+                                data-color="slate" onclick="selectEditFolderColor(this, 'slate')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="red" onclick="selectEditFolderColor(this, 'red')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="orange" onclick="selectEditFolderColor(this, 'orange')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="amber" onclick="selectEditFolderColor(this, 'amber')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="emerald" onclick="selectEditFolderColor(this, 'emerald')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="cyan" onclick="selectEditFolderColor(this, 'cyan')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="blue" onclick="selectEditFolderColor(this, 'blue')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="purple" onclick="selectEditFolderColor(this, 'purple')"></button>
+                            <button
+                                class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="pink" onclick="selectEditFolderColor(this, 'pink')"></button>
+                        </div>
+                        <input type="hidden" id="edit-folder-color-value">
+                    </div>
+                </div>
+
+                <div class="px-6 py-5 border-t border-white/10 bg-black/20 flex items-center justify-end gap-3">
+                    <button onclick="closeEditFolderModal()"
+                        class="btn-glass-secondary px-5 py-2.5 rounded-lg text-sm font-medium">
+                        Hủy
+                    </button>
+                    <button onclick="saveEditFolder()"
+                        class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-900/40 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="ri-save-3-fill"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"
+        class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
+        <div id="toast-icon-container" class="p-1 rounded-full"></div>
+        <div class="flex flex-col">
+            <span id="toast-title" class="text-xs font-bold uppercase tracking-wider opacity-70 mb-0.5">Thông báo</span>
+            <span id="toast-msg" class="text-sm font-medium">Nội dung thông báo</span>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>
