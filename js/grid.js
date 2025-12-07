@@ -197,6 +197,7 @@ const columnDefs = [
     { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
+    { headerName: "Thư mục", field: "folder", width: 120, colId: 'folder', cellRenderer: textCellRenderer },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',
@@ -360,12 +361,26 @@ const gridOptions = {
 
     // --- EXTERNAL FILTER LOGIC ---
     isExternalFilterPresent: () => {
-        if (typeof selectedStatuses === 'undefined') return false;
-        return selectedStatuses.size < 3;
+        // Status check
+        const isStatusFilterActive = (typeof selectedStatuses !== 'undefined' && selectedStatuses.size < 3); // 3 is all
+        const isFolderFilterActive = (typeof currentFolderFilter !== 'undefined' && currentFolderFilter !== null);
+        return isStatusFilterActive || isFolderFilterActive;
     },
     doesExternalFilterPass: (node) => {
         if (!node.data || node.data.isLoading) return true;
-        if (typeof selectedStatuses === 'undefined') return true;
-        return selectedStatuses.has(node.data.status);
+
+        let pass = true;
+
+        // Status Filter
+        if (typeof selectedStatuses !== 'undefined') {
+            if (!selectedStatuses.has(node.data.status)) pass = false;
+        }
+
+        // Folder Filter
+        if (typeof currentFolderFilter !== 'undefined' && currentFolderFilter !== null) {
+            if (node.data.folder !== currentFolderFilter) pass = false;
+        }
+
+        return pass;
     }
 };

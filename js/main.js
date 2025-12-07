@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 gridApi.setGridOption('rowData', []);
                 console.log('No accounts in DB');
             }
+
+            // Load Folders
+            if (typeof loadFolders === 'function') {
+                loadFolders();
+            }
         }).catch(err => {
             console.error('Failed to load accounts from DB', err);
             gridApi.setGridOption('rowData', []);

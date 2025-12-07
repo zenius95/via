@@ -60,8 +60,40 @@ class Database {
                         else console.log('Migrated DB: Added emailRecover column');
                     });
                 }
+
+                // NEW: Check for folder column
+                const hasFolder = rows.some(r => r.name === 'folder');
+                if (!hasFolder) {
+                    this.db.run("ALTER TABLE accounts ADD COLUMN folder TEXT", (err) => {
+                        if (err) console.error('Migration add folder failed', err);
+                        else console.log('Migrated DB: Added folder column');
+                    });
+                }
             }
+
+            // Migration: Check if 'folders' table has 'color' column
+            this.db.all("PRAGMA table_info(folders)", (err, rows) => {
+                if (!err && rows) {
+                    const hasColor = rows.some(r => r.name === 'color');
+                    if (!hasColor && rows.length > 0) { // Only if table exists
+                        this.db.run("ALTER TABLE folders ADD COLUMN color TEXT", (err) => {
+                            if (err) console.error('Migration add folder color failed', err);
+                            else console.log('Migrated DB: Added folder color column');
+                        });
+                    }
+                }
+            });
+
+            // Folders Table
+            this.db.run(`
+            CREATE TABLE IF NOT EXISTS folders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE,
+                color TEXT
+            )
+        `);
         });
+
     }
 
     getAllAccounts() {
@@ -215,6 +247,64 @@ class Database {
                     if (err) reject(err);
                     else resolve(true);
                 });
+            });
+        });
+    }
+
+    // --- FOLDER METHODS ---
+
+    getFolders() {
+        return new Promise((resolve, reject) => {
+            this.db.all("SELECT * FROM folders", [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    }
+
+    addFolder(name, color) {
+        return new Promise((resolve, reject) => {
+            this.db.run("INSERT INTO folders (name, color) VALUES (?, ?)", [name, color], function (err) {
+                if (err) reject(err);
+                else resolve(this.lastID);
+            });
+        });
+    }
+
+    deleteFolder(id) {
+        return new Promise((resolve, reject) => {
+            // Also optionally clear folder assignment in accounts?
+            // For now, simple delete. User logic can handle re-assignment if needed.
+            // Or better: update accounts set folder = '' where folder = (select name from folders where id = ?)
+            // But we store folder NAME in accounts, not ID (based on plan).
+            // Let's get name first.
+            this.db.get("SELECT name FROM folders WHERE id = ?", [id], (err, row) => {
+                if (err || !row) {
+                    reject(err || 'Folder not found');
+                    return;
+                }
+                const folderName = row.name;
+                this.db.serialize(() => {
+                    this.db.run("BEGIN TRANSACTION");
+                    this.db.run("DELETE FROM folders WHERE id = ?", [id]);
+                    this.db.run("UPDATE accounts SET folder = '' WHERE folder = ?", [folderName]);
+                    this.db.run("COMMIT", (err) => {
+                        if (err) reject(err);
+                        else resolve(true);
+                    });
+                });
+            });
+        });
+    }
+
+    updateAccountFolder(uids, folderName) {
+        return new Promise((resolve, reject) => {
+            if (!uids || uids.length === 0) return resolve(0);
+            const placeholders = uids.map(() => '?').join(',');
+            const params = [folderName, ...uids];
+            this.db.run(`UPDATE accounts SET folder = ? WHERE uid IN (${placeholders})`, params, function (err) {
+                if (err) reject(err);
+                else resolve(this.changes);
             });
         });
     }

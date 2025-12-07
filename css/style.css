@@ -707,6 +707,7 @@ body {
     border-radius: 8px;
     transition: all 0.2s;
     margin-bottom: 2px;
+    position: relative;
 }
 
 .menu-item:hover {

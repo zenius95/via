@@ -8,7 +8,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 window.api = {
     send: (channel, data) => {
         // Allow specific channels
-        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey'];
+        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-account-folder'];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);
         }

@@ -89,6 +89,76 @@
 
             <div class="glass-divider"></div>
 
+            <div class="relative z-50">
+                <button id="folder-dropdown-btn" class="glass-btn-border" onclick="toggleFolderDropdown()"
+                    data-tooltip="Quản lý thư mục">
+                    <i class="ri-folder-3-fill text-amber-400"></i>
+                    <span>Thư mục</span>
+                    <span id="folder-badge-count"
+                        class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-amber-500/20">All</span>
+                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
+                </button>
+
+                <div id="folder-dropdown-menu" class="glass-dropdown-menu" style="min-width: 220px;">
+                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc & Quản
+                        lý
+                    </div>
+
+                    <!-- New Folder Input (Redesigned) -->
+                    <div class="px-2 pb-2 border-b border-white/10 mb-2 mt-1">
+                        <div class="relative group">
+                            <input type="text" id="new-folder-input" placeholder="Tạo mới..."
+                                class="glass-input-style w-full pl-8 pr-8 py-1.5 text-xs rounded-md focus:border-amber-500/50 transition-all"
+                                onkeydown="if(event.key === 'Enter') createNewFolder()">
+                            <i class="ri-add-line absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+
+                            <button onclick="createNewFolder()"
+                                class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded text-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10 transition-colors">
+                                <i class="ri-arrow-right-s-line"></i>
+                            </button>
+                        </div>
+
+                        <!-- Color Selection -->
+                        <div class="flex items-center gap-1.5 mt-2 px-1 justify-between" id="folder-color-selector">
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-slate-500 hover:scale-110 transition-transform cursor-pointer ring-2 ring-offset-1 ring-offset-[#0f172a] ring-white/50"
+                                data-color="slate" onclick="selectFolderColor(this, 'slate')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-red-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="red" onclick="selectFolderColor(this, 'red')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-orange-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="orange" onclick="selectFolderColor(this, 'orange')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-amber-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="amber" onclick="selectFolderColor(this, 'amber')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-emerald-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="emerald" onclick="selectFolderColor(this, 'emerald')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-cyan-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="cyan" onclick="selectFolderColor(this, 'cyan')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-blue-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="blue" onclick="selectFolderColor(this, 'blue')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-purple-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="purple" onclick="selectFolderColor(this, 'purple')"></button>
+                            <button
+                                class="w-3.5 h-3.5 rounded-full bg-pink-500 hover:scale-110 transition-transform cursor-pointer"
+                                data-color="pink" onclick="selectFolderColor(this, 'pink')"></button>
+                        </div>
+                        <input type="hidden" id="selected-folder-color" value="slate">
+                    </div>
+
+                    <div id="folder-list-container" class="max-h-[200px] overflow-y-auto custom-scrollbar">
+                        <!-- Folders injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-divider"></div>
+
             <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
                 <i class="ri-layout-line text-lg"></i>
             </button>
@@ -154,6 +224,15 @@
                 <div class="menu-item" onclick="menuAction('exportCsv')">
                     <i class="ri-file-text-fill text-sky-400"></i> Xuất CSV
                 </div>
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <i class="ri-folder-transfer-line text-amber-400"></i> Chuyển thư mục
+            <i class="ri-arrow-right-s-line ml-auto text-lg text-slate-500"></i>
+            <div class="submenu" id="ctx-menu-folders">
+                <!-- Folders injected here -->
+                <div class="menu-item italic text-slate-500 text-xs">Đang tải...</div>
             </div>
         </div>
         <div class="h-px bg-white/10 my-1 mx-2"></div>

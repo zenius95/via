@@ -20,6 +20,20 @@ ipcMain.handle('db:delete-accounts', async (event, uids) => {
     return await database.deleteAccounts(uids);
 });
 
+// Folder IPC
+ipcMain.handle('db:get-folders', async () => {
+    return await database.getFolders();
+});
+ipcMain.handle('db:add-folder', async (event, name) => {
+    return await database.addFolder(name);
+});
+ipcMain.handle('db:delete-folder', async (event, id) => {
+    return await database.deleteFolder(id);
+});
+ipcMain.handle('db:update-account-folder', async (event, { uids, folderName }) => {
+    return await database.updateAccountFolder(uids, folderName);
+});
+
 // Settings Handlers (Existing?)
 // Ensure IPC handlers are registered before app ready or inside createWindow if using webContents?
 // Usually defined at top level.
