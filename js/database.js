@@ -117,9 +117,23 @@ class Database {
                 user_agent TEXT,
                 screen_resolution TEXT,
                 notes TEXT,
-                created_at TEXT
+                created_at TEXT,
+                advanced_config TEXT
             )
         `);
+        });
+
+        // Migration: Check profiles table for advanced_config
+        this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
+            if (!err && rows && rows.length > 0) {
+                const hasAdv = rows.some(r => r.name === 'advanced_config');
+                if (!hasAdv) {
+                    this.db.run("ALTER TABLE profiles ADD COLUMN advanced_config TEXT", (err) => {
+                        if (err) console.error('Migration add advanced_config failed', err);
+                        else console.log('Migrated DB: Added advanced_config to profiles');
+                    });
+                }
+            }
         });
 
     }
@@ -382,13 +396,14 @@ class Database {
     addProfile(profile) {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
-                INSERT INTO profiles (name, os, browser, browser_version, user_agent, screen_resolution, notes, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO profiles (name, os, browser, browser_version, user_agent, screen_resolution, notes, created_at, advanced_config)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
             const createdAt = new Date().toISOString();
             stmt.run(
                 profile.name, profile.os, profile.browser, profile.browser_version || '', profile.user_agent,
                 profile.screen_resolution || '1920x1080', profile.notes || '', createdAt,
+                JSON.stringify(profile.advanced_config || {}),
                 function (err) {
                     if (err) reject(err);
                     else resolve(this.lastID);
@@ -403,12 +418,13 @@ class Database {
             const stmt = this.db.prepare(`
                 UPDATE profiles SET 
                     name = ?, os = ?, browser = ?, browser_version = ?, user_agent = ?, 
-                    screen_resolution = ?, notes = ?
+                    screen_resolution = ?, notes = ?, advanced_config = ?
                 WHERE id = ?
             `);
             stmt.run(
                 profile.name, profile.os, profile.browser, profile.browser_version || '', profile.user_agent,
-                profile.screen_resolution, profile.notes, profile.id,
+                profile.screen_resolution, profile.notes, JSON.stringify(profile.advanced_config || {}),
+                profile.id,
                 function (err) {
                     if (err) reject(err);
                     else resolve(this.changes);

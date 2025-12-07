@@ -140,6 +140,36 @@ function getBrowserIcon(browser) {
 
 // --- MODAL & FORM ---
 
+function switchProfileTab(tab) {
+    // Buttons
+    document.getElementById('tab-btn-basic').className = tab === 'basic'
+        ? 'py-2 px-4 text-sm font-medium border-b-2 border-blue-500 text-blue-400 focus:outline-none transition-colors'
+        : 'py-2 px-4 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition-colors';
+
+    document.getElementById('tab-btn-advanced').className = tab === 'advanced'
+        ? 'py-2 px-4 text-sm font-medium border-b-2 border-blue-500 text-blue-400 focus:outline-none transition-colors'
+        : 'py-2 px-4 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition-colors';
+
+    // Content
+    if (tab === 'basic') {
+        document.getElementById('tab-content-basic').classList.remove('hidden');
+        document.getElementById('tab-content-advanced').classList.add('hidden');
+    } else {
+        document.getElementById('tab-content-basic').classList.add('hidden');
+        document.getElementById('tab-content-advanced').classList.remove('hidden');
+    }
+}
+
+function toggleGeoFields() {
+    const mode = document.getElementById('adv-geo-mode').value;
+    const customDiv = document.getElementById('adv-geo-custom');
+    if (mode === 'custom') {
+        customDiv.classList.remove('hidden');
+    } else {
+        customDiv.classList.add('hidden');
+    }
+}
+
 function openProfileModal(profile = null) {
     const modal = document.getElementById('modal-profile');
     const form = document.getElementById('form-profile');
@@ -151,6 +181,29 @@ function openProfileModal(profile = null) {
 
     // Reset Select2 placeholder/values if needed (REMOVED to fix blank issue)
     // $('#profile-os, #profile-browser, #profile-browser-ver, #profile-resolution').val(null).trigger('change');
+
+    // Reset Tabs
+    switchProfileTab('basic');
+
+    // Default Advanced Values
+    document.getElementById('adv-webrtc').value = 'noise';
+    document.getElementById('adv-canvas').value = 'noise';
+    document.getElementById('adv-webgl-image').value = 'noise';
+    document.getElementById('adv-webgl-meta').value = 'noise';
+    document.getElementById('adv-audio').value = 'noise';
+    document.getElementById('adv-media').value = 'noise';
+    document.getElementById('adv-clientrects').value = 'noise';
+    document.getElementById('adv-concurrency').value = '4';
+    document.getElementById('adv-memory').value = '8';
+    document.getElementById('adv-dnt').checked = true;
+    document.getElementById('adv-geo-mode').value = 'prompt';
+    document.getElementById('adv-geo-lat').value = '';
+    document.getElementById('adv-geo-long').value = '';
+    document.getElementById('adv-geo-acc').value = '10';
+    document.getElementById('adv-timezone').value = 'auto';
+    document.getElementById('adv-language').value = 'vi-VN';
+    document.getElementById('adv-args').value = '';
+    toggleGeoFields();
 
     modal.classList.remove('hidden');
 
@@ -203,6 +256,36 @@ function openProfileModal(profile = null) {
         fetchBrowserVersions(profile.browser).then(() => {
             $('#profile-browser-ver').val(profile.browser_version || '120').trigger('change');
         });
+
+        // Load Advanced Config
+        try {
+            const adv = typeof profile.advanced_config === 'string' ? JSON.parse(profile.advanced_config) : (profile.advanced_config || {});
+
+            if (adv.webrtc) document.getElementById('adv-webrtc').value = adv.webrtc;
+            if (adv.canvas) document.getElementById('adv-canvas').value = adv.canvas;
+            if (adv.webgl_image) document.getElementById('adv-webgl-image').value = adv.webgl_image;
+            if (adv.webgl_meta) document.getElementById('adv-webgl-meta').value = adv.webgl_meta;
+            if (adv.audio) document.getElementById('adv-audio').value = adv.audio;
+            if (adv.media) document.getElementById('adv-media').value = adv.media;
+            if (adv.clientrects) document.getElementById('adv-clientrects').value = adv.clientrects;
+            if (adv.concurrency) document.getElementById('adv-concurrency').value = adv.concurrency;
+            if (adv.memory) document.getElementById('adv-memory').value = adv.memory;
+            if (adv.dnt !== undefined) document.getElementById('adv-dnt').checked = adv.dnt;
+
+            if (adv.geo_mode) document.getElementById('adv-geo-mode').value = adv.geo_mode;
+            if (adv.geo_lat) document.getElementById('adv-geo-lat').value = adv.geo_lat;
+            if (adv.geo_long) document.getElementById('adv-geo-long').value = adv.geo_long;
+            if (adv.geo_acc) document.getElementById('adv-geo-acc').value = adv.geo_acc;
+
+            if (adv.timezone) document.getElementById('adv-timezone').value = adv.timezone;
+            if (adv.language) document.getElementById('adv-language').value = adv.language;
+            if (adv.args) document.getElementById('adv-args').value = adv.args;
+
+            toggleGeoFields(); // Refresh visibility
+        } catch (e) {
+            console.error('Error parsing advanced config', e);
+        }
+
     } else {
         title.innerText = 'Thêm mới Profile';
         // New Profile defaults
@@ -228,9 +311,32 @@ async function handleProfileSubmit(e) {
     const notes = document.getElementById('profile-notes').value;
     const ua = document.getElementById('profile-ua').value;
 
+    // Collect Advanced Config
+    const advanced_config = {
+        webrtc: document.getElementById('adv-webrtc').value,
+        canvas: document.getElementById('adv-canvas').value,
+        webgl_image: document.getElementById('adv-webgl-image').value,
+        webgl_meta: document.getElementById('adv-webgl-meta').value,
+        audio: document.getElementById('adv-audio').value,
+        media: document.getElementById('adv-media').value,
+        clientrects: document.getElementById('adv-clientrects').value,
+        concurrency: document.getElementById('adv-concurrency').value,
+        memory: document.getElementById('adv-memory').value,
+        dnt: document.getElementById('adv-dnt').checked,
+
+        geo_mode: document.getElementById('adv-geo-mode').value,
+        geo_lat: document.getElementById('adv-geo-lat').value,
+        geo_long: document.getElementById('adv-geo-long').value,
+        geo_acc: document.getElementById('adv-geo-acc').value,
+
+        timezone: document.getElementById('adv-timezone').value,
+        language: document.getElementById('adv-language').value,
+        args: document.getElementById('adv-args').value
+    };
+
     const profileData = {
         name, os, browser, browser_version: version, user_agent: ua,
-        screen_resolution: resolution, notes
+        screen_resolution: resolution, notes, advanced_config
     };
 
     try {
