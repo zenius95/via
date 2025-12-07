@@ -24,8 +24,8 @@ ipcMain.handle('db:delete-accounts', async (event, uids) => {
 ipcMain.handle('db:get-folders', async () => {
     return await database.getFolders();
 });
-ipcMain.handle('db:add-folder', async (event, name) => {
-    return await database.addFolder(name);
+ipcMain.handle('db:add-folder', async (event, name, color) => {
+    return await database.addFolder(name, color);
 });
 ipcMain.handle('db:delete-folder', async (event, id) => {
     return await database.deleteFolder(id);

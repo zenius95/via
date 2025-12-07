@@ -197,7 +197,25 @@ const columnDefs = [
     { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
-    { headerName: "Thư mục", field: "folder", width: 120, colId: 'folder', cellRenderer: textCellRenderer },
+    {
+        headerName: "Thư mục", field: "folder", width: 150, colId: 'folder',
+        cellRenderer: (params) => {
+            if (params.data.isLoading) return `<div class="skeleton h-3 w-24"></div>`;
+            const folderName = params.value;
+            if (!folderName) return '';
+
+            // Lookup color
+            let colorClass = 'text-slate-400';
+            if (typeof window.folders !== 'undefined' && Array.isArray(window.folders)) {
+                const folder = window.folders.find(f => f.name === folderName);
+                if (folder && folder.color && typeof window.FOLDER_COLORS !== 'undefined') {
+                    colorClass = window.FOLDER_COLORS[folder.color] || 'text-slate-400';
+                }
+            }
+
+            return `<div class="flex items-center h-full"><i class="ri-folder-fill ${colorClass} mr-2"></i><span class="truncate">${folderName}</span></div>`;
+        }
+    },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',

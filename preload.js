@@ -6,11 +6,11 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Given the user config (nodeIntegration: true, contextIsolation: false), we can manually assign.
 
 window.api = {
-    send: (channel, data) => {
+    send: (channel, ...args) => {
         // Allow specific channels
         let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-account-folder'];
         if (validChannels.includes(channel)) {
-            return ipcRenderer.invoke(channel, data);
+            return ipcRenderer.invoke(channel, ...args);
         }
     },
     on: (channel, func) => {

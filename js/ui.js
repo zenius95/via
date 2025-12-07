@@ -987,12 +987,17 @@ const FOLDER_COLORS = {
     purple: 'text-purple-400',
     pink: 'text-pink-400',
 };
+window.FOLDER_COLORS = FOLDER_COLORS; // Expose to global for Grid
 
 async function loadFolders() {
     try {
         folders = await window.api.send('db:get-folders');
+        window.folders = folders; // Expose to global
         renderFolderDropdown();
         renderFolderCtxMenu();
+        if (typeof gridApi !== 'undefined') {
+            gridApi.refreshCells({ columns: ['folder'], force: true });
+        }
     } catch (err) {
         showToast('Lỗi tải danh sách thư mục', 'error');
         console.error(err);
@@ -1070,7 +1075,7 @@ function renderFolderDropdown() {
     const allDiv = document.createElement('div');
     allDiv.className = `menu-item ${currentFolderFilter === null ? 'bg-blue-500/20 text-blue-300' : ''}`;
     allDiv.innerHTML = `
-        <i class="ri-folders-line ${currentFolderFilter === null ? 'text-blue-400' : 'text-slate-500'} mr-2"></i>
+        <i class="ri-folders-fill ${currentFolderFilter === null ? 'text-blue-400' : 'text-slate-500'} mr-2"></i>
         <span class="flex-1">Tất cả thư mục</span>
     `;
     allDiv.onclick = () => filterByFolder(null);
@@ -1107,7 +1112,7 @@ function renderFolderCtxMenu() {
         const div = document.createElement('div');
         div.className = 'menu-item';
         const colorClass = FOLDER_COLORS[folder.color] || 'text-slate-400';
-        div.innerHTML = `<i class="ri-folder-line ${colorClass}"></i> ${folder.name}`;
+        div.innerHTML = `<i class="ri-folder-fill ${colorClass}"></i> ${folder.name}`;
         div.onclick = () => assignToFolder(folder.name);
         container.appendChild(div);
     });
@@ -1148,11 +1153,7 @@ async function assignToFolder(folderName) {
         });
 
         const ctxMenu = document.getElementById('context-menu');
-        // Hide context menu logic (assuming standard specific logic or generic hide)
-        // Since I don't have the showContextMenu and hide logic fully mapped, 
-        // I will rely on standard behavior or force hide if I can find the way.
-        // Usually clicking outside implies hiding, or explicit hide.
-        // Let's assume the user clicks away or the menu hides itself.
+        if (ctxMenu) ctxMenu.classList.remove('active');
     } catch (err) {
         showToast('Lỗi gán thư mục', 'error');
         console.error(err);
