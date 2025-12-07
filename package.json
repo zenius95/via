@@ -20,9 +20,5 @@
   "homepage": "https://github.com/zenius95/via#readme",
   "devDependencies": {
     "electron": "^39.2.5"
-  },
-  "dependencies": {
-    "puppeteer-core": "^24.32.0",
-    "sqlite3": "^5.1.7"
   }
 }

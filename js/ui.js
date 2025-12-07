@@ -15,7 +15,7 @@ function showToast(msg, type = 'success') {
     document.getElementById('toast-msg').innerText = msg;
     document.getElementById('toast-icon-container').innerHTML = config.icon;
     document.getElementById('toast-icon-container').className = `p-1.5 rounded-full ${config.iconBg}`;
-
+    
     clearTimeout(toastTimeout);
     requestAnimationFrame(() => toast.classList.remove('translate-y-32'));
     toastTimeout = setTimeout(() => toast.classList.add('translate-y-32'), 3000);
@@ -47,14 +47,14 @@ let dragSrcEl = null;
 function openColumnConfig() {
     if (!gridApi) return;
     colList.innerHTML = '';
-    const allCols = gridApi.getColumns();
+    const allCols = gridApi.getColumns(); 
     let displayCols = allCols.map(col => ({
         id: col.getColId(), header: col.getColDef().headerName, visible: col.isVisible(), pinned: col.isPinned()
     })).filter(c => c.header && c.id !== 'process');
 
     displayCols.forEach(col => {
         const div = document.createElement('div');
-        div.className = "glass-sortable-item sortable-item";
+        div.className = "glass-sortable-item sortable-item"; 
         div.draggable = true;
         div.dataset.colId = col.id;
         div.innerHTML = `
@@ -79,17 +79,7 @@ function closeColumnModal() {
     setTimeout(() => { colModal.classList.add('hidden'); }, 200);
 }
 
-function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-    this.classList.add('dragging');
-
-    // Hide default drag ghost
-    const img = new Image();
-    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    e.dataTransfer.setDragImage(img, 0, 0);
-}
+function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); this.classList.add('dragging'); }
 function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragSrcEl !== this) { const list = dragSrcEl.parentNode; const siblings = Array.from(list.children); const s = siblings.indexOf(dragSrcEl); const t = siblings.indexOf(this); if (s < t) { this.after(dragSrcEl); } else { this.before(dragSrcEl); } } return false; }
 function handleDrop(e) { if (e.stopPropagation) e.stopPropagation(); return false; }
 function handleDragEnd(e) { this.classList.remove('dragging'); }
@@ -101,7 +91,7 @@ const contextMenu = document.getElementById('context-menu');
 function showContextMenu(event) {
     event.preventDefault();
     const selectedCount = gridApi.getSelectedRows().length;
-
+    
     // Check nếu có vùng bôi đen (Range Selection)
     const ranges = gridApi ? gridApi.getCellRanges() : [];
     const hasRange = ranges && ranges.length > 0;
@@ -109,7 +99,7 @@ function showContextMenu(event) {
     // 1. Logic disable/enable cho các nút thao tác cần Selected Rows (Xuất, Xóa...)
     // Loại trừ nút select-range và submenu ra khỏi logic chung này
     contextMenu.querySelectorAll('.menu-item:not(#menu-select-range):not(.submenu .menu-item)').forEach(item => {
-        if (selectedCount === 0) item.classList.add('disabled');
+        if(selectedCount === 0) item.classList.add('disabled'); 
         else item.classList.remove('disabled');
     });
 
@@ -127,9 +117,9 @@ function showContextMenu(event) {
     contextMenu.classList.add('active');
 }
 
-document.addEventListener('click', (e) => {
+document.addEventListener('click', (e) => { 
     if (!contextMenu.contains(e.target)) contextMenu.classList.remove('active');
-
+    
     // Đóng column menu khi click ra ngoài
     const colMenu = document.getElementById('column-menu');
     // FIX: Đã đổi tên class thành custom-header-action-btn
@@ -140,7 +130,7 @@ document.addEventListener('click', (e) => {
 
 function menuAction(action) {
     contextMenu.classList.remove('active');
-
+    
     // Lấy data đã chọn (cho các action export/delete)
     const selectedData = gridApi.getSelectedRows();
 
@@ -173,7 +163,7 @@ function menuAction(action) {
         ranges.forEach(range => {
             const start = Math.min(range.startRow.rowIndex, range.endRow.rowIndex);
             const end = Math.max(range.startRow.rowIndex, range.endRow.rowIndex);
-            for (let i = start; i <= end; i++) {
+            for(let i = start; i <= end; i++) {
                 rowIndexes.add(i);
             }
         });
@@ -186,22 +176,6 @@ function menuAction(action) {
             }
         });
         showToast(`Đã tick chọn ${count} tài khoản từ vùng bôi đen`, "success");
-    } else if (action === 'openBrowser' || action === 'openBrowserHeadless') {
-        const isHeadless = (action === 'openBrowserHeadless');
-
-        if (selectedData.length === 0) {
-            showToast('Vui lòng chọn 1 tài khoản', 'error');
-            return;
-        }
-        if (selectedData.length > 5) {
-            showToast('Mở từ từ thôi Bro, máy lag đấy!', 'warning');
-        }
-
-        // Duyệt qua các row đã chọn và mở tab
-        selectedData.forEach(acc => {
-            acc.headless = isHeadless;
-            TabManager.createTab(acc);
-        });
     }
 }
 
@@ -217,19 +191,22 @@ function showColumnMenu(event, colId) {
     }
 
     // 1. UPDATE MENU TEXT DYNAMICALLY
+    // Lấy trạng thái cột hiện tại
     const col = gridApi.getColumn(colId);
     if (col) {
         // -- Pin Button --
-        const isPinned = col.isPinned();
+        const isPinned = col.isPinned(); // true/false or 'left'/'right'
         const pinBtn = document.getElementById('col-menu-pin');
         if (pinBtn) {
-            pinBtn.innerHTML = isPinned
-                ? '<i class="ri-unpin-line text-amber-400"></i> Bỏ ghim cột'
+            pinBtn.innerHTML = isPinned 
+                ? '<i class="ri-unpin-line text-amber-400"></i> Bỏ ghim cột' 
                 : '<i class="ri-pushpin-2-line text-amber-400"></i> Ghim sang trái';
         }
 
         // -- Mask Button (Che thông tin) --
         const maskBtn = document.getElementById('col-menu-mask');
+        // Check biến maskedColumns (giả sử maskedColumns là biến global bên grid.js)
+        // Nếu không access được trực tiếp, ta có thể dùng window.maskedColumns hoặc check logic khác
         if (maskBtn && typeof maskedColumns !== 'undefined') {
             const isMasked = maskedColumns.has(colId);
             maskBtn.innerHTML = isMasked
@@ -239,33 +216,34 @@ function showColumnMenu(event, colId) {
     }
 
     // 2. POSITION & SHOW
+    // FIX: Update class name to 'custom-header-action-btn'
     const btn = event.target.closest('.custom-header-action-btn');
     if (btn) {
         const rect = btn.getBoundingClientRect();
         menu.style.left = (rect.left - 180) + 'px'; // Căn lùi sang trái xíu
         menu.style.top = (rect.bottom + 5) + 'px';
         menu.style.display = 'block';
-
-        menu.classList.remove('active');
-        requestAnimationFrame(() => menu.classList.add('active'));
+        
+        menu.classList.remove('active'); 
+        requestAnimationFrame(()=> menu.classList.add('active'));
     }
 }
 
 function colMenuAction(action) {
     const menu = document.getElementById('column-menu');
     if (menu) menu.style.display = 'none';
-
+    
     if (!currentTargetColId || !gridApi) return;
 
     if (action === 'hide') {
         gridApi.setColumnsVisible([currentTargetColId], false);
         showToast('Đã ẩn cột', 'info');
-    }
+    } 
     else if (action === 'copy') {
         // --- LOGIC COPY TOÀN BỘ CỘT ---
         const colDef = gridApi.getColumn(currentTargetColId).getColDef();
         const field = colDef.field;
-
+        
         if (!field) {
             showToast('Cột này không có dữ liệu thô để copy', 'error');
             return;
@@ -322,7 +300,7 @@ function toggleFilterDropdown() {
     const dropdown = document.getElementById('filter-dropdown-menu');
     const btn = document.getElementById('filter-dropdown-btn');
     const isOpen = dropdown.classList.contains('show');
-
+    
     if (isOpen) {
         dropdown.classList.remove('show');
         btn.classList.remove('active');
@@ -333,7 +311,7 @@ function toggleFilterDropdown() {
     }
 }
 
-document.addEventListener('click', function (e) {
+document.addEventListener('click', function(e) {
     const dropdown = document.getElementById('filter-dropdown-menu');
     const btn = document.getElementById('filter-dropdown-btn');
     if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
@@ -357,12 +335,12 @@ function updateFilterCounts() {
     const counts = calculateStatusCounts();
     const totalSelected = selectedStatuses.size;
     const badge = document.getElementById('filter-badge-count');
-
+    
     if (totalSelected === 3) badge.innerText = 'All';
     else badge.innerText = totalSelected;
-
+    
     const dropdown = document.getElementById('filter-dropdown-menu');
-    if (dropdown.classList.contains('show')) {
+    if(dropdown.classList.contains('show')) {
         renderFilterItems();
     }
 }
@@ -371,16 +349,16 @@ function renderFilterItems() {
     const container = document.getElementById('filter-list-container');
     const counts = calculateStatusCounts();
     container.innerHTML = '';
-
+    
     Object.keys(statusMap).forEach(key => {
         const info = statusMap[key];
         const isChecked = selectedStatuses.has(key);
         const count = counts[key] || 0;
-
+        
         const div = document.createElement('div');
         div.className = `filter-item ${isChecked ? 'active' : ''}`;
         div.onclick = (e) => toggleStatusFilter(key, e);
-
+        
         div.innerHTML = `
             <div class="status-dot ${info.colorClass}"></div>
             <span class="text-slate-300 text-sm flex-1">${info.label}</span>
@@ -403,299 +381,3 @@ function toggleStatusFilter(status, event) {
     updateFilterCounts();
     if (gridApi) gridApi.onFilterChanged();
 }
-
-// --- LAUNCH QUEUE MANAGER ---
-const LaunchQueue = {
-    queue: [],
-    activeLaunches: 0,
-    maxConcurrent: 2, // Default
-    delayMs: 1000,   // Default
-    isProcessing: false,
-
-    async init() {
-        try {
-            const settings = await ipcRenderer.invoke('get-settings');
-            if (settings) {
-                this.maxConcurrent = parseInt(settings.maxThreads) || 2;
-                this.delayMs = (parseInt(settings.launchDelay) || 1) * 1000;
-                console.log(`Queue Init: Max=${this.maxConcurrent}, Delay=${this.delayMs}ms`);
-            }
-        } catch (e) { console.error('Queue Init Error:', e); }
-    },
-
-    addToQueue(task) {
-        this.queue.push(task);
-        this.process();
-    },
-
-    async process() {
-        if (this.isProcessing) return;
-        this.isProcessing = true;
-
-        while (this.queue.length > 0 && this.activeLaunches < this.maxConcurrent) {
-            const task = this.queue.shift();
-            this.activeLaunches++;
-
-            this.runTask(task).then(() => {
-                this.activeLaunches--;
-                setTimeout(() => {
-                    this.process();
-                }, this.delayMs);
-            });
-        }
-
-        this.isProcessing = false;
-    },
-
-    async runTask(task) {
-        const { accountData, tabId, loadingDiv, uiWv } = task;
-
-        try {
-            if (!document.getElementById(`view-${tabId}`)) return;
-
-            const isHeadless = accountData.headless || false;
-            const result = await ipcRenderer.invoke('puppeteer-start', {
-                uid: accountData.uid,
-                proxy: accountData.proxy,
-                userAgent: accountData.userAgent,
-                headless: isHeadless
-            });
-
-            if (result.success) {
-                if (document.getElementById(`loading-${tabId}`)) loadingDiv.remove();
-                uiWv.classList.remove('hidden');
-                uiWv.src = `via.html?tabId=${tabId}&uid=${accountData.uid}`;
-            } else {
-                if (document.getElementById(`loading-${tabId}`)) {
-                    loadingDiv.innerHTML = `
-                        <div class="flex flex-col items-center text-center p-6">
-                            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-                                <i class="ri-error-warning-fill text-3xl text-red-500"></i>
-                            </div>
-                            <h3 class="text-red-400 font-bold text-lg mb-2">Khởi động thất bại</h3>
-                            <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${result.msg}</p>
-                            <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
-                                Đóng Tab
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            if (document.getElementById(`loading-${tabId}`)) {
-                loadingDiv.innerHTML = `
-                    <div class="flex flex-col items-center text-center p-6">
-                         <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-                            <i class="ri-plug-line text-3xl text-red-500"></i>
-                        </div>
-                        <h3 class="text-red-400 font-bold text-lg mb-2">Lỗi kết nối IPC</h3>
-                        <p class="text-slate-400 text-sm mb-6 max-w-[300px]">${err.message}</p>
-                        <button onclick="TabManager.closeTab('${tabId}')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-700">
-                            Đóng Tab
-                        </button>
-                    </div>
-                `;
-            }
-        }
-    }
-};
-
-LaunchQueue.init();
-
-
-const TabManager = {
-    tabs: {},
-    activeTabId: 'dashboard',
-
-    switchToDashboard: function () {
-        this.activeTabId = 'dashboard';
-
-        // UI Tabs
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-dashboard').classList.add('active');
-
-        // UI Views
-        document.getElementById('dashboard-view').classList.remove('hidden');
-        document.getElementById('webview-container').classList.add('hidden');
-
-        // Ẩn tất cả các wrapper tabs bằng class mới
-        Object.values(this.tabs).forEach(t => {
-            t.viewWrapper.classList.remove('tab-view-active');
-            t.viewWrapper.classList.add('tab-view-hidden');
-        });
-    },
-
-    createTab: function (accountData) {
-        const tabId = 'tab-' + accountData.uid;
-
-        if (this.tabs[tabId]) {
-            this.switchToTab(tabId);
-            return;
-        }
-
-        // 1. Create Button immediately
-        const tabBtn = document.createElement('div');
-        tabBtn.className = 'tab';
-        tabBtn.id = `btn-${tabId}`;
-        tabBtn.innerHTML = `
-            <div class="tab-content">
-                <img src="${accountData.avatar || 'https://via.placeholder.com/20'}" class="w-4 h-4 rounded-full border border-slate-600">
-                <span class="tab-title max-w-[100px] overflow-hidden text-ellipsis">${accountData.name || accountData.uid}</span>
-            </div>
-            <div class="tab-close-btn" onclick="event.stopPropagation(); TabManager.closeTab('${tabId}')">
-                <i class="ri-close-line"></i>
-            </div>
-        `;
-        tabBtn.onclick = () => this.switchToTab(tabId);
-
-        // Enable Drag & Drop
-        tabBtn.draggable = true;
-        tabBtn.addEventListener('dragstart', handleDragStart);
-        tabBtn.addEventListener('dragover', handleDragOver);
-        tabBtn.addEventListener('drop', handleDrop);
-        tabBtn.addEventListener('dragend', handleDragEnd);
-
-        document.getElementById('tabs-container').appendChild(tabBtn);
-
-        // 2. Create Wrapper & Loading State
-        const viewWrapper = document.createElement('div');
-        viewWrapper.id = `view-${tabId}`;
-        viewWrapper.className = 'tab-view-wrapper tab-view-hidden';
-
-        // Loading Overlay
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = `loading-${tabId}`;
-        loadingDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-50';
-        loadingDiv.innerHTML = `
-            <div class="flex flex-col items-center animate-pulse">
-                 <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                 <div class="text-blue-400 font-medium text-sm">Đang khởi động Browser...</div>
-                 <div class="text-slate-500 text-xs mt-2">ID: ${accountData.uid}</div>
-                 <div class="text-slate-600 text-[10px] mt-1">Đang chờ hàng đợi...</div>
-            </div>
-        `;
-        viewWrapper.appendChild(loadingDiv);
-
-        // Webview (initially hidden)
-        const uiWv = document.createElement('webview');
-        uiWv.className = 'w-full h-full bg-slate-900 hidden';
-        uiWv.setAttribute('nodeintegration', 'true');
-        uiWv.setAttribute('webpreferences', 'contextIsolation=no');
-        viewWrapper.appendChild(uiWv);
-
-        document.getElementById('webview-container').appendChild(viewWrapper);
-
-        // 3. Register Tab
-        this.tabs[tabId] = {
-            id: tabId,
-            data: accountData,
-            viewWrapper: viewWrapper,
-            uiWv: uiWv
-        };
-
-        // Switch to new tab immediately
-        this.switchToTab(tabId);
-
-        // 4. PUSH TO QUEUE
-        LaunchQueue.addToQueue({
-            accountData,
-            tabId,
-            loadingDiv,
-            uiWv
-        });
-    },
-
-    switchToTab: function (tabId) {
-        if (!this.tabs[tabId]) return;
-        this.activeTabId = tabId;
-
-        // UI Tabs
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`btn-${tabId}`).classList.add('active');
-
-        // UI Views Main
-        document.getElementById('dashboard-view').classList.add('hidden');
-        document.getElementById('webview-container').classList.remove('hidden');
-
-        // --- LOGIC MỚI: Dùng Visibility thay vì Display ---
-        Object.values(this.tabs).forEach(t => {
-            if (t.id === tabId) {
-                // Hiện tab này
-                t.viewWrapper.classList.remove('tab-view-hidden');
-                t.viewWrapper.classList.add('tab-view-active');
-            } else {
-                // Ẩn tab khác
-                t.viewWrapper.classList.remove('tab-view-active');
-                t.viewWrapper.classList.add('tab-view-hidden');
-            }
-        });
-    },
-
-    closeTab: async function (tabId) {
-        if (!this.tabs[tabId]) return;
-
-        // Gọi IPC đóng browser (chỉ nếu là tab account)
-        if (tabId.startsWith('tab-') && tabId !== 'settings') {
-            ipcRenderer.invoke('puppeteer-close', tabId).catch(console.error);
-        }
-
-        this.tabs[tabId].viewWrapper.remove();
-        document.getElementById(`btn-${tabId}`).remove();
-        delete this.tabs[tabId];
-
-        if (this.activeTabId === tabId) {
-            this.switchToDashboard();
-        }
-    },
-
-    openSettingsTab: function () {
-        const tabId = 'settings';
-
-        if (this.tabs[tabId]) {
-            this.switchToTab(tabId);
-            return;
-        }
-
-        // 1. Create Button
-        const tabBtn = document.createElement('div');
-        tabBtn.className = 'tab';
-        tabBtn.id = `btn-${tabId}`;
-        tabBtn.innerHTML = `
-            <div class="tab-content">
-                <i class="ri-settings-3-fill text-slate-400"></i>
-                <span class="tab-title">Cài đặt</span>
-            </div>
-            <div class="tab-close-btn" onclick="event.stopPropagation(); TabManager.closeTab('${tabId}')">
-                <i class="ri-close-line"></i>
-            </div>
-        `;
-        tabBtn.onclick = () => this.switchToTab(tabId);
-        document.getElementById('tabs-container').appendChild(tabBtn);
-
-        // 2. Create Wrapper
-        const viewWrapper = document.createElement('div');
-        viewWrapper.id = `view-${tabId}`;
-        viewWrapper.className = 'tab-view-wrapper tab-view-hidden'; // Start hidden
-
-        // Webview
-        const uiWv = document.createElement('webview');
-        uiWv.src = 'setting.html';
-        uiWv.className = 'w-full h-full bg-transparent';
-        uiWv.setAttribute('nodeintegration', 'true');
-        uiWv.setAttribute('webpreferences', 'contextIsolation=no');
-
-        viewWrapper.appendChild(uiWv);
-        document.getElementById('webview-container').appendChild(viewWrapper);
-
-        // 3. Register & Switch
-        this.tabs[tabId] = {
-            id: tabId,
-            data: { name: 'Cài đặt' },
-            viewWrapper: viewWrapper,
-            uiWv: uiWv
-        };
-
-        this.switchToTab(tabId);
-    }
-};

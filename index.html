@@ -18,11 +18,31 @@
 
 <body oncontextmenu="return false;">
     <div id="titlebar">
-        <div class="tabs-container" id="tabs-container">
-            <div class="tab active" onclick="TabManager.switchToDashboard()" id="tab-dashboard">
+        <div class="titlebar-drag-region">
+        </div>
+        <div class="tabs-container">
+            <div class="tab active">
                 <div class="tab-content">
-                    <i class="ri-dashboard-fill text-blue-400"></i>
-                    <span class="tab-title">Dashboard</span>
+                    <i class="ri-facebook-circle-fill text-blue-400"></i>
+                    <span class="tab-title">Account</span>
+                </div>
+            </div>
+            <div class="tab">
+                <div class="tab-content">
+                    <i class="ri-flow-chart"></i>
+                    <span class="tab-title">Workflow</span>
+                </div>
+            </div>
+            <div class="tab">
+                <div class="tab-content">
+                    <i class="ri-folder-user-fill"></i>
+                    <span class="tab-title">Profile</span>
+                </div>
+            </div>
+            <div class="tab">
+                <div class="tab-content">
+                    <i class="ri-global-line"></i>
+                    <span class="tab-title">Proxy</span>
                 </div>
             </div>
         </div>
@@ -39,97 +59,84 @@
         </div>
     </div>
 
-    <div id="dashboard-view" class="flex flex-col flex-1 w-full min-h-0">
+    <div class="glass-toolbar">
+        <!-- LEFT CONTROLS -->
+        <div class="flex items-center gap-2 shrink-0">
+            <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
+                <i class="ri-play-fill text-lg"></i>
+                <span class="ml-1">Bắt đầu</span>
+            </button>
 
-        <div class="glass-toolbar">
-            <!-- LEFT CONTROLS -->
-            <div class="flex items-center gap-2 shrink-0">
-                <button class="btn-start-pro" onclick="showToast('Hệ thống đang khởi chạy...', 'info')">
-                    <i class="ri-play-fill text-lg"></i>
-                    <span class="ml-1">Bắt đầu</span>
+            <div class="glass-divider"></div>
+
+            <div class="relative z-50">
+                <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
+                    data-tooltip="Lọc trạng thái">
+                    <i class="ri-filter-3-fill text-blue-400"></i>
+                    <span>Trạng thái</span>
+                    <span id="filter-badge-count"
+                        class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
+                    <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
                 </button>
 
-                <div class="glass-divider"></div>
-
-                <div class="relative z-50">
-                    <button id="filter-dropdown-btn" class="glass-btn-border" onclick="toggleFilterDropdown()"
-                        data-tooltip="Lọc trạng thái">
-                        <i class="ri-filter-3-fill text-blue-400"></i>
-                        <span>Trạng thái</span>
-                        <span id="filter-badge-count"
-                            class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-blue-500/20">All</span>
-                        <i class="ri-arrow-down-s-line ml-1 text-slate-500"></i>
-                    </button>
-
-                    <div id="filter-dropdown-menu" class="glass-dropdown-menu">
-                        <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc
-                            theo
-                            trạng thái</div>
-                        <div id="filter-list-container">
-                        </div>
+                <div id="filter-dropdown-menu" class="glass-dropdown-menu">
+                    <div class="text-[10px] uppercase text-slate-500 font-bold px-2 py-1 mb-1 tracking-wider">Lọc theo
+                        trạng thái</div>
+                    <div id="filter-list-container">
                     </div>
-                </div>
-
-                <div class="glass-divider"></div>
-
-                <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
-                    <i class="ri-layout-line text-lg"></i>
-                </button>
-            </div>
-
-            <!-- CENTER SEARCH (Responsive) -->
-            <div class="flex-1 px-8 flex justify-center">
-                <div class="relative group w-full max-w-[600px]">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
-                    </div>
-                    <!-- w-full to fill max-w-[600px] container -->
-                    <input type="text" placeholder="Tìm kiếm tài khoản..."
-                        class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
-                        oninput="onQuickFilterChanged()">
                 </div>
             </div>
 
-            <!-- RIGHT CONTROLS -->
-            <div class="flex items-center shrink-0">
-                <button class="glass-btn-border" data-tooltip="Cài đặt" onclick="TabManager.openSettingsTab()">
-                    <i class="ri-settings-3-line text-lg"></i>
-                </button>
+            <div class="glass-divider"></div>
+
+            <button class="glass-btn-border" data-tooltip="Tùy chỉnh cột" onclick="openColumnConfig()">
+                <i class="ri-layout-line text-lg"></i>
+            </button>
+        </div>
+
+        <!-- CENTER SEARCH (Responsive) -->
+        <div class="flex-1 px-8 flex justify-center">
+            <div class="relative group w-full max-w-[600px]">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ri-search-line text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                </div>
+                <!-- w-full to fill max-w-[600px] container -->
+                <input type="text" placeholder="Tìm kiếm tài khoản..."
+                    class="search-input glass-input-style pl-9 pr-4 py-2 rounded-lg text-sm w-full transition-all"
+                    oninput="onQuickFilterChanged()">
             </div>
         </div>
 
-        <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
-
-        <div class="footer-pro">
-            <div class="stat-pill group cursor-default glass-btn-border">
-                <div>
-                    <span class="stat-label">Tổng:</span>
-                    <span id="total-rows" class="stat-value text-slate-200">0</span>
-                </div>
-                <div class="footer-divider"></div>
-                <div>
-                    <span class="stat-label transition-colors">Chọn:</span>
-                    <span id="selected-rows" class="stat-value text-slate-200">0</span>
-                </div>
-                <div class="footer-divider"></div>
-                <div>
-                    <span class="stat-label transition-colors">Vùng:</span>
-                    <span id="range-rows" class="stat-value text-slate-200">0</span>
-                </div>
-            </div>
+        <!-- RIGHT CONTROLS -->
+        <div class="flex items-center shrink-0">
+            <button class="glass-btn-border" data-tooltip="Cài đặt">
+                <i class="ri-settings-3-line text-lg"></i>
+            </button>
         </div>
     </div>
 
-    <div id="webview-container" class="flex-1 w-full min-h-0 hidden relative">
+    <div id="myGrid" class="ag-theme-alpine-dark flex-1 w-full min-h-0"></div>
+
+    <div class="footer-pro">
+        <div class="stat-pill group cursor-default glass-btn-border">
+            <div>
+                <span class="stat-label">Tổng:</span>
+                <span id="total-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Chọn:</span>
+                <span id="selected-rows" class="stat-value text-slate-200">0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div>
+                <span class="stat-label transition-colors">Vùng:</span>
+                <span id="range-rows" class="stat-value text-slate-200">0</span>
+            </div>
+        </div>
     </div>
 
     <div id="context-menu">
-        <div class="menu-item" onclick="menuAction('openBrowser')">
-            <i class="ri-earth-fill text-emerald-400"></i> Mở trình duyệt (Login)
-        </div>
-        <div class="menu-item" onclick="menuAction('openBrowserHeadless')">
-            <i class="ri-ghost-line text-slate-400"></i> Mở tab mới (Headless)
-        </div>
         <div id="menu-select-range" class="menu-item" onclick="menuAction('selectRange')">
             <i class="ri-checkbox-multiple-fill text-purple-400"></i> Chọn vùng bôi đen
         </div>
@@ -239,8 +246,6 @@
             </div>
         </div>
     </div>
-
-
 
     <div id="toast"
         class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
