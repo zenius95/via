@@ -683,18 +683,20 @@
                         </div>
                     </div>
 
-                    <!-- User Agent Readonly -->
+                    <!-- User Agent Editable -->
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">User Agent
-                                (Auto-Generated)</label>
-                            <span
-                                class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Preview</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">User
+                                Agent</label>
+                            <button type="button" onclick="generateUserAgent()"
+                                class="text-[10px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 transition-colors flex items-center gap-1">
+                                <i class="ri-refresh-line"></i> Tạo lại
+                            </button>
                         </div>
                         <div class="relative">
-                            <textarea id="profile-ua" rows="2" readonly
-                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/50 cursor-not-allowed resize-none border-dashed"
-                                placeholder="Mozilla/5.0..."></textarea>
+                            <textarea id="profile-ua" rows="2"
+                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-xs font-mono text-slate-300 focus:border-blue-500/50 resize-none"
+                                placeholder="Nhập hoặc để tự động tạo..."></textarea>
                         </div>
                     </div>
 
