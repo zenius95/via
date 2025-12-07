@@ -1259,3 +1259,69 @@ async function assignToFolder(folderName) {
         console.error(err);
     }
 }
+
+// --- GLOBAL KEYBOARD SHORTCUTS ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modals = [
+            { id: 'confirm-modal', close: closeConfirmModal },
+            { id: 'duplicate-modal', close: closeDuplicateModal },
+            { id: 'import-modal', close: closeImportModal },
+            { id: 'col-config-modal', close: closeColumnModal },
+            { id: 'edit-folder-modal', close: closeEditFolderModal }
+        ];
+
+        let modalClosed = false;
+        for (const m of modals) {
+            const el = document.getElementById(m.id);
+            if (el && !el.classList.contains('hidden')) {
+                m.close();
+                modalClosed = true;
+                break;
+            }
+        }
+
+        if (modalClosed) return;
+
+        const dropdowns = [
+            'context-menu',
+            'column-menu',
+            'filter-dropdown-menu',
+            'folder-dropdown-menu'
+        ];
+
+        dropdowns.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.classList.contains('active')) el.classList.remove('active');
+                if (el.classList.contains('show')) el.classList.remove('show');
+                if (el.style.display === 'block') el.style.display = 'none';
+            }
+        });
+
+        document.getElementById('filter-dropdown-btn')?.classList.remove('active');
+    }
+
+    if (e.key === 'Enter') {
+        const confirmModal = document.getElementById('confirm-modal');
+        if (confirmModal && !confirmModal.classList.contains('hidden')) {
+            document.getElementById('modal-confirm-btn').click();
+            e.preventDefault();
+            return;
+        }
+
+        const duplicateModal = document.getElementById('duplicate-modal');
+        if (duplicateModal && !duplicateModal.classList.contains('hidden')) {
+            confirmDuplicateImport();
+            e.preventDefault();
+            return;
+        }
+
+        const editFolderModal = document.getElementById('edit-folder-modal');
+        if (editFolderModal && !editFolderModal.classList.contains('hidden')) {
+            saveEditFolder();
+            e.preventDefault();
+            return;
+        }
+    }
+});
