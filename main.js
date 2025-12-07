@@ -1,105 +1,33 @@
+console.log('!!! NEW MAIN JS LOADED !!!');
 const { app, BrowserWindow, ipcMain, BrowserView } = require('electron')
 const path = require('path')
+
+// Global references
+let mainWindow;
+let views = {}; // Map of id -> BrowserView
+let activeViewId = null;
 
 // IPC Handlers
 const database = require('./js/database');
 
-ipcMain.handle('db:get-accounts', async () => {
-    return await database.getAllAccounts();
-});
-
-ipcMain.handle('db:add-accounts', async (event, accounts) => {
-    return await database.insertAccounts(accounts);
-});
-
-ipcMain.handle('db:update-account', async (event, account) => {
-    return await database.updateAccount(account);
-});
-
-ipcMain.handle('db:delete-accounts', async (event, uids) => {
-    return await database.deleteAccounts(uids);
-});
-
-// Folder IPC
-ipcMain.handle('db:get-folders', async () => {
-    return await database.getFolders();
-});
-ipcMain.handle('db:add-folder', async (event, name, color) => {
-    return await database.addFolder(name, color);
-});
-ipcMain.handle('db:delete-folder', async (event, id) => {
-    return await database.deleteFolder(id);
-});
-ipcMain.handle('db:update-folder', async (event, { id, newName, newColor, oldName }) => {
-    return await database.updateFolder(id, newName, newColor, oldName);
-});
-ipcMain.handle('db:update-account-folder', async (event, { uids, folderName }) => {
-    return await database.updateAccountFolder(uids, folderName);
-});
-
-// Settings Handlers (Existing?)
-// Ensure IPC handlers are registered before app ready or inside createWindow if using webContents?
-// Usually defined at top level.
-
-function createWindow() {
-    const win = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        frame: false, // Frameless window
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            preload: path.join(__dirname, 'preload.js')
-        }
-    })
-
-    win.loadFile('index.html')
-    win.setMenu(null) // Remove default menu
-
-    // --- BROWSER VIEW SETUP ---
+// Helper to create a view
+function createView(id, url) {
     const view = new BrowserView({
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
         }
-    })
+    });
 
-    win.setBrowserView(view)
-
-    // Calculate bounds: Titlebar height is approx 40px
-    const TITLEBAR_HEIGHT = 48;
-
-    function updateViewBounds() {
-        const { width, height } = win.getBounds() // Window size (including frame if any, but frameless here)
-        // With frame:false, getBounds = content size roughly. 
-        // We want to fill the rest of the window.
-        // Electron documentation says setBounds is relative to window's client area.
-        view.setBounds({ x: 0, y: TITLEBAR_HEIGHT, width: width, height: height - TITLEBAR_HEIGHT })
+    // Load URL
+    if (url.startsWith('http')) {
+        view.webContents.loadURL(url);
+    } else {
+        view.webContents.loadFile(path.join(__dirname, url));
     }
 
-    view.webContents.loadFile('account.html')
-
-    // Initial bounds
-    // We might need to wait for 'show' or 'ready-to-show' mainly
-    win.once('ready-to-show', () => {
-        updateViewBounds();
-        win.show();
-    })
-
-    // Default show is false usually? No, it's true by default.
-    // If we rely on default show, update bounds immediately.
-    updateViewBounds();
-
-    // Update on resize
-    win.on('resize', updateViewBounds)
-    win.on('maximize', updateViewBounds)
-    win.on('unmaximize', updateViewBounds)
-
-    // win.webContents.openDevTools()
-    // view.webContents.openDevTools({ mode: 'detach' })
-
-    // Handler for BrowserView shortcuts (DevTools F12, Reload Ctrl+R)
+    // DevTools & Shortcuts
     view.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F12') {
             view.webContents.toggleDevTools({ mode: 'detach' });
@@ -111,56 +39,169 @@ function createWindow() {
         }
     });
 
-    // win.webContents.openDevTools()
+    views[id] = view;
+    return view;
+}
 
-    // Shortcuts for development (Reload, DevTools)
-    win.webContents.on('before-input-event', (event, input) => {
+ipcMain.on('switch-view', (event, id) => {
+    console.log('Main: switch-view', id);
+    if (views[id] && mainWindow) {
+        // Detach old, attach new
+        // Note: setBrowserView(null) not strictly needed if replacing, but clean.
+        // mainWindow.setBrowserView(null); 
+        mainWindow.setBrowserView(views[id]);
+        activeViewId = id;
+
+        // Update bounds for the new view
+        updateViewBounds();
+
+        // Focus
+        views[id].webContents.focus();
+    } else {
+        console.error('Main: View not found', id);
+    }
+});
+
+ipcMain.on('close-view', (event, id) => {
+    // Cannot close account view this way (logic in renderer prevents it usually)
+    if (id === 'account') return;
+
+    if (views[id]) {
+        if (activeViewId === id) {
+            mainWindow.setBrowserView(null);
+            activeViewId = null;
+        }
+        // Destroy
+        // views[id].webContents.destroy(); // Optional, let GC handle if dereferenced? 
+        // Better to explicitly destroy to free resources.
+        try {
+            // view.destroy() is not a method on BrowserView, it's garbage collected when not attached?
+            // Actually BrowserView doesn't have destroy(). 
+            // webContents.destroy() exists but risky.
+            // Just removing reference and setting null logic is safe.
+            // But we should ensure it's detached.
+        } catch (e) { console.error(e) }
+
+        delete views[id];
+    }
+});
+
+ipcMain.handle('open-settings-tab', async (event) => {
+    if (mainWindow) {
+        const id = 'settings';
+
+        // Create if not exists
+        if (!views[id]) {
+            createView(id, 'setting.html');
+        }
+
+        // Send to renderer to create tab UI AND switch
+        mainWindow.webContents.send('create-tab', {
+            title: 'Setting',
+            icon: 'ri-settings-3-line',
+            id: id,
+            active: true // Tell renderer to activate immediately
+        });
+
+        // Also manually switch on main side? 
+        // Renderer will send 'switch-view' when it processes 'create-tab' (if we program it to), 
+        // OR we can switch here directly?
+        // Better: Renderer drives the UI state. Renderer receives 'create-tab', adds it, calls activateTab -> sends 'switch-view'.
+        // This ensures UI and Main are in sync.
+    }
+});
+
+// Database IPCs
+ipcMain.handle('db:get-accounts', async () => await database.getAllAccounts());
+ipcMain.handle('db:add-accounts', async (event, accounts) => await database.insertAccounts(accounts));
+ipcMain.handle('db:update-account', async (event, account) => await database.updateAccount(account));
+ipcMain.handle('db:delete-accounts', async (event, uids) => await database.deleteAccounts(uids));
+ipcMain.handle('db:get-folders', async () => await database.getFolders());
+ipcMain.handle('db:add-folder', async (event, name, color) => await database.addFolder(name, color));
+ipcMain.handle('db:delete-folder', async (event, id) => await database.deleteFolder(id));
+ipcMain.handle('db:update-folder', async (event, args) => await database.updateFolder(args.id, args.newName, args.newColor, args.oldName));
+ipcMain.handle('db:update-account-folder', async (event, args) => await database.updateAccountFolder(args.uids, args.folderName));
+
+// Bounds Helper
+const TITLEBAR_HEIGHT = 48;
+function updateViewBounds() {
+    if (mainWindow && activeViewId && views[activeViewId]) {
+        const bounds = mainWindow.getContentBounds();
+        views[activeViewId].setBounds({
+            x: 0,
+            y: TITLEBAR_HEIGHT,
+            width: bounds.width,
+            height: bounds.height - TITLEBAR_HEIGHT
+        });
+    }
+}
+
+function createWindow() {
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        frame: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false, // For main window UI
+            preload: path.join(__dirname, 'preload.js')
+        }
+    })
+
+    mainWindow.loadFile('index.html')
+    mainWindow.setMenu(null)
+
+    // Setup Account View
+    const accountView = createView('account', 'account.html');
+    mainWindow.setBrowserView(accountView);
+    activeViewId = 'account';
+
+    mainWindow.once('ready-to-show', () => {
+        updateViewBounds();
+        mainWindow.show();
+    })
+
+    // Bounds logic
+    mainWindow.on('resize', updateViewBounds)
+    mainWindow.on('maximize', updateViewBounds)
+    mainWindow.on('unmaximize', updateViewBounds)
+
+    // Shortcuts for Main Window
+    mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.control && input.key.toLowerCase() === 'r') {
             event.preventDefault()
-            if (input.shift) {
-                win.webContents.reloadIgnoringCache()
+            if (activeViewId && views[activeViewId]) {
+                views[activeViewId].webContents.reload();
             } else {
-                win.reload()
+                mainWindow.reload();
             }
         }
         if (input.key === 'F12') {
-            win.webContents.toggleDevTools()
-            event.preventDefault()
+            mainWindow.webContents.toggleDevTools();
+            event.preventDefault();
         }
     })
 
-    // IPC listeners for window controls
-    ipcMain.on('window-minimize', () => win.minimize())
+    // Window Controls
+    ipcMain.on('window-minimize', () => mainWindow.minimize())
     ipcMain.on('window-maximize', () => {
-        if (win.isMaximized()) {
-            win.unmaximize()
-        } else {
-            win.maximize()
-        }
+        if (mainWindow.isMaximized()) mainWindow.unmaximize();
+        else mainWindow.maximize();
     })
-    ipcMain.on('window-close', () => win.close())
+    ipcMain.on('window-close', () => mainWindow.close())
 
-    // Emit events to renderer when window state changes
-    win.on('maximize', () => {
-        win.webContents.send('window-maximized')
-    })
-    win.on('unmaximize', () => {
-        win.webContents.send('window-unmaximized')
-    })
+    // Maximize events
+    mainWindow.on('maximize', () => mainWindow.webContents.send('window-maximized'))
+    mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-unmaximized'))
 }
 
 app.whenReady().then(() => {
     createWindow()
-
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow()
-        }
+        if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 })
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit()
-    }
+    if (process.platform !== 'darwin') app.quit()
 })

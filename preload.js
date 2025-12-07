@@ -8,13 +8,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 const api = {
     send: (channel, ...args) => {
         // Allow specific channels
-        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder'];
+        let validChannels = ['db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts', 'window-minimize', 'window-maximize', 'window-close', 'checkKey', 'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder', 'open-settings-tab', 'switch-view'];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
         }
     },
     on: (channel, func) => {
-        let validChannels = ['window-maximized', 'window-unmaximized'];
+        let validChannels = ['window-maximized', 'window-unmaximized', 'create-tab'];
         if (validChannels.includes(channel)) {
             // Deliberately strip event as it includes `sender` 
             ipcRenderer.on(channel, (event, ...args) => func(...args));
