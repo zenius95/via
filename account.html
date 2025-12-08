@@ -11,68 +11,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
 
     <!-- Select2 & jQuery -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <link rel="stylesheet" href="css/style.css">
+
     <style>
-        /* Select2 Customization for Glassmorphism */
-        .select2-container {
-            width: 100% !important;
-        }
-
-        .select2-container .select2-selection--single {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            height: 32px;
-            /* Smaller height for modal */
-            display: flex;
-            align-items: center;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #e2e8f0 !important;
-            padding-left: 0.75rem !important;
-            font-size: 0.75rem;
-            /* Smaller font */
-            line-height: 30px !important;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 30px;
-            right: 4px;
-        }
-
-        .select2-dropdown {
-            background-color: #1e293b !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            color: #d1d5db;
-            backdrop-filter: blur(12px);
-            z-index: 10005;
-            /* Higher than modal */
-        }
-
-        .select2-search__field {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: white !important;
-            border-radius: 0.25rem;
-        }
-
-        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: rgba(59, 130, 246, 0.5);
-            color: white;
-        }
-
-        .select2-container--default .select2-results__option--selected {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
         /* Special override for independent view */
         body {
             background: transparent;
