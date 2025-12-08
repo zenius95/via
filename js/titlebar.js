@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron')
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ĐIỀU KHIỂN CỬA SỔ (WINDOW CONTROLS) ---
+    // Window Controls
     document.getElementById('min-btn').addEventListener('click', () => {
         ipcRenderer.send('window-minimize')
     })
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('window-close')
     })
 
-    // Lắng nghe thay đổi trạng thái cửa sổ để đổi icon Maximize/Restore
+    // Listen for window state changes
     ipcRenderer.on('window-maximized', () => {
         const icon = document.querySelector('#max-btn i')
         icon.classList.remove('ri-checkbox-blank-line')
@@ -27,17 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.classList.add('ri-checkbox-blank-line')
     })
 
-    // --- QUẢN LÝ TABS (TAB MANAGEMENT) ---
+    // --- Tab Management ---
     const tabsContainer = document.querySelector('.tabs-container');
     const accountTab = document.getElementById('main-account-tab');
 
-    // Cuộn ngang danh sách tab bằng chuột (Scroll)
+    // Tab Scrolling
     tabsContainer.addEventListener('wheel', (evt) => {
         evt.preventDefault();
         tabsContainer.scrollLeft += evt.deltaY;
     });
 
-    // Cập nhật hiển thị đường kẻ ngăn cách giữa Tab tĩnh và Tab động
+    // Helper to update divider visibility
     function updateDividerState() {
         const hasTabs = tabsContainer.querySelectorAll('.tab').length > 0;
         if (accountTab) {
@@ -48,24 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Call initially
     updateDividerState();
 
-    /**
-     * Kích hoạt một Tab
-     * @param {HTMLElement} tabEl - Element của tab cần active
-     */
+    // Function to activate a tab
     function activateTab(tabEl) {
-        // Deactivate tất cả các tab động
+        // Deactivate all dynamic tabs
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
 
-        // Tab Động (Dynamic Tab)
+        // If activating a dynamic tab
         if (tabEl && tabEl !== accountTab && tabEl.classList.contains('tab')) {
             tabEl.classList.add('active');
 
-            // Gửi IPC yêu cầu Main Process chuyển View
+            // Switch View Logic
             const id = tabEl.dataset.id;
             if (id) ipcRenderer.send('switch-view', id);
 
         } else if (tabEl === accountTab) {
-            // Tab Tĩnh (Account Dashboard)
+            // Account Tab Click
             ipcRenderer.send('switch-view', 'account');
         }
     }
@@ -111,10 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // IPC Listener: Tạo tab mới khi nhận yêu cầu từ Main
+    // IPC Listener for creating tabs
     ipcRenderer.on('create-tab', (event, tabData) => {
-        // Kiểm tra xem tab đã tồn tại chưa
+        // Check if tab already exists
         if (tabData.id) {
+            // Find by ID in dataset
             const existing = document.querySelector(`.tab[data-id="${tabData.id}"]`);
             if (existing) {
                 activateTab(existing);
@@ -124,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newTab = document.createElement('div');
         newTab.className = 'tab';
+        // if (tabData.id) newTab.id = 'tab-' + tabData.id; // Optional
         newTab.dataset.id = tabData.id || ('tab-' + Date.now());
 
         newTab.innerHTML = `
@@ -136,9 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabsContainer.appendChild(newTab);
         setupTab(newTab);
-        updateDividerState();
+        updateDividerState(); // Update divider
 
-        // Tự động active nếu đc yêu cầu
+        // Auto-activate if requested
         if (tabData.active) {
             activateTab(newTab);
         }

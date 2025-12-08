@@ -1,21 +1,22 @@
 /* js/process.js */
 
-// --- CẤU HÌNH (CONFIGURATION) ---
+// --- CONFIGURATION ---
 let PROCESS_CONFIG = {
-    maxThreads: 3, // Số luồng chạy tối đa cùng lúc
-    delay: 2000,   // Thời gian chờ giữa các lần khởi chạy luồng (ms)
-    timeout: 0,    // Thời gian timeout tối đa cho mỗi profile (0 = không giới hạn)
-    retry: 0       // Số lần thử lại nếu gặp lỗi
+    maxThreads: 3,
+    delay: 2000,
+    timeout: 0,
+    retry: 0
 };
 
-// --- TRẠNG THÁI (STATE) ---
-let isProcessRunning = false; // Cờ báo hiệu tiến trình đang chạy
-let processQueue = [];        // Hàng đợi chứa các node (tài khoản) cần xử lý
-let activeThreads = 0;        // Số luồng đang hoạt động hiện tại
-let forceStop = false;        // Cờ báo hiệu lệnh dừng khẩn cấp từ người dùng
+// --- STATE ---
+let isProcessRunning = false;
+let processQueue = [];
+let activeThreads = 0;
+let forceStop = false;
 
 // --- DOM ELEMENTS ---
-// Sẽ được khởi tạo khi trang load xong
+// Will be initialized on load
+
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btn-start-process');
     if (btn) {
@@ -34,7 +35,7 @@ function toggleProcess() {
 async function startProcess() {
     if (!gridApi) return;
 
-    // 1. Tải cấu hình từ Database
+    // Load Settings
     try {
         const settings = await window.api.send('db:get-settings');
         if (settings) {
@@ -42,18 +43,20 @@ async function startProcess() {
             PROCESS_CONFIG.delay = (parseInt(settings.launchDelay) || 2) * 1000;
             PROCESS_CONFIG.retry = parseInt(settings.retryCount) || 0;
             PROCESS_CONFIG.timeout = parseInt(settings.timeout) || 0;
-            PROCESS_CONFIG.chromePath = settings.chromePath || ''; // Load đường dẫn Chrome
+            PROCESS_CONFIG.chromePath = settings.chromePath || ''; // LOAD CHROME PATH
 
             console.log('Loaded Config:', PROCESS_CONFIG);
         }
 
-        // 2. Kiểm tra đường dẫn Chrome
+        // Validate Chrome Path
         if (!PROCESS_CONFIG.chromePath) {
             console.log('Chrome Path missing, attempting auto-detect...');
             const detectedPath = await window.api.send('main:get-chrome-path');
             if (detectedPath) {
                 PROCESS_CONFIG.chromePath = detectedPath;
-                // Có thể lưu lại vào DB nếu cần thiết
+                // Optional: Save back to DB? 
+                // For now, just use it for this session.
+                // Or better: Let user know.
             } else {
                 showToast('Chưa cấu hình đường dẫn Chrome! Vui lòng vào Cài đặt.', 'error');
                 return;
@@ -64,32 +67,30 @@ async function startProcess() {
         console.error('Failed to load process config', err);
     }
 
-    // 3. Chuẩn bị hàng đợi (Queue) từ các dòng đang chọn
     const selectedNodes = gridApi.getSelectedNodes();
     if (selectedNodes.length === 0) {
         showToast('Vui lòng chọn tài khoản để chạy', 'warning');
         return;
     }
 
-    // Cập nhật giao diện nút Start -> Stop
+    // UPDATE UI
     const btn = document.getElementById('btn-start-process');
     btn.classList.add('bg-red-600', 'hover:bg-red-500', '!from-red-600', '!to-red-500', 'shadow-red-900/40');
-
-    // Thay đổi nội dung nút
+    // Remove default gradient classes if they conflict, or override with !important via class/style
+    // Simple way: Change innerHTML and style
     btn.innerHTML = `
         <i class="ri-stop-fill text-lg"></i>
         <span class="ml-1">Dừng lại</span>
     `;
-    // Thêm style trực tiếp để đảm bảo ghi đè các class gradient cũ
+    // We might need to handle the gradient background via style if classes are stubborn
     btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
     btn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
 
-    // Khởi tạo trạng thái chạy
     isProcessRunning = true;
     forceStop = false;
-    processQueue = [...selectedNodes]; // Copy danh sách node vào hàng đợi
+    processQueue = [...selectedNodes]; // Copy selected nodes
 
-    // Reset trạng thái trên bảng về "Waiting"
+    // Reset status for selected rows
     processQueue.forEach(node => {
         if (node.data) {
             node.setDataValue('processStatus', 'WAITING');
@@ -98,21 +99,21 @@ async function startProcess() {
     });
 
     showToast(`Bắt đầu chạy với ${processQueue.length} tài khoản`, 'info');
-    runQueueLoop(); // Bắt đầu vòng lặp xử lý hàng đợi
+    runQueueLoop();
 }
 
 function stopProcess() {
     forceStop = true;
     isProcessRunning = false;
-    processQueue = []; // Xóa sạch hàng đợi
+    processQueue = []; // Clear queue
 
-    // Revert giao diện nút về trạng thái "Bắt đầu"
+    // UI Revert
     const btn = document.getElementById('btn-start-process');
     btn.innerHTML = `
         <i class="ri-play-fill text-lg"></i>
         <span class="ml-1">Bắt đầu</span>
     `;
-    btn.style.background = ''; // Xóa style inline để dùng lại class mặc định
+    btn.style.background = ''; // Revert to CSS default
     btn.style.boxShadow = '';
 
     showToast('Đã dừng tiến trình', 'warning');
@@ -122,27 +123,29 @@ async function runQueueLoop() {
     while (isProcessRunning) {
         if (forceStop) break;
 
-        // Kiểm tra nếu hàng đợi trống và không còn luồng nào đang chạy
+        // Check if queue empty and no threads running
         if (processQueue.length === 0 && activeThreads === 0) {
             stopProcess();
             showToast('Đã hoàn thành tất cả tác vụ', 'success');
             break;
         }
 
-        // Kiểm tra giới hạn luồng (Concurrency)
+        // Check concurrency
         if (activeThreads < PROCESS_CONFIG.maxThreads && processQueue.length > 0) {
             const node = processQueue.shift();
             if (node) {
-                // Khởi chạy luồng mới
+                // Launch thread
                 runThread(node);
 
-                // Delay trước khi khởi chạy luồng tiếp theo (tránh mở ồ ạt)
+                // Delay before next launch check? 
+                // Wait delay ms before the loop continues to launch another?
+                // The requirement says "Delay: thời gian delay giữa các luồng mở lên cùng lúc"
                 if (PROCESS_CONFIG.delay > 0) {
                     await new Promise(r => setTimeout(r, PROCESS_CONFIG.delay));
                 }
             }
         } else {
-            // Nếu full luồng hoặc hết hàng đợi, chờ 200ms rồi kiểm tra lại
+            // Wait a bit if full or empty
             await new Promise(r => setTimeout(r, 200));
         }
     }
@@ -153,9 +156,9 @@ async function runThread(node) {
     let currentRetry = 0;
     const maxRetry = PROCESS_CONFIG.retry;
 
-    // Vòng lặp thử lại (Retry Loop)
+    // Retry Loop
     while (true) {
-        // Tạo ID duy nhất cho lần chạy này để tránh cập nhật nhầm vào node cũ nếu bị dừng
+        // Generate unique attempt ID to prevent zombie updates
         const attemptId = Date.now() + Math.random();
         node.data.activeAttemptId = attemptId;
 
@@ -164,21 +167,21 @@ async function runThread(node) {
 
             updateNodeStatus(node, 'RUNNING', currentRetry > 0 ? `Bắt đầu lại (Lần ${currentRetry})...` : 'Đang khởi chạy...');
 
-            // Tạo Promise timeout
+            // Create timeout promise
             const timeoutPromise = PROCESS_CONFIG.timeout > 0
                 ? new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), PROCESS_CONFIG.timeout * 1000))
                 : new Promise(() => { });
 
-            // Promise thực thi hành động chính
+            // Action Promise
             const actionPromise = (async () => {
                 if (forceStop) throw new Error('Stopped');
 
-                // Chỉ update status nếu attempt này còn hiệu lực
+                // GUARD: Only update if this attempt is still active
                 if (node.data.activeAttemptId === attemptId) {
                     updateNodeStatus(node, 'RUNNING', 'Đang mở trình duyệt...');
                 }
 
-                // Gọi IPC để chạy profile (liên lạc với Main Process)
+                // Call IPC
                 const result = await window.api.send('process:run-profile', {
                     account: node.data,
                     config: PROCESS_CONFIG
@@ -190,32 +193,35 @@ async function runThread(node) {
                     throw new Error(result.message);
                 }
 
-                // Thành công
+                // Success - Message from automation
                 return result ? result.message : 'Hoàn thành';
             })();
 
-            // Chạy đua giữa Timeout và Hành động chính (Promise.race)
+            // Wrap logic in race
             await Promise.race([actionPromise, timeoutPromise]);
 
             updateNodeStatus(node, 'SUCCESS', 'Hoàn thành');
-            break; // Thành công -> Thoát vòng lặp
+            break; // Success - Exit Loop
 
         } catch (err) {
-            // Kiểm tra lỗi dừng
+            // Check if Stopped
             if (err.message === 'Stopped') {
                 updateNodeStatus(node, 'STOPPED', 'Đã dừng');
                 break;
             }
 
-            // Kiểm tra xem có cần thử lại không
+            // If Timeout, we shouldn't retry? (User requirement implied retry logic applies generally)
+            // But let's follow standard pattern: Retry on error.
+
+            // CHECK RETRY
             if (currentRetry < maxRetry) {
                 currentRetry++;
                 updateNodeStatus(node, 'RETRY', `Lỗi: ${err.message}. Đợi thử lại (${currentRetry}/${maxRetry})...`);
-                await sleep(2000); // Chờ 2s trước khi thử lại
-                continue; // Quay lại đầu vòng lặp
+                await sleep(2000); // Wait before retry
+                continue; // Loop again
             }
 
-            // Nếu hết lượt thử lại, báo lỗi cuối cùng
+            // Final Error Status
             if (err.message === 'Checkpoint') {
                 updateNodeStatus(node, 'ERROR', 'Lỗi: Checkpoint');
             } else if (err.message === 'Timeout') {
@@ -225,22 +231,21 @@ async function runThread(node) {
             } else {
                 updateNodeStatus(node, 'ERROR', 'Lỗi không xác định');
             }
-            break; // Thoát vòng lặp
+            break; // Exit loop
         }
     }
 
     activeThreads--;
 }
 
-// Cập nhật trạng thái cho node trên bảng (AG Grid)
 function updateNodeStatus(node, status, msg) {
     if (!node || !node.data) return;
 
-    // Cập nhật data trực tiếp để tránh trigger sự kiện onCellValueChanged (gây lưu DB không cần thiết)
+    // Direct update to avoid triggering onCellValueChanged (DB Save)
     node.data.processStatus = status;
     node.data.processMessage = msg;
 
-    // Buộc vẽ lại (redraw) các cell trong cột 'process' cho row này
+    // Force refresh cell
     gridApi.refreshCells({
         rowNodes: [node],
         columns: ['process'],

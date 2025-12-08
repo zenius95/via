@@ -1,45 +1,31 @@
 /* js/ui.js */
 
-// --- TOAST NOTIFICATION (THÔNG BÁO) ---
+// --- TOAST ---
 let toastTimeout;
-
-/**
- * Hiển thị thông báo (Toast) ở góc màn hình
- * @param {string} msg - Nội dung thông báo
- * @param {string} type - Loại thông báo: 'success' | 'error' | 'info'
- */
 function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');
-
-    // Cấu hình giao diện cho từng loại thông báo
     const configs = {
         success: { title: 'Thành công', icon: '<i class="ri-checkbox-circle-fill text-xl"></i>', classes: 'bg-emerald-950/90 border-emerald-500/30 text-emerald-50', iconBg: 'bg-emerald-500/20 text-emerald-400' },
         error: { title: 'Lỗi', icon: '<i class="ri-error-warning-fill text-xl"></i>', classes: 'bg-red-950/90 border-red-500/30 text-red-50', iconBg: 'bg-red-500/20 text-red-400' },
         info: { title: 'Thông tin', icon: '<i class="ri-information-fill text-xl"></i>', classes: 'bg-sky-950/90 border-sky-500/30 text-sky-50', iconBg: 'bg-sky-500/20 text-sky-400' }
     };
-
     const config = configs[type] || configs.success;
-
-    // Update giao diện Toast
     toast.className = `fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-[20000] flex items-center gap-3 border backdrop-blur-md min-w-[300px] transition-all duration-300 ${config.classes}`;
     document.getElementById('toast-title').innerText = config.title;
     document.getElementById('toast-msg').innerText = msg;
     document.getElementById('toast-icon-container').innerHTML = config.icon;
     document.getElementById('toast-icon-container').className = `p-1.5 rounded-full ${config.iconBg}`;
 
-    // Reset timeout cũ và hiển thị toast mới (Slide up animation)
     clearTimeout(toastTimeout);
     requestAnimationFrame(() => toast.classList.remove('translate-y-32'));
-
-    // Tự động ẩn sau 3 giây
     toastTimeout = setTimeout(() => toast.classList.add('translate-y-32'), 3000);
 }
 
-// --- IMPORT MODAL & LOGIC ---
-let importMode = 'auto'; // Chế độ import: 'auto' (tự động nhận diện) | 'custom' (người dùng định nghĩa cột)
-let customColumns = []; // Mảng lưu thứ tự các cột khi import Custom
+// --- IMPORT MODAL ---
+// --- IMPORT LOGIC ---
+let importMode = 'auto'; // 'auto' | 'custom'
+let customColumns = []; // ['uid', 'password', ...]
 
-// Định nghĩa các loại cột hỗ trợ import
 const COL_TYPES = {
     'uid': { label: 'UID', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
     'password': { label: 'Mật khẩu', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
@@ -289,6 +275,7 @@ function openImportModal() {
     importMode = 'auto'; // Reset to auto
     document.getElementById('import-format-select').value = 'auto';
     toggleImportMode();
+    if (!m) return;
     textarea.value = '';
     m.classList.remove('hidden');
     requestAnimationFrame(() => {
@@ -309,9 +296,9 @@ function processImportDemo() {
     processImportData();
 }
 
-// --- LOGIC XỬ LÝ TEXT IMPORT ---
-let pendingNewRows = []; // Danh sách tài khoản mới hợp lệ
-let pendingDuplicateRows = []; // Danh sách tài khoản bị trùng UID
+// --- DUPLICATE LOGIC VARS ---
+let pendingNewRows = [];
+let pendingDuplicateRows = [];
 
 function processImportData() {
     const content = document.getElementById('import-textarea').value;
@@ -360,13 +347,11 @@ function processImportData() {
         let token = '';
 
         if (importMode === 'custom') {
-            // --- XỬ LÝ THEO CẤU HÌNH CỘT TÙY CHỈNH ---
+            // --- CUSTOM PARSING ---
             if (customColumns.length > 0) {
                 customColumns.forEach((type, index) => {
                     if (index >= cols.length) return;
                     const val = cols[index].trim();
-
-                    // Map giá trị vào trường tương ứng
                     if (type === 'uid') uid = val;
                     else if (type === 'password') password = val;
                     else if (type === '2fa') twoFa = val;
@@ -378,12 +363,12 @@ function processImportData() {
                 });
             }
         } else {
-            // --- XỬ LÝ TỰ ĐỘNG (AUTO HEURISTIC) ---
-            // 1. UID & Pass: Giả định cột đầu là UID, cột 2 là Pass
+            // --- HEURISTIC PARSING (AUTO) ---
+            // 1. UID & Pass: Cột đầu tiên là UID, cột 2 là Pass
             uid = cols[0].trim();
             password = cols[1] ? cols[1].trim() : '';
 
-            // Handle c_user fallback for UID (nếu cột 1 không phải số UID)
+            // Handle c_user fallback for UID
             if (isNaN(uid) || !uid) {
                 const cookieIndex = cols.findIndex(c => c.includes('c_user='));
                 if (cookieIndex !== -1) {
@@ -392,19 +377,21 @@ function processImportData() {
                 }
             }
 
-            // 2. TÌM KIẾM EMAIL THÔNG MINH
+            // 2. TIM KIẾM EMAIL (New Logic)
             /*
              * Logic:
-             * - Duyệt qua tất cả các cột để tìm Email.
-             * - Nếu gặp domain phổ biến (gmail, hotmail...) -> Coi là EMAIL CHÍNH.
-             *      -> Cột ngay bên phải nó khả năng cao là PASSWORD EMAIL.
-             * - Các email tìm thấy còn lại -> Coi là EMAIL KHÔI PHỤC (nối nhau bằng ' | ')
+             * - Duyệt qua từng cột để tìm Email.
+             * - Nếu là (gmail, hotmail, outlook, yahoo) -> Là EMAIL CHÍNH.
+             *      -> Cột bên phải (ngay sau nó) là EMAIL PASS.
+             * - Tất cả email còn lại -> EMAIL KHÔI PHỤC (nối nhau bằng | hoặc lấy cái đầu tiên?)
+             *   (User update: "Tất cả các email còn lại được tính là email khôi phục")
              */
 
             const MAIN_DOMAINS = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
             let foundMainEmail = false;
             let recoveryEmails = [];
 
+            // Scan all columns for emails
             for (let i = 0; i < cols.length; i++) {
                 const col = cols[i].trim();
                 const emailMatch = col.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i);
@@ -413,31 +400,39 @@ function processImportData() {
                     const currentEmail = emailMatch[0];
                     const domain = currentEmail.split('@')[1].toLowerCase();
 
-                    // Nếu chưa tìm thấy email chính và gặp domain phổ biến
+                    // Check if it is a main email candidate
                     if (!foundMainEmail && MAIN_DOMAINS.includes(domain)) {
                         email = currentEmail;
                         foundMainEmail = true;
 
-                        // Kiểm tra cột bên cạnh có thể là pass email
+                        // Check password next to it
                         if (cols[i + 1]) {
+                            // Simple heuristic: if next col is NOT another email (or maybe it IS the password even if it looks weird)
+                            // User requirement: "bên phải Email chính sau dấu | sẽ luôn là Email Password"
+                            // So we take it blindly.
                             emailPassword = cols[i + 1].trim();
-                            i++; // Bỏ qua cột pass ở vòng lặp sau
+                            // Skip next iteration? No, loop continues, but we should be careful not to treat emailPassword as email if it happens to be one (unlikely for pass)
+                            // Actually if emailPassword is an email, it would be caught by regex in next loop.
+                            // But since we consumed it as pass, we probably shouldn't treat it as recovery email?
+                            // Let's increment i to skip scanning emailPassword as an email candidate?
+                            // User said "Start with Main, Right is Pass". If Pass is also an email (weird), it's a pass.
+                            i++;
                         }
                     } else {
-                        // Email phụ / khôi phục
+                        // It's a recovery email (or main email found already)
                         recoveryEmails.push(currentEmail);
                     }
                 }
             }
 
+            // Join recovery emails if multiple? Let's just take the first one or join them?
+            // DB has single text field. Let's join by | if multiple.
             emailRecover = recoveryEmails.join(' | ');
 
-            // 3. TÌM CÁC TRƯỜNG KHÁC (2FA, Token, Cookie)
-            // Tìm chuỗi 32 ký tự -> 2FA
+            // 3. OTHER FIELDS
             const twofaIndex = cols.findIndex(c => c.replace(/\s/g, '').length === 32 && !c.includes('@'));
             if (twofaIndex !== -1) twoFa = cols[twofaIndex].trim();
 
-            // Tìm chuỗi bắt đầu 'EAA' -> Token
             const tokenIndex = cols.findIndex(c => c.startsWith('EAA'));
             if (tokenIndex !== -1) token = cols[tokenIndex].trim();
 
@@ -473,7 +468,7 @@ function processImportData() {
 
     // --- CHECK RESULTS ---
     if (pendingDuplicateRows.length > 0) {
-        showDuplicateModal();
+        if (document.getElementById('duplicate-modal')) showDuplicateModal();
     } else {
         // No duplicates, verify and add
         finishImport(pendingNewRows, 0);
@@ -551,7 +546,7 @@ function finishImport(rowsToAdd, skippedCount, isMerge = false) {
     closeImportModal();
 }
 
-// --- CONFIRM MODAL (XÁC NHẬN HÀNH ĐỘNG) ---
+// --- CONFIRM MODAL ---
 let modalConfirmCallback = null;
 function showConfirmDialog(title, message, onConfirm) {
     document.getElementById('modal-title').innerText = title;
@@ -566,7 +561,10 @@ function closeConfirmModal() {
     m.classList.add('opacity-0'); m.querySelector('div.relative').classList.replace('scale-100', 'scale-95');
     setTimeout(() => { m.classList.add('hidden'); modalConfirmCallback = null; }, 200);
 }
-document.getElementById('modal-confirm-btn').addEventListener('click', () => { if (modalConfirmCallback) modalConfirmCallback(); closeConfirmModal(); });
+const confirmBtn = document.getElementById('modal-confirm-btn');
+if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => { if (modalConfirmCallback) modalConfirmCallback(); closeConfirmModal(); });
+}
 
 
 // --- COLUMN CONFIG MODAL & DRAG DROP ---
@@ -615,7 +613,7 @@ function handleDrop(e) { if (e.stopPropagation) e.stopPropagation(); return fals
 function handleDragEnd(e) { this.classList.remove('dragging'); }
 
 
-// --- CONTEXT MENU (CHUỘT PHẢI) ---
+// --- CONTEXT MENU ---
 const contextMenu = document.getElementById('context-menu');
 
 function showContextMenu(event) {
@@ -648,7 +646,7 @@ function showContextMenu(event) {
 }
 
 document.addEventListener('click', (e) => {
-    if (!contextMenu.contains(e.target)) contextMenu.classList.remove('active');
+    if (contextMenu && !contextMenu.contains(e.target)) contextMenu.classList.remove('active');
 
     // Đóng column menu khi click ra ngoài
     const colMenu = document.getElementById('column-menu');
@@ -720,7 +718,7 @@ function menuAction(action) {
     }
 }
 
-// --- COLUMN MENU LOGIC (MENU CẤU HÌNH CỘT) ---
+// --- COLUMN MENU LOGIC (UPDATED) ---
 let currentTargetColId = null;
 
 function showColumnMenu(event, colId) {
@@ -841,7 +839,7 @@ function colMenuAction(action) {
     }
 }
 
-// --- FILTER DROPDOWN LOGIC (BỘ LỌC TRẠNG THÁI) ---
+// --- FILTER DROPDOWN LOGIC ---
 let selectedStatuses = new Set(['LIVE', 'DIE', 'CHECKPOINT', 'UNCHECKED']); // Mặc định chọn tất
 const statusMap = {
     'LIVE': { label: 'Hoạt động (Live)', colorClass: 'bg-live', textClass: 'text-emerald-400' },
@@ -936,9 +934,9 @@ function toggleStatusFilter(status, event) {
     if (gridApi) gridApi.onFilterChanged();
 }
 
-// --- FOLDER LOGIC (QUẢN LÝ THƯ MỤC) ---
+// --- FOLDER LOGIC ---
 let folders = [];
-let currentFolderFilter = null; // null = Hiển thị tất cả folder
+let currentFolderFilter = null; // null = all
 
 // Global Click for Dropdowns
 document.addEventListener('click', (e) => {
@@ -1266,9 +1264,8 @@ async function assignToFolder(folderName) {
     }
 }
 
-// --- GLOBAL KEYBOARD SHORTCUTS (PHÍM TẮT TOÀN CỤC) ---
+// --- GLOBAL KEYBOARD SHORTCUTS ---
 document.addEventListener('keydown', (e) => {
-    // Esc: Đóng tất cả modal và menu
     if (e.key === 'Escape') {
         const modals = [
             { id: 'confirm-modal', close: closeConfirmModal },

@@ -235,26 +235,22 @@ async function handleProfileSubmit(e) {
 
     try {
         if (id) {
-            // Update: Cập nhật thông tin profile hiện có
+            // Update
             await window.api.send('db:update-profile', { ...profileData, id });
             showToast('Cập nhật profile thành công', 'success');
         } else {
-            // Add: Thêm mới profile vào database
+            // Add
             await window.api.send('db:add-profile', profileData);
             showToast('Thêm profile mới thành công', 'success');
         }
         closeProfileModal();
-        loadProfiles(); // Tải lại danh sách sau khi thay đổi
+        loadProfiles(); // Refresh
     } catch (err) {
         console.error('Save profile error:', err);
         showToast('Có lỗi xảy ra', 'error');
     }
 }
 
-/**
- * Mở modal chỉnh sửa cho một profile cụ thể
- * @param {number} id - ID của profile cần sửa
- */
 async function editProfile(id) {
     const profile = currentProfiles.find(p => p.id === id);
     if (profile) {
@@ -262,12 +258,8 @@ async function editProfile(id) {
     }
 }
 
-/**
- * Xóa một profile cụ thể (nút xóa trên từng dòng)
- * @param {number} id - ID của profile cần xóa
- */
 async function deleteProfile(id) {
-    if (confirm('Bạn có chắc chắn muốn xóa profile này không?')) {
+    showConfirmDialog('Xóa Profile?', 'Bạn có chắc chắn muốn xóa profile này không?', async () => {
         try {
             await window.api.send('db:delete-profile', id);
             showToast('Đã xóa profile', 'success');
@@ -276,19 +268,15 @@ async function deleteProfile(id) {
             console.error(err);
             showToast('Lỗi khi xóa', 'error');
         }
-    }
+    });
 }
 
-/**
- * Tự động tạo chuỗi UserAgent dựa trên OS và Browser người dùng chọn.
- * Giúp người dùng không phải tự nhập thủ công.
- */
 function generateUserAgent() {
     const os = $('#profile-os').val();
     const browser = $('#profile-browser').val();
     const version = $('#profile-browser-ver').val() || '120';
 
-    // Logic tạo UA string chuẩn (giả lập)
+    // Improved UA Generator
     let ua = '';
 
     if (browser === 'Chrome') {

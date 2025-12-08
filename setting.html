@@ -560,7 +560,7 @@
                     </div>
 
                     <div class="mt-4 p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-colors cursor-pointer group flex items-center justify-between"
-                        onclick="if(confirm('CẢNH BÁO: Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa toàn bộ dữ liệu?')) showToast('Đã xóa dữ liệu thành công', 'success')">
+                        onclick="showConfirmDialog('Xác nhận xóa', 'CẢNH BÁO: Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa toàn bộ dữ liệu?', () => showToast('Đã xóa dữ liệu thành công', 'success'))">
                         <div class="flex items-center gap-4">
                             <i class="ri-alarm-warning-fill text-red-500 text-xl group-hover:animate-pulse"></i>
                             <div>
@@ -578,12 +578,42 @@
     </div>
 
     <div id="toast"
-        class="fixed bottom-8 right-8 px-5 py-4 rounded-xl shadow-2xl transform translate-y-40 z-50 flex items-center gap-4 border backdrop-blur-xl min-w-[320px] transition-all duration-300">
-        <div id="toast-icon-container" class="p-2 rounded-full"></div>
+        class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-[20000] flex items-center gap-3 border backdrop-blur-md min-w-[300px] transition-all duration-300">
+        <div id="toast-icon-container" class="p-1.5 rounded-full"></div>
         <div class="flex flex-col">
-            <span id="toast-title" class="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">Thông
-                báo</span>
+            <span id="toast-title" class="text-xs font-bold uppercase tracking-wider opacity-70 mb-0.5">Thông báo</span>
             <span id="toast-msg" class="text-sm font-medium">Nội dung thông báo</span>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal"
+        class="fixed inset-0 z-[20001] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[400px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box bg-slate-900 border border-white/10 rounded-xl shadow-2xl">
+                <div class="p-8 text-center">
+                    <div class="flex flex-col items-center gap-5">
+                        <div
+                            class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            <i class="ri-alarm-warning-fill text-3xl text-red-500 drop-shadow-md"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="modal-title" class="text-xl font-bold text-white mb-2 tracking-tight">Tiêu đề</h3>
+                            <p id="modal-msg" class="text-slate-300 text-sm leading-relaxed">Nội dung thông báo</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-center gap-3">
+                        <button onclick="closeConfirmModal()"
+                            class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                            Hủy bỏ
+                        </button>
+                        <button id="modal-confirm-btn"
+                            class="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-900/40 transition-all transform hover:-translate-y-0.5">
+                            Xác nhận
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -723,6 +753,7 @@
         </div>
     </div>
 
+    <script src="js/ui.js"></script>
     <script src="js/setting.js"></script>
     <script src="js/profile_manager.js"></script>
     <script>
@@ -758,53 +789,7 @@
             target.style.animation = 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         }
 
-        // Toast Logic
-        let toastTimeout;
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            const iconContainer = document.getElementById('toast-icon-container');
-            const toastTitle = document.getElementById('toast-title');
-            const toastMsg = document.getElementById('toast-msg');
-
-            clearTimeout(toastTimeout);
-
-            // Reset classes
-            toast.className = 'fixed bottom-8 right-8 px-5 py-4 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transform z-50 flex items-center gap-4 border backdrop-blur-xl min-w-[320px] transition-all duration-300';
-            iconContainer.innerHTML = '';
-
-            let colorClass = '';
-
-            if (type === 'success') {
-                colorClass = 'border-emerald-500/20 bg-emerald-900/80';
-                toastTitle.classList.add('text-emerald-400');
-                iconContainer.className = 'p-2 rounded-full bg-emerald-500/20';
-                iconContainer.innerHTML = '<i class="ri-checkbox-circle-fill text-xl text-emerald-400"></i>';
-            } else if (type === 'warning') {
-                colorClass = 'border-amber-500/20 bg-amber-900/80';
-                toastTitle.classList.add('text-amber-400');
-                iconContainer.className = 'p-2 rounded-full bg-amber-500/20';
-                iconContainer.innerHTML = '<i class="ri-alert-fill text-xl text-amber-400"></i>';
-            } else {
-                colorClass = 'border-blue-500/20 bg-blue-900/80';
-                toastTitle.classList.add('text-blue-400');
-                iconContainer.className = 'p-2 rounded-full bg-blue-500/20';
-                iconContainer.innerHTML = '<i class="ri-information-fill text-xl text-blue-400"></i>';
-            }
-
-            toast.classList.add(...colorClass.split(' '));
-            toastMsg.innerText = msg;
-            toastMsg.className = 'text-sm font-medium text-white';
-
-            // Show
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-40', 'opacity-0');
-            });
-
-            // Hide after 3s
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-40', 'opacity-0');
-            }, 3000);
-        }
+        // Toast Logic handled by ui.js
 
     </script>
 </body>

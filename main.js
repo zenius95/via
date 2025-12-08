@@ -1,23 +1,15 @@
 const { app, BrowserWindow, ipcMain, BrowserView } = require('electron')
 const path = require('path')
 
-// --- KHAI BÁO BIẾN TOÀN CỤC ---
-// mainWindow: Cửa sổ chính của ứng dụng
-// views: Object lưu trữ các BrowserView con (như tab tài khoản, cài đặt...) theo ID
-// activeViewId: ID của view đang được hiển thị
+// Global references
 let mainWindow;
-let views = {};
+let views = {}; // Map of id -> BrowserView
 let activeViewId = null;
 
-// --- XỬ LÝ IPC (Database) ---
-// Import module database để xử lý các yêu cầu truy vấn từ Renderer
+// IPC Handlers
 const database = require('./js/database');
 
-/**
- * Hàm trợ giúp tạo mới một BrowserView (tương tự một tab trong trình duyệt)
- * @param {string} id - Định danh duy nhất cho view
- * @param {string} url - Đường dẫn URL hoặc file HTML cần load
- */
+// Helper to create a view
 function createView(id, url) {
     const view = new BrowserView({
         webPreferences: {
@@ -27,22 +19,19 @@ function createView(id, url) {
         }
     });
 
-    // Xác định cách load nội dung dựa trên URL
-    // Nếu bắt đầu bằng http/https thì load URL web, ngược lại load file HTML nội bộ
+    // Load URL
     if (url.startsWith('http')) {
         view.webContents.loadURL(url);
     } else {
         view.webContents.loadFile(path.join(__dirname, url));
     }
 
-    // Cấu hình phím tắt cho View (DevTools và Reload)
+    // DevTools & Shortcuts
     view.webContents.on('before-input-event', (event, input) => {
-        // F12: Mở công cụ lập trình (DevTools) chế độ tách rời
         if (input.key === 'F12') {
             view.webContents.toggleDevTools({ mode: 'detach' });
             event.preventDefault();
         }
-        // Ctrl + R: Tải lại trang hiện tại
         if (input.control && input.key.toLowerCase() === 'r') {
             view.webContents.reload();
             event.preventDefault();
@@ -53,59 +42,56 @@ function createView(id, url) {
     return view;
 }
 
-// Xử lý sự kiện chuyển đổi View (Tab)
 ipcMain.on('switch-view', (event, id) => {
     if (views[id] && mainWindow) {
-        // Gán view mới vào cửa sổ chính
+        // Detach old, attach new
         mainWindow.setBrowserView(views[id]);
         activeViewId = id;
 
-        // Cập nhật lại kích thước view để khớp với cửa sổ
+        // Update bounds for the new view
         updateViewBounds();
 
-        // Focus vào view để nhận input ngay lập tức
+        // Focus
         views[id].webContents.focus();
     }
 });
 
-// Xử lý sự kiện đóng một View (Tab)
 ipcMain.on('close-view', (event, id) => {
-    // Không cho phép đóng tab danh sách tài khoản chính
+    // Cannot close account view this way (logic in renderer prevents it usually)
     if (id === 'account') return;
 
     if (views[id]) {
-        // Nếu đang xem tab muốn đóng, gỡ nó khỏi cửa sổ chính trước
         if (activeViewId === id) {
             mainWindow.setBrowserView(null);
             activeViewId = null;
         }
-        // Xóa tham chiếu khỏi danh sách views để bộ nhớ được giải phóng (Garbage Collection)
+        // Destroy (optional, but good for cleanup)
+        // views[id].webContents.destroy(); 
+
         delete views[id];
     }
 });
 
-// Xử lý mở tab Cài đặt (Settings)
 ipcMain.handle('open-settings-tab', async (event) => {
     if (mainWindow) {
         const id = 'settings';
 
-        // Nếu view settings chưa tồn tại thì tạo mới
+        // Create if not exists
         if (!views[id]) {
             createView(id, 'setting.html');
         }
 
-        // Gửi lệnh xuống Renderer để tạo UI tab và kích hoạt nó
+        // Send to renderer to create tab UI AND switch
         mainWindow.webContents.send('create-tab', {
             title: 'Setting',
             icon: 'ri-settings-3-line',
             id: id,
-            active: true // Báo cho Renderer biết cần active tab này ngay
+            active: true // Tell renderer to activate immediately
         });
     }
 });
 
-// --- XỬ LÝ DATABASE (TÀI KHOẢN & THƯ MỤC) ---
-// Các hàm này gọi trực tiếp vào module database.js để thực hiện CRUD
+// Database IPCs
 ipcMain.handle('db:get-accounts', async () => await database.getAllAccounts());
 ipcMain.handle('db:add-accounts', async (event, accounts) => await database.insertAccounts(accounts));
 ipcMain.handle('db:update-account', async (event, account) => await database.updateAccount(account));
@@ -116,23 +102,22 @@ ipcMain.handle('db:delete-folder', async (event, id) => await database.deleteFol
 ipcMain.handle('db:update-folder', async (event, args) => await database.updateFolder(args.id, args.newName, args.newColor, args.oldName));
 ipcMain.handle('db:update-account-folder', async (event, args) => await database.updateAccountFolder(args.uids, args.folderName));
 
-// --- XỬ LÝ DATABASE (SETTINGS & PROFILE) ---
+// --- SETTINGS IPC ---
 ipcMain.handle('db:get-settings', async () => await database.getSettings());
 ipcMain.handle('db:save-settings', async (event, settings) => await database.saveSettings(settings));
 
+// --- PROFILE IPC ---
 ipcMain.handle('db:get-profiles', async () => await database.getProfiles());
 ipcMain.handle('db:add-profile', async (event, profile) => await database.addProfile(profile));
 ipcMain.handle('db:update-profile', async (event, profile) => await database.updateProfile(profile));
 ipcMain.handle('db:delete-profile', async (event, id) => await database.deleteProfile(id));
 
-// --- XỬ LÝ AUTOMATION (TỰ ĐỘNG HÓA) ---
+// --- AUTOMATION IPC ---
 const automation = require('./js/automation');
-// Kích hoạt chạy profile: Nhận account và config từ Renderer, chuyển cho module automation xử lý
 ipcMain.handle('process:run-profile', async (event, { account, config }) => {
     return await automation.runProfile(account, config);
 });
 
-// Hệ thống tự động tìm kiếm đường dẫn Chrome trên máy người dùng (Windows)
 ipcMain.handle('main:get-chrome-path', async () => {
     const fs = require('fs');
     const commonPaths = [
@@ -147,7 +132,6 @@ ipcMain.handle('main:get-chrome-path', async () => {
     return '';
 });
 
-// Hộp thoại chọn file (để người dùng chọn đường dẫn Chrome thủ công)
 ipcMain.handle('dialog:open-file', async () => {
     const { dialog } = require('electron');
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -160,10 +144,8 @@ ipcMain.handle('dialog:open-file', async () => {
     return null;
 });
 
-// --- QUẢN LÝ KÍCH THƯỚC VIEW ---
-const TITLEBAR_HEIGHT = 48; // Chiều cao thanh tiêu đề tùy chỉnh (custom titlebar)
-
-// Cập nhật vị trí và kích thước của View hiện tại để nằm ngay dưới thanh tiêu đề
+// Bounds Helper
+const TITLEBAR_HEIGHT = 48;
 function updateViewBounds() {
     if (mainWindow && activeViewId && views[activeViewId]) {
         const bounds = mainWindow.getContentBounds();
@@ -176,23 +158,22 @@ function updateViewBounds() {
     }
 }
 
-// Tạo cửa sổ chính của ứng dụng
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        frame: false, // Tắt khung viền mặc định của OS để dùng custom titlebar
+        frame: false,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false, // Cho phép dùng Node.js trong Main Window UI
+            contextIsolation: false, // For main window UI
             preload: path.join(__dirname, 'preload.js')
         }
     })
 
     mainWindow.loadFile('index.html')
-    mainWindow.setMenu(null) // Ẩn menu mặc định
+    mainWindow.setMenu(null)
 
-    // Khởi tạo tab "Tài khoản" (Account View) mặc định
+    // Setup Account View
     const accountView = createView('account', 'account.html');
     mainWindow.setBrowserView(accountView);
     activeViewId = 'account';
@@ -202,14 +183,13 @@ function createWindow() {
         mainWindow.show();
     })
 
-    // Xử lý sự kiện resize cửa sổ để cập nhật lại kích thước View
+    // Bounds logic
     mainWindow.on('resize', updateViewBounds)
     mainWindow.on('maximize', updateViewBounds)
     mainWindow.on('unmaximize', updateViewBounds)
 
-    // Phím tắt cho Cửa sổ chính
+    // Shortcuts for Main Window
     mainWindow.webContents.on('before-input-event', (event, input) => {
-        // Ctrl + R: Reload View đang active hoặc cả cửa sổ
         if (input.control && input.key.toLowerCase() === 'r') {
             event.preventDefault()
             if (activeViewId && views[activeViewId]) {
@@ -218,14 +198,13 @@ function createWindow() {
                 mainWindow.reload();
             }
         }
-        // F12: Toggle DevTools cho cửa sổ chính
         if (input.key === 'F12') {
             mainWindow.webContents.toggleDevTools();
             event.preventDefault();
         }
     })
 
-    // Xử lý các sự kiện điều khiển cửa sổ nhận từ Renderer (Nút thu nhỏ, phóng to, đóng)
+    // Window Controls
     ipcMain.on('window-minimize', () => mainWindow.minimize())
     ipcMain.on('window-maximize', () => {
         if (mainWindow.isMaximized()) mainWindow.unmaximize();
@@ -233,7 +212,7 @@ function createWindow() {
     })
     ipcMain.on('window-close', () => mainWindow.close())
 
-    // Gửi sự kiện trạng thái maximize về Renderer để cập nhật icon nút
+    // Maximize events
     mainWindow.on('maximize', () => mainWindow.webContents.send('window-maximized'))
     mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-unmaximized'))
 }

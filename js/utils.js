@@ -1,10 +1,5 @@
 /* js/utils.js */
 
-/**
- * Loại bỏ dấu tiếng Việt khỏi chuỗi
- * @param {string} str - Chuỗi gốc có dấu
- * @returns {string} - Chuỗi không dấu, chữ thường
- */
 function removeVietnameseTones(str) {
     str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
     str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
@@ -24,7 +19,6 @@ function removeVietnameseTones(str) {
     return str.toLowerCase();
 }
 
-// Copy text vào clipboard và hiển thị thông báo
 function copyText(text) {
     navigator.clipboard.writeText(text).then(() => showToast("Đã copy vào clipboard", "success"));
 }

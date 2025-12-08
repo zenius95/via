@@ -1,14 +1,7 @@
 // setting.js - Logic for Settings Page
 // Uses window.api exposed via preload.js
 
-// --- HÀM TIỆN ÍCH ---
-
-/**
- * Hàm Debounce: Giới hạn tần suất gọi hàm (throttle)
- * Dùng để tránh việc lưu cài đặt liên tục khi người dùng đang gõ phím
- * @param {Function} func - Hàm cần gọi
- * @param {number} wait - Thời gian chờ (ms)
- */
+// Debounce helper
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -37,16 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupListeners();
 });
 
-/**
- * Tải cài đặt từ Database khi khởi động
- * Nếu chưa có đường dẫn Chrome -> Thử tự động nhận diện
- */
 async function loadSettings() {
     try {
         const settings = await window.api.send('db:get-settings');
         currentSettings = settings || {};
 
-        // Hiển thị giá trị lên UI
+        // Populate UI
         if (elChromePath) elChromePath.value = currentSettings.chromePath || '';
         if (elThreads) elThreads.value = currentSettings.maxThreads || 3;
         if (elDelay) elDelay.value = currentSettings.launchDelay || 2;
@@ -54,12 +43,12 @@ async function loadSettings() {
         if (elRetry) elRetry.value = currentSettings.retryCount || 0;
         if (elHeadless) elHeadless.checked = currentSettings.headless === 'true';
 
-        // Tự động nhận diện Chrome nếu chưa cấu hình
+        // Auto detect if empty
         if (!elChromePath.value) {
             const detectedPath = await window.api.send('main:get-chrome-path');
             if (detectedPath) {
                 elChromePath.value = detectedPath;
-                // Lưu ngay nếu tìm thấy
+                // Auto save if detected
                 saveSettings();
                 if (typeof showToast === 'function') showToast('Đã tự động nhận diện Chrome', 'success');
             }
@@ -99,14 +88,13 @@ function setupListeners() {
 }
 
 // Global function for "Browse" button
-// Hàm mở hộp thoại chọn file (được gọi từ nút "Chọn...")
 window.browseChromePath = async () => {
     try {
-        const path = await window.api.send('dialog:open-file'); // Gọi IPC Main Process
+        const path = await window.api.send('dialog:open-file');
         if (path) {
             if (elChromePath) {
                 elChromePath.value = path;
-                saveSettings(); // Lưu ngay sau khi chọn
+                saveSettings();
                 if (typeof showToast === 'function') showToast('Đã cập nhật đường dẫn Chrome', 'success');
             }
         }
