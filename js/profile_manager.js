@@ -94,14 +94,12 @@ function populateVersionSelect(versions) {
 async function loadProfiles() {
     try {
         let profiles;
-        console.log('Loading profiles. isTrashView:', isTrashView);
         if (isTrashView) {
             profiles = await window.api.send('db:get-deleted-profiles');
         } else {
             profiles = await window.api.send('db:get-profiles');
         }
         currentProfiles = profiles || [];
-        console.log(`Loaded ${currentProfiles.length} profiles.`);
         renderProfiles(currentProfiles);
     } catch (err) {
         console.error('Load profiles error:', err);
@@ -496,7 +494,6 @@ async function deleteSelectedProfiles() {
             // Execute deletions sequentially
             for (const id of ids) {
                 const numericId = parseInt(id, 10);
-                console.log(`Deleting profile ${numericId} (Mode: ${isTrashView ? 'Permanent' : 'Soft'})...`);
                 await window.api.send(ipcChannel, numericId);
                 successCount++;
             }
@@ -540,7 +537,6 @@ function toggleTrashView() {
         selectAllCheckbox.indeterminate = false;
     }
 
-    console.log('Toggled trash view. New state:', isTrashView);
     loadProfiles();
 }
 

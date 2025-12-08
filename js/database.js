@@ -362,13 +362,9 @@ class Database {
 
     getProfiles() {
         return new Promise((resolve, reject) => {
-            console.log('Fetching active profiles...');
             this.db.all("SELECT * FROM profiles WHERE is_deleted IS NULL OR is_deleted = 0 ORDER BY id DESC", [], (err, rows) => {
                 if (err) reject(err);
-                else {
-                    console.log(`Found ${rows ? rows.length : 0} active profiles.`);
-                    resolve(rows);
-                }
+                else resolve(rows);
             });
         });
     }
@@ -414,26 +410,18 @@ class Database {
 
     getDeletedProfiles() {
         return new Promise((resolve, reject) => {
-            console.log('Fetching deleted profiles...');
             this.db.all("SELECT * FROM profiles WHERE is_deleted = 1 ORDER BY id DESC", [], (err, rows) => {
                 if (err) reject(err);
-                else {
-                    console.log(`Found ${rows ? rows.length : 0} deleted profiles.`);
-                    resolve(rows);
-                }
+                else resolve(rows);
             });
         });
     }
 
     deleteProfile(id) {
         return new Promise((resolve, reject) => {
-            console.log(`Soft deleting profile ${id}...`);
             this.db.run("UPDATE profiles SET is_deleted = 1 WHERE id = ?", [id], function (err) {
                 if (err) reject(err);
-                else {
-                    console.log(`Soft deleted profile ${id}. Changes: ${this.changes}`);
-                    resolve(this.changes);
-                }
+                else resolve(this.changes);
             });
         });
     }
