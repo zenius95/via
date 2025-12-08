@@ -20,122 +20,104 @@ class Database {
     }
 
     initTable() {
-        // Simple Key-Value Store for Settings
-        this.db.run(`
-            CREATE TABLE IF NOT EXISTS settings (
-                id TEXT PRIMARY KEY,
-                value TEXT
-            )
-        `);
+        this.db.serialize(() => {
+            // Settings Table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS settings (
+                    id TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            `);
 
-        // Accounts Table
-        this.db.run(`
-            CREATE TABLE IF NOT EXISTS accounts (
-                uid TEXT PRIMARY KEY,
-                password TEXT,
-                twoFa TEXT,
-                email TEXT,
-                emailPassword TEXT,
-                emailRecover TEXT,
-                cookie TEXT,
-                token TEXT,
-                status TEXT,
-                name TEXT,
-                avatar TEXT,
-                proxy TEXT,
-                user_agent TEXT,
-                notes TEXT,
-                processStatus TEXT,
-                processMessage TEXT
-            )
-        `);
-
-        // Migration: Check if emailRecover exists
-        this.db.all("PRAGMA table_info(accounts)", (err, rows) => {
-            if (!err && rows) {
-                const hasRecover = rows.some(r => r.name === 'emailRecover');
-                if (!hasRecover) {
-                    this.db.run("ALTER TABLE accounts ADD COLUMN emailRecover TEXT", (err) => {
-                        if (err) console.error('Migration add emailRecover failed', err);
-                        else console.log('Migrated DB: Added emailRecover column');
-                    });
-                }
-
-                // NEW: Check for folder column
-                const hasFolder = rows.some(r => r.name === 'folder');
-                if (!hasFolder) {
-                    this.db.run("ALTER TABLE accounts ADD COLUMN folder TEXT", (err) => {
-                        if (err) console.error('Migration add folder failed', err);
-                        else console.log('Migrated DB: Added folder column');
-                    });
-                }
-            }
-
-            // Migration: Check profiles table for browser_version
-            this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
-                if (!err && rows && rows.length > 0) {
-                    const hasBrowserVer = rows.some(r => r.name === 'browser_version');
-                    if (!hasBrowserVer) {
-                        this.db.run("ALTER TABLE profiles ADD COLUMN browser_version TEXT", (err) => {
-                            if (err) console.error('Migration add browser_version failed', err);
-                            else console.log('Migrated DB: Added browser_version to profiles');
-                        });
-                    }
-                }
-            });
-
-            // Migration: Check if 'folders' table has 'color' column
-            this.db.all("PRAGMA table_info(folders)", (err, rows) => {
-                if (!err && rows) {
-                    const hasColor = rows.some(r => r.name === 'color');
-                    if (!hasColor && rows.length > 0) { // Only if table exists
-                        this.db.run("ALTER TABLE folders ADD COLUMN color TEXT", (err) => {
-                            if (err) console.error('Migration add folder color failed', err);
-                            else console.log('Migrated DB: Added folder color column');
-                        });
-                    }
-                }
-            });
+            // Accounts Table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS accounts (
+                    uid TEXT PRIMARY KEY,
+                    password TEXT,
+                    twoFa TEXT,
+                    email TEXT,
+                    emailPassword TEXT,
+                    emailRecover TEXT,
+                    cookie TEXT,
+                    token TEXT,
+                    status TEXT,
+                    name TEXT,
+                    avatar TEXT,
+                    proxy TEXT,
+                    user_agent TEXT,
+                    notes TEXT,
+                    processStatus TEXT,
+                    processMessage TEXT,
+                    folder TEXT
+                )
+            `);
 
             // Folders Table
             this.db.run(`
-            CREATE TABLE IF NOT EXISTS folders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE,
-                color TEXT
-            )
-        `);
+                CREATE TABLE IF NOT EXISTS folders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE,
+                    color TEXT
+                )
+            `);
 
             // Profiles Table
             this.db.run(`
-            CREATE TABLE IF NOT EXISTS profiles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                os TEXT,
-                browser TEXT,
-                browser_version TEXT,
-                user_agent TEXT,
-                screen_resolution TEXT,
-                notes TEXT,
-                created_at TEXT,
-                is_deleted INTEGER DEFAULT 0
-            )
-        `);
-
-            // Migration: Check profiles table for is_deleted
-            this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
-                if (!err && rows && rows.length > 0) {
-                    const hasIsDeleted = rows.some(r => r.name === 'is_deleted');
-                    if (!hasIsDeleted) {
-                        this.db.run("ALTER TABLE profiles ADD COLUMN is_deleted INTEGER DEFAULT 0", (err) => {
-                            if (err) console.error('Migration add is_deleted failed', err);
-                            else console.log('Migrated DB: Added is_deleted to profiles');
-                        });
-                    }
-                }
+                CREATE TABLE IF NOT EXISTS profiles (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    os TEXT,
+                    browser TEXT,
+                    browser_version TEXT,
+                    user_agent TEXT,
+                    screen_resolution TEXT,
+                    notes TEXT,
+                    created_at TEXT,
+                    is_deleted INTEGER DEFAULT 0
+                )
+            `, (err) => {
+                // Migrations run after tables are potentially created
+                this.runMigrations();
             });
         });
+    }
 
+    runMigrations() {
+        // Accounts migrations
+        this.db.all("PRAGMA table_info(accounts)", (err, rows) => {
+            if (!err && rows) {
+                if (!rows.some(r => r.name === 'emailRecover')) {
+                    this.db.run("ALTER TABLE accounts ADD COLUMN emailRecover TEXT");
+                }
+                if (!rows.some(r => r.name === 'folder')) {
+                    this.db.run("ALTER TABLE accounts ADD COLUMN folder TEXT");
+                }
+            }
+        });
+
+        // Folders migrations
+        this.db.all("PRAGMA table_info(folders)", (err, rows) => {
+            if (!err && rows && rows.length > 0) {
+                if (!rows.some(r => r.name === 'color')) {
+                    this.db.run("ALTER TABLE folders ADD COLUMN color TEXT");
+                }
+            }
+        });
+
+        // Profiles migrations
+        this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
+            if (!err && rows && rows.length > 0) {
+                if (!rows.some(r => r.name === 'browser_version')) {
+                    this.db.run("ALTER TABLE profiles ADD COLUMN browser_version TEXT");
+                }
+                if (!rows.some(r => r.name === 'is_deleted')) {
+                    this.db.run("ALTER TABLE profiles ADD COLUMN is_deleted INTEGER DEFAULT 0", (err) => {
+                        if (err) console.error('Migration is_deleted failed', err);
+                        else console.log('Migrated DB: Added is_deleted');
+                    });
+                }
+            }
+        });
     }
 
     getAllAccounts() {
@@ -152,15 +134,15 @@ class Database {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
                     uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
-                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             stmt.run(
                 account.uid, account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
-                account.processStatus || '', account.processMessage || '',
+                account.processStatus || '', account.processMessage || '', account.folder || '',
                 (err) => {
                     if (err) reject(err);
                     else resolve(true);
@@ -175,19 +157,18 @@ class Database {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
                     uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
-                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             this.db.serialize(() => {
                 this.db.run("BEGIN TRANSACTION");
                 accounts.forEach(account => {
-                    console.log('Inserting Account:', account.uid, 'Status:', account.status, 'Process:', account.processStatus);
                     stmt.run(
                         account.uid, account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                         account.cookie, account.token, account.status, account.name, account.avatar,
                         account.proxy || '', account.user_agent || '', account.notes || '',
-                        account.processStatus || '', account.processMessage || '',
+                        account.processStatus || '', account.processMessage || '', account.folder || '',
                         (err) => {
                             if (err) console.error('Insert account error', account.uid, err);
                         }
@@ -346,11 +327,6 @@ class Database {
 
     deleteFolder(id) {
         return new Promise((resolve, reject) => {
-            // Also optionally clear folder assignment in accounts?
-            // For now, simple delete. User logic can handle re-assignment if needed.
-            // Or better: update accounts set folder = '' where folder = (select name from folders where id = ?)
-            // But we store folder NAME in accounts, not ID (based on plan).
-            // Let's get name first.
             this.db.get("SELECT name FROM folders WHERE id = ?", [id], (err, row) => {
                 if (err || !row) {
                     reject(err || 'Folder not found');
@@ -384,24 +360,15 @@ class Database {
 
     // --- PROFILE METHODS ---
 
-
-
-    // --- PROFILE METHODS ---
-
     getProfiles() {
         return new Promise((resolve, reject) => {
+            console.log('Fetching active profiles...');
             this.db.all("SELECT * FROM profiles WHERE is_deleted IS NULL OR is_deleted = 0 ORDER BY id DESC", [], (err, rows) => {
                 if (err) reject(err);
-                else resolve(rows);
-            });
-        });
-    }
-
-    getDeletedProfiles() {
-        return new Promise((resolve, reject) => {
-            this.db.all("SELECT * FROM profiles WHERE is_deleted = 1 ORDER BY id DESC", [], (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
+                else {
+                    console.log(`Found ${rows ? rows.length : 0} active profiles.`);
+                    resolve(rows);
+                }
             });
         });
     }
@@ -445,12 +412,29 @@ class Database {
         });
     }
 
-    // Soft delete
+    getDeletedProfiles() {
+        return new Promise((resolve, reject) => {
+            // Debug Log
+            console.log('Fetching deleted profiles...');
+            this.db.all("SELECT * FROM profiles WHERE is_deleted = 1 ORDER BY id DESC", [], (err, rows) => {
+                if (err) reject(err);
+                else {
+                    console.log(`Found ${rows ? rows.length : 0} deleted profiles.`);
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
     deleteProfile(id) {
         return new Promise((resolve, reject) => {
+            console.log(`Soft deleting profile ${id}...`);
             this.db.run("UPDATE profiles SET is_deleted = 1 WHERE id = ?", [id], function (err) {
                 if (err) reject(err);
-                else resolve(this.changes);
+                else {
+                    console.log(`Soft deleted profile ${id}. Changes: ${this.changes}`);
+                    resolve(this.changes);
+                }
             });
         });
     }

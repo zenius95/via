@@ -94,12 +94,14 @@ function populateVersionSelect(versions) {
 async function loadProfiles() {
     try {
         let profiles;
+        console.log('Loading profiles. isTrashView:', isTrashView);
         if (isTrashView) {
             profiles = await window.api.send('db:get-deleted-profiles');
         } else {
             profiles = await window.api.send('db:get-profiles');
         }
         currentProfiles = profiles || [];
+        console.log(`Loaded ${currentProfiles.length} profiles.`);
         renderProfiles(currentProfiles);
     } catch (err) {
         console.error('Load profiles error:', err);
@@ -132,29 +134,31 @@ function renderProfiles(profiles) {
     }
 
     tbody.innerHTML = profiles.map(p => `
-        <tr class="hover:bg-white/5 transition-colors group">
+        <tr class="hover:bg-white/5 transition-colors group profile-row" oncontextmenu="handleProfileContextMenu(event, ${p.id})">
             <td class="px-6 py-4 w-12">
                 <div class="flex items-center justify-center">
                     <input type="checkbox" class="profile-checkbox w-4 h-4 rounded border-gray-600 bg-slate-700 text-blue-600 focus:ring-offset-gray-900 focus:ring-1 focus:ring-blue-500 cursor-pointer" value="${p.id}">
                 </div>
             </td>
-            <td class="px-6 py-4 font-medium text-white">${p.name}</td>
-            <td class="px-6 py-4">
+            <td class="px-6 py-4 font-medium text-white select-none">${p.name}</td>
+            <td class="px-6 py-4 select-none">
                 <i class="${getOSIcon(p.os)} mr-2"></i>${p.os}
             </td>
-            <td class="px-6 py-4">
+            <td class="px-6 py-4 select-none">
                 <i class="${getBrowserIcon(p.browser)} mr-2"></i>${p.browser} <span class="text-xs text-slate-500">v${p.browser_version || '?'}</span>
             </td>
-            <td class="px-6 py-4 text-center text-xs truncate max-w-[150px] text-slate-500" title="${p.user_agent}">
+            <td class="px-6 py-4 text-center text-xs truncate max-w-[150px] text-slate-500 select-none" title="${p.user_agent}">
                 ${p.user_agent ? p.user_agent.substring(0, 20) + '...' : 'Auto'}
             </td>
-            <td class="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+            <td class="px-6 py-4 text-right">
                 ${isTrashView ? `
-                    <button onclick="restoreProfile(${p.id})" title="Khôi phục" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-green-400 transition-colors"><i class="ri-arrow-go-back-line"></i></button>
-                    <button onclick="permanentDeleteProfile(${p.id})" title="Xóa vĩnh viễn" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-500 transition-colors"><i class="ri-delete-bin-2-fill"></i></button>
+                    <button onclick="restoreProfile(${p.id})" title="Khôi phục" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded text-xs font-medium transition-colors border border-green-500/20">
+                        <i class="ri-arrow-go-back-line"></i> Khôi phục
+                    </button>
                 ` : `
-                    <button onclick="editProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i class="ri-edit-line"></i></button>
-                    <button onclick="deleteProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i class="ri-delete-bin-line"></i></button>
+                    <button onclick="editProfile(${p.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 rounded text-xs font-medium transition-colors border border-blue-500/20">
+                        <i class="ri-edit-line"></i> Sửa
+                    </button>
                 `}
             </td>
         </tr>
@@ -162,6 +166,9 @@ function renderProfiles(profiles) {
 
     // Update count
     updateSelectedCount();
+
+    // Close context menu on click elsewhere
+    document.addEventListener('click', closeContextMenu);
 }
 
 function updateSelectAllState() {
@@ -187,16 +194,132 @@ function updateSelectedCount() {
     const profiles = currentProfiles || [];
     const checkedCheckboxes = document.querySelectorAll('.profile-checkbox:checked');
     const countDiv = document.querySelector('#section-profiles .border-t');
-    const deleteBtn = document.getElementById('btn-delete-selected');
 
     if (countDiv) {
         if (checkedCheckboxes.length > 0) {
             countDiv.innerHTML = `<span class="text-blue-400 font-medium">Đã chọn ${checkedCheckboxes.length} / ${profiles.length} profiles</span>`;
-            if (deleteBtn) deleteBtn.classList.remove('hidden');
         } else {
             countDiv.innerText = `Hiển thị ${profiles.length} profiles`;
-            if (deleteBtn) deleteBtn.classList.add('hidden');
         }
+    }
+}
+
+// --- CONTEXT MENU ---
+
+function handleProfileContextMenu(e, id) {
+    e.preventDefault();
+    closeContextMenu();
+
+    // Select the row if not already selected (optional, but good UX)
+    // Find checkbox for this id
+    const checkbox = document.querySelector(`.profile-checkbox[value="${id}"]`);
+
+    // If we have multiple selections and this row IS one of them, do NOT deselect others.
+    // If this row is NOT selected, select ONLY this row (mimics standard OS behavior)
+    if (checkbox && !checkbox.checked) {
+        // Clear other selections
+        document.querySelectorAll('.profile-checkbox').forEach(cb => cb.checked = false);
+        checkbox.checked = true;
+        updateSelectAllState();
+        updateSelectedCount();
+    }
+
+    // Determine numbers
+    const checkedCount = document.querySelectorAll('.profile-checkbox:checked').length;
+
+    // Create Menu
+    const menu = document.createElement('div');
+    menu.id = 'profile-context-menu';
+    menu.className = 'fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl py-1.5 z-[9999] min-w-[160px] animate-fade-in backdrop-blur-md';
+    menu.style.left = `${e.clientX}px`;
+    menu.style.top = `${e.clientY}px`;
+
+    const actionText = isTrashView ? 'Xóa vĩnh viễn' : 'Xóa';
+    const icon = isTrashView ? 'ri-delete-bin-2-fill' : 'ri-delete-bin-line';
+    const colorClass = isTrashView ? 'text-red-500' : 'text-red-400';
+
+    let menuHtml = '';
+
+    if (!isTrashView) {
+        // Edit Option
+        if (checkedCount <= 1) {
+            menuHtml += `
+                <button onclick="editProfile(${id})" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm text-slate-300 hover:text-white flex items-center gap-2">
+                    <i class="ri-edit-line"></i> Chỉnh sửa
+                </button>
+            `;
+        }
+    } else {
+        // Restore Option
+        menuHtml += `
+            <button onclick="restoreSelectedOrSingle(${id})" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm text-green-400 hover:text-green-300 flex items-center gap-2">
+                <i class="ri-arrow-go-back-line"></i> Khôi phục ${checkedCount > 1 ? `(${checkedCount})` : ''}
+            </button>
+        `;
+    }
+
+    // Delete Option
+    menuHtml += `
+        <button onclick="deleteSelectedOrSingle(${id})" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm ${colorClass} hover:text-red-300 flex items-center gap-2">
+            <i class="${icon}"></i> ${actionText} ${checkedCount > 1 ? `(${checkedCount})` : ''}
+        </button>
+    `;
+
+    menu.innerHTML = menuHtml;
+    document.body.appendChild(menu);
+
+    // Adjust position if out of bounds
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        menu.style.left = `${window.innerWidth - rect.width - 10}px`;
+    }
+    if (rect.bottom > window.innerHeight) {
+        menu.style.top = `${window.innerHeight - rect.height - 10}px`;
+    }
+}
+
+function closeContextMenu() {
+    const existing = document.getElementById('profile-context-menu');
+    if (existing) existing.remove();
+}
+
+function deleteSelectedOrSingle(id) {
+    // If checkboxes are checked, use bulk delete logic
+    const checked = document.querySelectorAll('.profile-checkbox:checked');
+    if (checked.length > 0) {
+        deleteSelectedProfiles();
+    } else {
+        // Fallback to single delete (though we auto-selected above)
+        if (isTrashView) permanentDeleteProfile(id);
+        else deleteProfile(id);
+    }
+    closeContextMenu();
+}
+
+function restoreSelectedOrSingle(id) {
+    const checked = document.querySelectorAll('.profile-checkbox:checked');
+    if (checked.length > 0) {
+        // Bulk restore
+        const ids = Array.from(checked).map(cb => cb.value);
+        // Reuse bulk delete logic but for restore? Need new function.
+        bulkRestore(ids);
+    } else {
+        restoreProfile(id);
+    }
+    closeContextMenu();
+}
+
+async function bulkRestore(ids) {
+    try {
+        let count = 0;
+        for (const id of ids) {
+            await window.api.send('db:restore-profile', id);
+            count++;
+        }
+        showToast(`Đã khôi phục ${count} profile`, 'success');
+        loadProfiles();
+    } catch (err) {
+        showToast('Lỗi khôi phục', 'error');
     }
 }
 
@@ -401,18 +524,11 @@ function toggleTrashView() {
         if (title) title.innerText = 'Thùng rác';
         if (addBtn) addBtn.style.display = 'none';
 
-        // Change bulk delete button text if visible
-        const delBtn = document.getElementById('btn-delete-selected');
-        if (delBtn) delBtn.innerHTML = '<i class="ri-delete-bin-2-fill mr-1"></i> Xóa vĩnh viễn';
-
     } else {
         btn.innerHTML = '<i class="ri-delete-bin-2-line mr-1"></i> Thùng rác';
         btn.className = "px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/5";
         if (title) title.innerText = 'Quản lý Profile';
         if (addBtn) addBtn.style.display = 'inline-block';
-
-        const delBtn = document.getElementById('btn-delete-selected');
-        if (delBtn) delBtn.innerHTML = '<i class="ri-delete-bin-line mr-1"></i> Xóa đã chọn';
     }
 
     // Reset selection state

@@ -866,7 +866,8 @@ function toggleFilterDropdown() {
 document.addEventListener('click', function (e) {
     const dropdown = document.getElementById('filter-dropdown-menu');
     const btn = document.getElementById('filter-dropdown-btn');
-    if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+
+    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
         dropdown.classList.remove('show');
         btn.classList.remove('active');
     }
