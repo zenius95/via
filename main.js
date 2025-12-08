@@ -7,7 +7,9 @@ let views = {}; // Map of id -> BrowserView
 let activeViewId = null;
 
 // IPC Handlers
+// IPC Handlers
 const database = require('./js/database');
+const logger = require('./js/logger');
 
 // Helper to create a view
 function createView(id, url) {
@@ -95,7 +97,16 @@ ipcMain.handle('open-settings-tab', async (event) => {
 ipcMain.handle('db:get-accounts', async () => await database.getAllAccounts());
 ipcMain.handle('db:add-accounts', async (event, accounts) => await database.insertAccounts(accounts));
 ipcMain.handle('db:update-account', async (event, account) => await database.updateAccount(account));
-ipcMain.handle('db:delete-accounts', async (event, uids) => await database.deleteAccounts(uids));
+ipcMain.handle('db:delete-accounts', async (event, uids) => {
+    const result = await database.deleteAccounts(uids);
+    // Cleanup logs
+    if (Array.isArray(uids)) {
+        for (const uid of uids) {
+            await logger.deleteLogFolder(uid);
+        }
+    }
+    return result;
+});
 ipcMain.handle('db:get-folders', async () => await database.getFolders());
 ipcMain.handle('db:add-folder', async (event, name, color) => await database.addFolder(name, color));
 ipcMain.handle('db:delete-folder', async (event, id) => await database.deleteFolder(id));
@@ -113,7 +124,19 @@ ipcMain.handle('db:add-profile', async (event, profile) => await database.addPro
 ipcMain.handle('db:update-profile', async (event, profile) => await database.updateProfile(profile));
 ipcMain.handle('db:delete-profile', async (event, id) => await database.deleteProfile(id));
 ipcMain.handle('db:restore-profile', async (event, id) => await database.restoreProfile(id));
-ipcMain.handle('db:permanent-delete-profile', async (event, id) => await database.permanentDeleteProfile(id));
+ipcMain.handle('db:permanent-delete-profile', async (event, id) => {
+    const result = await database.permanentDeleteProfile(id);
+    await logger.deleteLogFolder(id);
+    return result;
+});
+
+// --- LOGGER IPC ---
+ipcMain.handle('log:init', async (event, { uid, fileName }) => {
+    return await logger.init(uid, fileName);
+});
+ipcMain.handle('log:write', async (event, { uid, fileName, message }) => {
+    return await logger.write(uid, fileName, message);
+});
 
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');

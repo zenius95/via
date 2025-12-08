@@ -196,6 +196,16 @@ async function runThread(node) {
         try {
             if (forceStop) throw new Error('Stopped');
 
+            if (forceStop) throw new Error('Stopped');
+
+            // --- INIT LOG ---
+            // Format: YYYY-MM-DD_HH-mm-ss.txt
+            const now = new Date();
+            const fileName = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}.txt`;
+
+            node.data.logFileName = fileName;
+            await window.api.send('log:init', { uid: node.data.uid, fileName });
+
             updateNodeStatus(node, 'RUNNING', currentRetry > 0 ? `Bắt đầu lại (Lần ${currentRetry})...` : 'Đang khởi chạy...');
 
             // Create timeout promise
@@ -274,7 +284,18 @@ function updateNodeStatus(node, status, msg) {
 
     // Direct update to avoid triggering onCellValueChanged (DB Save)
     node.data.processStatus = status;
+    // Direct update to avoid triggering onCellValueChanged (DB Save)
+    node.data.processStatus = status;
     node.data.processMessage = msg;
+
+    // Write Log
+    if (node.data.logFileName) {
+        window.api.send('log:write', {
+            uid: node.data.uid,
+            fileName: node.data.logFileName,
+            message: msg
+        });
+    }
 
     // Force refresh cell
     gridApi.refreshCells({

@@ -19,7 +19,10 @@ const api = {
             'db:get-profiles', 'db:add-profile', 'db:update-profile', 'db:delete-profile',
             'db:get-deleted-profiles', 'db:restore-profile', 'db:permanent-delete-profile',
             // Automation Channels
-            'process:run-profile'
+            // Automation Channels
+            'process:run-profile',
+            // Logger
+            'log:init', 'log:write'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
