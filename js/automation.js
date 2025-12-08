@@ -1,7 +1,7 @@
 const { chromium } = require('playwright-core');
 const { screen } = require('electron');
 
-async function runProfile(account, config) {
+async function launchBrowser(account, config) {
     let browser = null;
     let context = null;
 
@@ -112,39 +112,12 @@ async function runProfile(account, config) {
         // 4. Navigate
         const page = await context.newPage();
 
-        // Timeout handling for navigation
-        const navTimeout = config.timeout && config.timeout > 0 ? config.timeout * 1000 : 30000;
-
-        // Demo nav
-        await page.goto('https://www.facebook.com/', { timeout: navTimeout, waitUntil: 'domcontentloaded' });
-
-        // Wait? Or just perform check?
-        // If config.timeout is set for the whole process, we might want to wait OR do specific actions.
-        // For this generic "Run Profile" feature, maybe just open and wait a bit?
-        // Or wait for login selector?
-
-        // Let's verify login
-        // Check for specific element
-
-        await page.waitForTimeout(5000); // Wait 5s to see
-
-        const title = await page.title();
-
-        await browser.close();
-
-        return { status: 'SUCCESS', message: `Đã mở xong: ${title}` };
+        return { browser, context, page };
 
     } catch (err) {
-        console.error('Automation Error', err);
+        console.error('Automation Launch Error', err);
         if (browser) await browser.close().catch(() => { });
-
-        // Check for browser close/disconnect errors
-        const errMsg = err.message || '';
-        if (errMsg.includes('Target closed') || errMsg.includes('closed') || errMsg.includes('Protocol error')) {
-            return { status: 'ERROR', message: 'BrowserClosed' };
-        }
-
-        return { status: 'ERROR', message: err.message };
+        throw err;
     }
 }
 
@@ -155,4 +128,4 @@ function parseCookies(cookieStr) {
     }).filter(c => c.name && c.value);
 }
 
-module.exports = { runProfile };
+module.exports = { launchBrowser };

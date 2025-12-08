@@ -22,6 +22,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) {
         btn.addEventListener('click', toggleProcess);
     }
+
+    // Listen for status updates
+    if (window.api && window.api.on) {
+        window.api.on('process:update-status', ({ uid, message }) => {
+            if (!gridApi) return;
+
+            // Find node by UID
+            const processNode = processQueue.find(n => n.data.uid === uid);
+            // Also check running nodes if not in queue (but usually activeThreads are what we care about)
+            // But getting node from grid API is safer to ensure we have the node reference
+
+            // Iterate all nodes? Or use getRowNode? 
+            // gridApi.forEachNode?
+            // Since we don't have rowId set to uid, we might need to search.
+            // But we can optimize if we rely on processQueue, but processQueue items are shifted out when running.
+            // So we need to look up in grid.
+
+            gridApi.forEachNode(node => {
+                if (node.data && node.data.uid === uid) {
+                    // Check if it's currently running/active? 
+                    // We probably just trust the message.
+                    // But we should respect "Stopped" state if local logic stopped it?
+                    // The IPC comes from Main, so it IS running.
+                    updateNodeStatus(node, 'RUNNING', message);
+                }
+            });
+        });
+    }
 });
 
 function toggleProcess() {
@@ -197,7 +225,7 @@ async function runThread(node) {
                 }
 
                 // Success - Message from automation
-                return result ? result.message : 'Hoàn thành';
+                return;
             })();
 
             // Wrap logic in race

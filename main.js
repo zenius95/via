@@ -117,8 +117,35 @@ ipcMain.handle('db:permanent-delete-profile', async (event, id) => await databas
 
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');
+const scriptExecutor = require('./js/script_executor');
+
 ipcMain.handle('process:run-profile', async (event, { account, config }) => {
-    return await automation.runProfile(account, config);
+    let browserInstance = null;
+    try {
+        const { browser, page } = await automation.launchBrowser(account, config);
+        browserInstance = browser;
+
+        const result = await scriptExecutor.execute(page, config, (message) => {
+            if (event.sender) {
+                event.sender.send('process:update-status', { uid: account.uid, message });
+            }
+        });
+
+        await browser.close();
+        return result;
+
+    } catch (err) {
+        console.error('Process Error', err);
+        if (browserInstance) {
+            await browserInstance.close().catch(() => { });
+        }
+
+        const errMsg = err.message || '';
+        if (errMsg.includes('Target closed') || errMsg.includes('closed') || errMsg.includes('Protocol error')) {
+            return { status: 'ERROR', message: 'BrowserClosed' };
+        }
+        return { status: 'ERROR', message: errMsg };
+    }
 });
 
 ipcMain.handle('main:get-chrome-path', async () => {
