@@ -108,9 +108,12 @@ ipcMain.handle('db:save-settings', async (event, settings) => await database.sav
 
 // --- PROFILE IPC ---
 ipcMain.handle('db:get-profiles', async () => await database.getProfiles());
+ipcMain.handle('db:get-deleted-profiles', async () => await database.getDeletedProfiles());
 ipcMain.handle('db:add-profile', async (event, profile) => await database.addProfile(profile));
 ipcMain.handle('db:update-profile', async (event, profile) => await database.updateProfile(profile));
 ipcMain.handle('db:delete-profile', async (event, id) => await database.deleteProfile(id));
+ipcMain.handle('db:restore-profile', async (event, id) => await database.restoreProfile(id));
+ipcMain.handle('db:permanent-delete-profile', async (event, id) => await database.permanentDeleteProfile(id));
 
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');

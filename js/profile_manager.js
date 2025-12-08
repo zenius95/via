@@ -2,13 +2,38 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProfiles();
 
     // Bind Add Button in section-profiles
-    const addBtn = document.querySelector('#section-profiles button');
-    if (addBtn) {
-        addBtn.onclick = () => openProfileModal();
+    // Logic moved to inline onclick in HTML to avoid selector issues
+    // const addBtn = document.querySelector('#section-profiles button');
+    // if (addBtn) {
+    //     addBtn.onclick = () => openProfileModal();
+    // }
+
+    // Bind Select All Checkbox
+    const selectAllCheckbox = document.getElementById('select-all-profiles');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            document.querySelectorAll('.profile-checkbox').forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectedCount();
+        });
+    }
+
+    // Delegate event for profile individual checkboxes
+    const profilesTableBody = document.querySelector('#section-profiles tbody');
+    if (profilesTableBody) {
+        profilesTableBody.addEventListener('change', (e) => {
+            if (e.target.classList.contains('profile-checkbox')) {
+                updateSelectAllState();
+                updateSelectedCount();
+            }
+        });
     }
 });
 
 let currentProfiles = [];
+let isTrashView = false;
 const browserVersionCache = {}; // Cache versions
 
 async function fetchBrowserVersions(browser) {
@@ -68,7 +93,12 @@ function populateVersionSelect(versions) {
 
 async function loadProfiles() {
     try {
-        const profiles = await window.api.send('db:get-profiles');
+        let profiles;
+        if (isTrashView) {
+            profiles = await window.api.send('db:get-deleted-profiles');
+        } else {
+            profiles = await window.api.send('db:get-profiles');
+        }
         currentProfiles = profiles || [];
         renderProfiles(currentProfiles);
     } catch (err) {
@@ -81,20 +111,33 @@ function renderProfiles(profiles) {
     const tbody = document.querySelector('#section-profiles tbody');
     if (!tbody) return;
 
+    // Reset Select All
+    const selectAllCheckbox = document.getElementById('select-all-profiles');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    }
+
     if (!profiles || profiles.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" class="py-8 text-center text-slate-500 italic">
-                    Chưa có profile nào. Hãy tạo mới ngay!
+                <td colspan="6" class="py-8 text-center text-slate-500 italic">
+                    ${isTrashView ? 'Thùng rác trống.' : 'Chưa có profile nào. Hãy tạo mới ngay!'}
                 </td>
             </tr>
         `;
-        document.querySelector('#section-profiles .text-slate-500.text-center').innerText = '0 profiles';
+        const countDiv = document.querySelector('#section-profiles .border-t');
+        if (countDiv) countDiv.innerText = '0 profiles';
         return;
     }
 
     tbody.innerHTML = profiles.map(p => `
         <tr class="hover:bg-white/5 transition-colors group">
+            <td class="px-6 py-4 w-12">
+                <div class="flex items-center justify-center">
+                    <input type="checkbox" class="profile-checkbox w-4 h-4 rounded border-gray-600 bg-slate-700 text-blue-600 focus:ring-offset-gray-900 focus:ring-1 focus:ring-blue-500 cursor-pointer" value="${p.id}">
+                </div>
+            </td>
             <td class="px-6 py-4 font-medium text-white">${p.name}</td>
             <td class="px-6 py-4">
                 <i class="${getOSIcon(p.os)} mr-2"></i>${p.os}
@@ -106,15 +149,55 @@ function renderProfiles(profiles) {
                 ${p.user_agent ? p.user_agent.substring(0, 20) + '...' : 'Auto'}
             </td>
             <td class="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="editProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i class="ri-edit-line"></i></button>
-                <button onclick="deleteProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i class="ri-delete-bin-line"></i></button>
+                ${isTrashView ? `
+                    <button onclick="restoreProfile(${p.id})" title="Khôi phục" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-green-400 transition-colors"><i class="ri-arrow-go-back-line"></i></button>
+                    <button onclick="permanentDeleteProfile(${p.id})" title="Xóa vĩnh viễn" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-500 transition-colors"><i class="ri-delete-bin-2-fill"></i></button>
+                ` : `
+                    <button onclick="editProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i class="ri-edit-line"></i></button>
+                    <button onclick="deleteProfile(${p.id})" class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i class="ri-delete-bin-line"></i></button>
+                `}
             </td>
         </tr>
     `).join('');
 
     // Update count
+    updateSelectedCount();
+}
+
+function updateSelectAllState() {
+    const checkboxes = document.querySelectorAll('.profile-checkbox');
+    const checkedCheckboxes = document.querySelectorAll('.profile-checkbox:checked');
+    const selectAllCheckbox = document.getElementById('select-all-profiles');
+
+    if (selectAllCheckbox) {
+        if (checkboxes.length > 0 && checkboxes.length === checkedCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes.length > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+}
+
+function updateSelectedCount() {
+    const profiles = currentProfiles || [];
+    const checkedCheckboxes = document.querySelectorAll('.profile-checkbox:checked');
     const countDiv = document.querySelector('#section-profiles .border-t');
-    if (countDiv) countDiv.innerText = `Hiển thị ${profiles.length} profiles`;
+    const deleteBtn = document.getElementById('btn-delete-selected');
+
+    if (countDiv) {
+        if (checkedCheckboxes.length > 0) {
+            countDiv.innerHTML = `<span class="text-blue-400 font-medium">Đã chọn ${checkedCheckboxes.length} / ${profiles.length} profiles</span>`;
+            if (deleteBtn) deleteBtn.classList.remove('hidden');
+        } else {
+            countDiv.innerText = `Hiển thị ${profiles.length} profiles`;
+            if (deleteBtn) deleteBtn.classList.add('hidden');
+        }
+    }
 }
 
 function getOSIcon(os) {
@@ -263,6 +346,101 @@ async function deleteProfile(id) {
         try {
             await window.api.send('db:delete-profile', id);
             showToast('Đã xóa profile', 'success');
+            loadProfiles();
+        } catch (err) {
+            console.error(err);
+            showToast('Lỗi khi xóa', 'error');
+        }
+    });
+}
+
+async function deleteSelectedProfiles() {
+    const checked = document.querySelectorAll('.profile-checkbox:checked');
+    const ids = Array.from(checked).map(cb => cb.value);
+
+    if (ids.length === 0) return;
+
+    const actionText = isTrashView ? 'Xóa vĩnh viễn' : 'Xóa';
+    const warningText = isTrashView
+        ? 'Hành động này không thể hoàn tác! Bạn có chắc chắn muốn xóa vĩnh viễn không?'
+        : 'Các profile sẽ được chuyển vào thùng rác.';
+
+    showConfirmDialog(`${actionText} các profile đã chọn?`, `${warningText} (${ids.length} profile)`, async () => {
+        try {
+            let successCount = 0;
+            const ipcChannel = isTrashView ? 'db:permanent-delete-profile' : 'db:delete-profile';
+
+            // Execute deletions sequentially
+            for (const id of ids) {
+                await window.api.send(ipcChannel, id);
+                successCount++;
+            }
+            showToast(`Đã ${actionText.toLowerCase()} ${successCount} profile`, 'success');
+            loadProfiles();
+
+            // Hide button after action
+            const btn = document.getElementById('btn-delete-selected');
+            if (btn) btn.classList.add('hidden');
+        } catch (err) {
+            console.error('Batch delete error:', err);
+            showToast('Có lỗi xảy ra khi xóa danh sách', 'error');
+            loadProfiles();
+        }
+    });
+}
+
+function toggleTrashView() {
+    isTrashView = !isTrashView;
+    const btn = document.getElementById('btn-toggle-trash');
+    const title = document.getElementById('profile-section-title');
+    const addBtn = document.querySelector('button[onclick="openProfileModal()"]');
+
+    if (isTrashView) {
+        btn.innerHTML = '<i class="ri-arrow-go-back-line mr-1"></i> Quay lại';
+        btn.className = "px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 rounded-lg text-sm font-medium transition-colors border border-blue-500/20";
+        if (title) title.innerText = 'Thùng rác';
+        if (addBtn) addBtn.style.display = 'none';
+
+        // Change bulk delete button text if visible
+        const delBtn = document.getElementById('btn-delete-selected');
+        if (delBtn) delBtn.innerHTML = '<i class="ri-delete-bin-2-fill mr-1"></i> Xóa vĩnh viễn';
+
+    } else {
+        btn.innerHTML = '<i class="ri-delete-bin-2-line mr-1"></i> Thùng rác';
+        btn.className = "px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/5";
+        if (title) title.innerText = 'Quản lý Profile';
+        if (addBtn) addBtn.style.display = 'inline-block';
+
+        const delBtn = document.getElementById('btn-delete-selected');
+        if (delBtn) delBtn.innerHTML = '<i class="ri-delete-bin-line mr-1"></i> Xóa đã chọn';
+    }
+
+    // Reset selection state
+    const selectAllCheckbox = document.getElementById('select-all-profiles');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    }
+
+    loadProfiles();
+}
+
+async function restoreProfile(id) {
+    try {
+        await window.api.send('db:restore-profile', id);
+        showToast('Đã khôi phục profile', 'success');
+        loadProfiles();
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi khôi phục', 'error');
+    }
+}
+
+async function permanentDeleteProfile(id) {
+    showConfirmDialog('Xóa vĩnh viễn?', 'Hành động này không thể hoàn tác. Bạn có chắc chắn không?', async () => {
+        try {
+            await window.api.send('db:permanent-delete-profile', id);
+            showToast('Đã xóa vĩnh viễn profile', 'success');
             loadProfiles();
         } catch (err) {
             console.error(err);

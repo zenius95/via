@@ -117,9 +117,23 @@ class Database {
                 user_agent TEXT,
                 screen_resolution TEXT,
                 notes TEXT,
-                created_at TEXT
+                created_at TEXT,
+                is_deleted INTEGER DEFAULT 0
             )
         `);
+
+            // Migration: Check profiles table for is_deleted
+            this.db.all("PRAGMA table_info(profiles)", (err, rows) => {
+                if (!err && rows && rows.length > 0) {
+                    const hasIsDeleted = rows.some(r => r.name === 'is_deleted');
+                    if (!hasIsDeleted) {
+                        this.db.run("ALTER TABLE profiles ADD COLUMN is_deleted INTEGER DEFAULT 0", (err) => {
+                            if (err) console.error('Migration add is_deleted failed', err);
+                            else console.log('Migrated DB: Added is_deleted to profiles');
+                        });
+                    }
+                }
+            });
         });
 
     }
@@ -370,9 +384,22 @@ class Database {
 
     // --- PROFILE METHODS ---
 
+
+
+    // --- PROFILE METHODS ---
+
     getProfiles() {
         return new Promise((resolve, reject) => {
-            this.db.all("SELECT * FROM profiles ORDER BY id DESC", [], (err, rows) => {
+            this.db.all("SELECT * FROM profiles WHERE is_deleted IS NULL OR is_deleted = 0 ORDER BY id DESC", [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    }
+
+    getDeletedProfiles() {
+        return new Promise((resolve, reject) => {
+            this.db.all("SELECT * FROM profiles WHERE is_deleted = 1 ORDER BY id DESC", [], (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows);
             });
@@ -382,8 +409,8 @@ class Database {
     addProfile(profile) {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
-                INSERT INTO profiles (name, os, browser, browser_version, user_agent, screen_resolution, notes, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO profiles (name, os, browser, browser_version, user_agent, screen_resolution, notes, created_at, is_deleted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
             `);
             const createdAt = new Date().toISOString();
             stmt.run(
@@ -418,7 +445,26 @@ class Database {
         });
     }
 
+    // Soft delete
     deleteProfile(id) {
+        return new Promise((resolve, reject) => {
+            this.db.run("UPDATE profiles SET is_deleted = 1 WHERE id = ?", [id], function (err) {
+                if (err) reject(err);
+                else resolve(this.changes);
+            });
+        });
+    }
+
+    restoreProfile(id) {
+        return new Promise((resolve, reject) => {
+            this.db.run("UPDATE profiles SET is_deleted = 0 WHERE id = ?", [id], function (err) {
+                if (err) reject(err);
+                else resolve(this.changes);
+            });
+        });
+    }
+
+    permanentDeleteProfile(id) {
         return new Promise((resolve, reject) => {
             this.db.run("DELETE FROM profiles WHERE id = ?", [id], function (err) {
                 if (err) reject(err);
