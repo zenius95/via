@@ -715,6 +715,13 @@ function menuAction(action) {
             }
         });
         showToast(`Đã tick chọn ${count} tài khoản từ vùng bôi đen`, "success");
+    } else if (action === 'openCopyAccountModal') {
+        const selectedData = gridApi.getSelectedRows();
+        if (selectedData.length === 0) {
+            showToast('Vui lòng chọn ít nhất 1 tài khoản', 'warning');
+            return;
+        }
+        openCopyAccountModal(selectedData);
     }
 }
 
@@ -791,7 +798,6 @@ function colMenuAction(action) {
         showToast('Đã ẩn cột', 'info');
     }
     else if (action === 'copy') {
-        // --- LOGIC COPY TOÀN BỘ CỘT ---
         const colDef = gridApi.getColumn(currentTargetColId).getColDef();
         const field = colDef.field;
 
@@ -811,8 +817,11 @@ function colMenuAction(action) {
         });
 
         if (textToCopy) {
-            copyText(textToCopy);
-            showToast(`Đã copy ${count} dòng vào clipboard`, 'success');
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast(`Đã copy ${count} dòng vào clipboard`, 'success');
+            }).catch(() => {
+                showToast('Lỗi khi copy vào clipboard', 'error');
+            });
         } else {
             showToast('Không có dữ liệu để copy', 'warning');
         }
@@ -1316,17 +1325,250 @@ document.addEventListener('keydown', (e) => {
         }
 
         const duplicateModal = document.getElementById('duplicate-modal');
-        if (duplicateModal && !duplicateModal.classList.contains('hidden')) {
-            confirmDuplicateImport();
-            e.preventDefault();
-            return;
-        }
+        e.preventDefault();
+        return;
+    }
 
-        const editFolderModal = document.getElementById('edit-folder-modal');
-        if (editFolderModal && !editFolderModal.classList.contains('hidden')) {
-            saveEditFolder();
-            e.preventDefault();
-            return;
-        }
+    const editFolderModal = document.getElementById('edit-folder-modal');
+    if (editFolderModal && !editFolderModal.classList.contains('hidden')) {
+        saveEditFolder();
+        e.preventDefault();
+        return;
     }
 });
+
+// --- COPY ACCOUNT MODAL LOGIC (REFACTORED) ---
+let currentCopyData = [];
+// Default columns
+let copyActiveColumns = ['uid', 'password', 'twoFa', 'email', 'emailPassword'];
+
+function openCopyAccountModal(data) {
+    currentCopyData = data;
+    const m = document.getElementById('copy-account-modal');
+    if (!m) return;
+
+    document.getElementById('copy-row-count').innerText = data.length;
+
+    // Initial Render
+    renderCopyColumnsRefactored();
+    updateCopyPreviewRefactored();
+
+    m.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        m.classList.remove('opacity-0');
+        m.querySelector('div.relative').classList.replace('scale-95', 'scale-100');
+    });
+}
+
+function closeCopyAccountModal() {
+    const m = document.getElementById('copy-account-modal');
+    m.classList.add('opacity-0');
+    m.querySelector('div.relative').classList.replace('scale-100', 'scale-95');
+    setTimeout(() => { m.classList.add('hidden'); }, 200);
+}
+
+// Reuse COL_TYPES from Import logic
+// helper to get label/color from COL_TYPES or fallback
+function getColTypeInfo(key) {
+    return COL_TYPES[key] || { label: key, color: 'text-slate-400' };
+}
+
+let draggedCopyColIndex = null;
+let dragCopyPlaceholder = null;
+
+function renderCopyColumnsRefactored() {
+    const container = document.getElementById('copy-columns-container');
+    container.innerHTML = '';
+
+    copyActiveColumns.forEach((colType, index) => {
+        // Main Item Container
+        const div = document.createElement('div');
+        div.className = 'relative flex items-center gap-0 bg-white/5 border border-white/10 hover:border-white/30 rounded-lg pr-1 animate-fade-in-up group transition-all duration-200 cursor-grab active:cursor-grabbing';
+        div.draggable = true;
+        div.dataset.index = index;
+
+        // Drag Attributes and Events
+        div.ondragstart = (e) => {
+            draggedCopyColIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', index);
+
+            // Placeholder
+            dragCopyPlaceholder = div.cloneNode(true);
+            dragCopyPlaceholder.classList.add('opacity-30', 'border-dashed', 'border-white/40');
+            dragCopyPlaceholder.classList.remove('animate-fade-in-up', 'cursor-grab', 'hover:border-white/30');
+            dragCopyPlaceholder.innerHTML = '';
+            dragCopyPlaceholder.style.width = `${div.offsetWidth}px`;
+            dragCopyPlaceholder.style.height = `${div.offsetHeight}px`;
+
+            setTimeout(() => {
+                div.classList.add('hidden');
+                div.parentNode.insertBefore(dragCopyPlaceholder, div);
+            }, 0);
+        };
+
+        div.ondragend = (e) => {
+            div.classList.remove('hidden');
+            if (dragCopyPlaceholder && dragCopyPlaceholder.parentNode) {
+                dragCopyPlaceholder.parentNode.removeChild(dragCopyPlaceholder);
+            }
+            dragCopyPlaceholder = null;
+            draggedCopyColIndex = null;
+            renderCopyColumnsRefactored();
+        };
+
+        // Drag Handle
+        const handle = document.createElement('div');
+        handle.className = 'pl-1.5 pr-0.5 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing flex items-center justify-center';
+        handle.innerHTML = '<i class="ri-draggable text-xs"></i>';
+
+        // Select logic
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative flex items-center';
+
+        const select = document.createElement('select');
+        select.className = 'bg-transparent text-xs font-medium text-slate-200 focus:text-white focus:outline-none border-none py-2 pl-2 pr-7 appearance-none cursor-pointer transition-colors';
+        select.onchange = (e) => updateCopyColumn(index, e.target.value);
+        select.onmousedown = (e) => e.stopPropagation();
+
+        // Populate options
+        for (const [key, conf] of Object.entries(COL_TYPES)) {
+            if (key === 'ignored') continue;
+            const option = document.createElement('option');
+            option.value = key;
+            option.text = conf.label;
+            option.className = 'bg-[#1a1b1e] text-slate-300 py-1';
+            if (key === colType) option.selected = true;
+            select.appendChild(option);
+        }
+
+        const arrow = document.createElement('i');
+        arrow.className = 'ri-arrow-down-s-line absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs';
+
+        wrapper.appendChild(select);
+        wrapper.appendChild(arrow);
+
+        // Separator
+        const sep = document.createElement('div');
+        sep.className = 'w-px h-3.5 bg-white/10 mx-0.5';
+
+        // Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'w-6 h-6 flex items-center justify-center rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-colors cursor-pointer';
+        removeBtn.innerHTML = '<i class="ri-close-line text-xs"></i>';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeCopyColumn(index);
+        };
+        removeBtn.onmousedown = (e) => e.stopPropagation();
+
+        div.appendChild(handle);
+        div.appendChild(wrapper);
+        div.appendChild(sep);
+        div.appendChild(removeBtn);
+
+        container.appendChild(div);
+    });
+
+    // Add Button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'h-[38px] px-4 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 hover:border-pink-500/40 transition-all flex items-center gap-2 text-sm font-medium group animate-fade-in-up';
+    addBtn.onclick = () => addCopyColumn();
+    addBtn.innerHTML = `
+        <div class="w-5 h-5 rounded-full bg-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <i class="ri-add-line text-xs"></i>
+        </div>
+        Thêm cột
+    `;
+    container.appendChild(addBtn);
+
+    // DropZone Logic
+    container.ondragover = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!dragCopyPlaceholder) return;
+
+        const target = e.target.closest('div[draggable="true"]');
+        if (target && target !== dragCopyPlaceholder) {
+            const rect = target.getBoundingClientRect();
+            const next = (e.clientX - rect.left) / (rect.right - rect.left) > 0.5;
+            if (next) container.insertBefore(dragCopyPlaceholder, target.nextSibling);
+            else container.insertBefore(dragCopyPlaceholder, target);
+        } else if (e.target === container) {
+            container.appendChild(dragCopyPlaceholder);
+        }
+    };
+
+    container.ondrop = (e) => {
+        e.preventDefault();
+        if (draggedCopyColIndex === null) return;
+
+        const items = Array.from(container.children);
+        let finalIndex = items.indexOf(dragCopyPlaceholder);
+        const originalItemIndex = items.indexOf(container.querySelector('div[draggable="true"].hidden'));
+
+        if (originalItemIndex < finalIndex) finalIndex--;
+
+        if (draggedCopyColIndex !== finalIndex && finalIndex !== -1) {
+            const item = copyActiveColumns.splice(draggedCopyColIndex, 1)[0];
+            copyActiveColumns.splice(finalIndex, 0, item);
+        }
+
+        renderCopyColumnsRefactored();
+        updateCopyPreviewRefactored();
+    };
+}
+
+function addCopyColumn() {
+    copyActiveColumns.push('uid');
+    renderCopyColumnsRefactored();
+    updateCopyPreviewRefactored();
+}
+
+function removeCopyColumn(index) {
+    copyActiveColumns.splice(index, 1);
+    renderCopyColumnsRefactored();
+    updateCopyPreviewRefactored();
+}
+
+function updateCopyColumn(index, value) {
+    copyActiveColumns[index] = value;
+    updateCopyPreviewRefactored();
+}
+
+function updateCopyPreviewRefactored() {
+    const textarea = document.getElementById('copy-account-textarea');
+
+    const lines = currentCopyData.map(row => {
+        return copyActiveColumns.map(colType => {
+            // Map colType strings (from COL_TYPES keys) to row properties
+            if (colType === 'uid') return row.uid || '';
+            if (colType === 'password') return row.password || '';
+            if (colType === 'twoFa') return row.twoFa || '';
+            if (colType === 'email') return row.email || '';
+            if (colType === 'emailPassword') return row.emailPassword || '';
+            if (colType === 'emailRecover') return row.emailRecover || '';
+            if (colType === 'cookie') return row.cookie || '';
+            if (colType === 'token') return row.token || '';
+            return '';
+        }).join('|');
+    });
+
+    textarea.value = lines.join('\n');
+}
+
+function copyToClipboard() {
+    const textarea = document.getElementById('copy-account-textarea');
+    textarea.select();
+    document.execCommand('copy');
+
+    // UI Feedback
+    const btn = document.querySelector('#copy-account-modal button i.ri-file-copy-line').parentNode;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="ri-check-line"></i> Đã chép';
+    setTimeout(() => {
+        btn.innerHTML = originalContent;
+        closeCopyAccountModal();
+        showToast(`Đã copy ${currentCopyData.length} tài khoản`, 'success');
+    }, 800);
+}
