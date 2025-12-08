@@ -137,6 +137,12 @@ ipcMain.handle('log:init', async (event, { uid, fileName }) => {
 ipcMain.handle('log:write', async (event, { uid, fileName, message }) => {
     return await logger.write(uid, fileName, message);
 });
+ipcMain.handle('log:get-files', async (event, { uid }) => {
+    return await logger.getLogFiles(uid);
+});
+ipcMain.handle('log:read-file', async (event, { uid, fileName }) => {
+    return await logger.readLogFile(uid, fileName);
+});
 
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');

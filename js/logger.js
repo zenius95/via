@@ -69,4 +69,35 @@ async function deleteLogFolder(uid) {
     }
 }
 
-module.exports = { init, write, deleteLogFolder };
+async function getLogFiles(uid) {
+    const dir = getLogDir(uid);
+    if (!fs.existsSync(dir)) return [];
+
+    try {
+        const files = fs.readdirSync(dir)
+            .filter(f => f.endsWith('.txt'))
+            .map(f => {
+                const stat = fs.statSync(path.join(dir, f));
+                return { name: f, time: stat.mtime.getTime(), size: stat.size };
+            })
+            .sort((a, b) => b.time - a.time); // Newest first
+        return files;
+    } catch (err) {
+        console.error('Error getting log files', err);
+        return [];
+    }
+}
+
+async function readLogFile(uid, fileName) {
+    const dir = getLogDir(uid);
+    const filePath = path.join(dir, fileName);
+    if (!fs.existsSync(filePath)) return '';
+    try {
+        return fs.readFileSync(filePath, 'utf8');
+    } catch (err) {
+        console.error('Error reading log file', err);
+        return 'Error reading file.';
+    }
+}
+
+module.exports = { init, write, deleteLogFolder, getLogFiles, readLogFile };

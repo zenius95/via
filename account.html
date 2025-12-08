@@ -522,6 +522,41 @@
         </div>
     </div>
 
+    <div id="log-viewer-modal"
+        class="fixed inset-0 z-[10002] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[800px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col h-[600px]">
+                <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ri-file-list-3-line text-blue-400"></i> Nhật ký hoạt động
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <select id="log-file-select"
+                            class="bg-black/30 border border-white/10 text-slate-300 text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500/50 w-[250px]">
+                            <!-- Options -->
+                        </select>
+                        <button onclick="closeLogViewer()" class="text-slate-400 hover:text-white transition-colors">
+                            <i class="ri-close-line text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-0 flex-1 flex flex-col relative bg-black/40">
+                    <textarea id="log-content-view" readonly
+                        class="w-full h-full bg-transparent border-none p-4 text-xs text-emerald-300/90 font-mono focus:outline-none resize-none leading-relaxed custom-scrollbar"></textarea>
+                </div>
+
+                <div class="px-6 py-3 border-t border-white/10 bg-black/20 flex items-center justify-between">
+                    <span class="text-xs text-slate-500 italic">Nhật ký được lưu cục bộ trong thư mục User Data.</span>
+                    <button onclick="closeLogViewer()"
+                        class="btn-glass-secondary px-5 py-2 rounded-lg text-sm font-medium">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast"
         class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
         <div id="toast-icon-container" class="p-1 rounded-full"></div>
@@ -535,6 +570,7 @@
     <script src="js/ui.js"></script>
     <script src="js/grid.js"></script>
     <script src="js/process.js"></script>
+    <script src="js/log_viewer.js"></script>
     <script src="js/main.js"></script>
 
 </body>

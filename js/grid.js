@@ -247,10 +247,18 @@ const columnDefs = [
                 else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
                 else if (status === 'READY') iconHtml = '<i class="ri-hourglass-line text-xs mr-1"></i>';
                 else if (status === 'RETRY') iconHtml = '<i class="ri-restart-line icon-spin text-xs mr-1"></i>';
-                else if (status === 'ERROR') iconHtml = '<i class="ri-error-warning-line text-xs mr-1"></i>';
                 else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
 
-                return `<div class="process-cell"><span class="${badgeClass}">${iconHtml}${status}</span><span class="process-msg">${params.data.processMessage}</span></div>`;
+                // Container for cell with hover effect
+                return `<div class="process-cell group relative flex items-center justify-between w-full pr-1">
+                            <div class="flex items-center overflow-hidden">
+                                <span class="${badgeClass}">${iconHtml}${status}</span>
+                                <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
+                            </div>
+                            <button onclick="openLogViewer('${params.data.uid}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded flex-shrink-0" title="Xem nhật ký">
+                                <i class="ri-file-list-line text-slate-300 hover:text-blue-400"></i>
+                            </button>
+                        </div>`;
             }
         },
         getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.value + ' ' + (params.data.processMessage || '')); }
