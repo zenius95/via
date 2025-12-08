@@ -43,7 +43,12 @@ async function startProcess() {
             PROCESS_CONFIG.delay = (parseInt(settings.launchDelay) || 2) * 1000;
             PROCESS_CONFIG.retry = parseInt(settings.retryCount) || 0;
             PROCESS_CONFIG.timeout = parseInt(settings.timeout) || 0;
-            PROCESS_CONFIG.chromePath = settings.chromePath || ''; // LOAD CHROME PATH
+            PROCESS_CONFIG.chromePath = settings.chromePath || '';
+
+            // Auto Split Config
+            PROCESS_CONFIG.autoSplit = settings.autoSplit === 'true';
+            PROCESS_CONFIG.splitRows = parseInt(settings.splitRows) || 2;
+            PROCESS_CONFIG.splitCols = parseInt(settings.splitCols) || 2;
 
             console.log('Loaded Config:', PROCESS_CONFIG);
         }
@@ -54,9 +59,6 @@ async function startProcess() {
             const detectedPath = await window.api.send('main:get-chrome-path');
             if (detectedPath) {
                 PROCESS_CONFIG.chromePath = detectedPath;
-                // Optional: Save back to DB? 
-                // For now, just use it for this session.
-                // Or better: Let user know.
             } else {
                 showToast('Chưa cấu hình đường dẫn Chrome! Vui lòng vào Cài đặt.', 'error');
                 return;
@@ -90,9 +92,10 @@ async function startProcess() {
     forceStop = false;
     processQueue = [...selectedNodes]; // Copy selected nodes
 
-    // Reset status for selected rows
-    processQueue.forEach(node => {
+    // Reset status and Assign Layout Index
+    processQueue.forEach((node, index) => {
         if (node.data) {
+            node.data.layoutIndex = index; // Assign index for Auto Split
             node.setDataValue('processStatus', 'WAITING');
             node.setDataValue('processMessage', 'Đang chờ...');
         }

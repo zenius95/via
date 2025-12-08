@@ -369,6 +369,37 @@
                             </div>
                         </label>
                     </div>
+                    <!-- Window Layout Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200">Tự động chia cửa sổ</h3>
+                                <p class="text-xs text-slate-500 mt-1">Sắp xếp các cửa sổ thành dạng lưới (Grid)</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="input-auto-split" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner">
+                                </div>
+                            </label>
+                        </div>
+
+                        <div id="layout-config-container"
+                            class="grid grid-cols-2 gap-4 transition-all duration-300 overflow-hidden"
+                            style="max-height: 0px; opacity: 0;">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-2">Số hàng (Rows)</label>
+                                <input type="number" id="input-split-rows" min="1" max="10" value="2"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-2">Số cột (Columns)</label>
+                                <input type="number" id="input-split-cols" min="1" max="10" value="2"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

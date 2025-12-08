@@ -22,6 +22,12 @@ const elTimeout = document.getElementById('input-timeout');
 const elRetry = document.getElementById('input-retry-count');
 const elHeadless = document.getElementById('input-headless');
 
+// Auto Split Elements
+const elAutoSplit = document.getElementById('input-auto-split');
+const elSplitRows = document.getElementById('input-split-rows');
+const elSplitCols = document.getElementById('input-split-cols');
+const elLayoutConfig = document.getElementById('layout-config-container');
+
 // Data
 let currentSettings = {};
 
@@ -29,6 +35,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     setupListeners();
 });
+
+function toggleLayoutConfig() {
+    if (elAutoSplit && elLayoutConfig) {
+        if (elAutoSplit.checked) {
+            elLayoutConfig.style.maxHeight = '100px';
+            elLayoutConfig.style.opacity = '1';
+            elLayoutConfig.style.marginTop = '1rem';
+        } else {
+            elLayoutConfig.style.maxHeight = '0px';
+            elLayoutConfig.style.opacity = '0';
+            elLayoutConfig.style.marginTop = '0';
+        }
+    }
+}
 
 async function loadSettings() {
     try {
@@ -42,6 +62,13 @@ async function loadSettings() {
         if (elTimeout) elTimeout.value = currentSettings.timeout || 0;
         if (elRetry) elRetry.value = currentSettings.retryCount || 0;
         if (elHeadless) elHeadless.checked = currentSettings.headless === 'true';
+
+        // Auto Split Loading
+        if (elAutoSplit) elAutoSplit.checked = currentSettings.autoSplit === 'true';
+        if (elSplitRows) elSplitRows.value = currentSettings.splitRows || 2;
+        if (elSplitCols) elSplitCols.value = currentSettings.splitCols || 2;
+
+        toggleLayoutConfig();
 
         // Auto detect if empty
         if (!elChromePath.value) {
@@ -66,7 +93,12 @@ const saveSettings = debounce(async () => {
         launchDelay: elDelay ? elDelay.value : '2',
         timeout: elTimeout ? elTimeout.value : '0',
         retryCount: elRetry ? elRetry.value : '0',
-        headless: elHeadless ? String(elHeadless.checked) : 'false'
+        headless: elHeadless ? String(elHeadless.checked) : 'false',
+
+        // Save Auto Split
+        autoSplit: elAutoSplit ? String(elAutoSplit.checked) : 'false',
+        splitRows: elSplitRows ? elSplitRows.value : '2',
+        splitCols: elSplitCols ? elSplitCols.value : '2'
     };
 
     try {
@@ -79,12 +111,19 @@ const saveSettings = debounce(async () => {
 }, 500);
 
 function setupListeners() {
-    const inputs = [elChromePath, elThreads, elDelay, elTimeout, elRetry];
+    const inputs = [elChromePath, elThreads, elDelay, elTimeout, elRetry, elSplitRows, elSplitCols];
     inputs.forEach(el => {
         if (el) el.addEventListener('input', saveSettings);
     });
 
     if (elHeadless) elHeadless.addEventListener('change', saveSettings);
+
+    if (elAutoSplit) {
+        elAutoSplit.addEventListener('change', () => {
+            toggleLayoutConfig();
+            saveSettings();
+        });
+    }
 }
 
 // Global function for "Browse" button

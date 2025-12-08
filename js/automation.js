@@ -1,4 +1,5 @@
 const { chromium } = require('playwright-core');
+const { screen } = require('electron');
 
 async function runProfile(account, config) {
     let browser = null;
@@ -7,24 +8,53 @@ async function runProfile(account, config) {
     try {
         console.log('Launching browser for', account.uid);
 
+        const args = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-infobars',
+            '--ignore-certificate-errors',
+            '--ignore-certificate-errors-spki-list',
+            '--disable-blink-features=AutomationControlled'
+        ];
+
+        // --- AUTO SPLIT WINDOW LOGIC ---
+        if (config.autoSplit && typeof account.layoutIndex === 'number') {
+            const primaryDisplay = screen.getPrimaryDisplay();
+            const { width: screenW, height: screenH } = primaryDisplay.workAreaSize;
+
+            const rows = config.splitRows || 2;
+            const cols = config.splitCols || 2;
+            const idx = account.layoutIndex;
+
+            // Calculate Grid Position
+            // e.g. 0 1
+            //      2 3
+            const slotIndex = idx % (rows * cols); // Cycle through slots
+            const row = Math.floor(slotIndex / cols);
+            const col = slotIndex % cols;
+
+            const width = Math.floor(screenW / cols);
+            const height = Math.floor(screenH / rows);
+            const x = col * width;
+            const y = row * height;
+
+            // Override window-position and add window-size
+            args.push(`--window-position=${x},${y}`);
+            args.push(`--window-size=${width},${height}`);
+        } else {
+            args.push('--window-position=0,0');
+        }
+
         // 1. Launch Browser
         browser = await chromium.launch({
-            executablePath: config.chromePath, // Must be provided
+            executablePath: config.chromePath,
             headless: config.headless === 'true',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-infobars',
-                '--window-position=0,0',
-                '--ignore-certificate-errors',
-                '--ignore-certificate-errors-spki-list',
-                '--disable-blink-features=AutomationControlled' // Try to hide automation
-            ]
+            args: args
         });
 
         // 2. Configure Context (Proxy, UserAgent, Viewport)
         const contextOptions = {
-            viewport: { width: 1280, height: 720 },
+            viewport: config.autoSplit ? null : { width: 1280, height: 720 },
             userAgent: account.user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             ignoreHTTPSErrors: true
         };
