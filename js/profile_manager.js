@@ -467,7 +467,7 @@ async function editProfile(id) {
 async function deleteProfile(id) {
     showConfirmDialog('Xóa Profile?', 'Bạn có chắc chắn muốn xóa profile này không?', async () => {
         try {
-            await window.api.send('db:delete-profile', id);
+            await window.api.send('db:delete-profile', parseInt(id, 10));
             showToast('Đã xóa profile', 'success');
             loadProfiles();
         } catch (err) {
@@ -495,7 +495,9 @@ async function deleteSelectedProfiles() {
 
             // Execute deletions sequentially
             for (const id of ids) {
-                await window.api.send(ipcChannel, id);
+                const numericId = parseInt(id, 10);
+                console.log(`Deleting profile ${numericId} (Mode: ${isTrashView ? 'Permanent' : 'Soft'})...`);
+                await window.api.send(ipcChannel, numericId);
                 successCount++;
             }
             showToast(`Đã ${actionText.toLowerCase()} ${successCount} profile`, 'success');
@@ -538,6 +540,7 @@ function toggleTrashView() {
         selectAllCheckbox.indeterminate = false;
     }
 
+    console.log('Toggled trash view. New state:', isTrashView);
     loadProfiles();
 }
 

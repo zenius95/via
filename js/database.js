@@ -414,7 +414,6 @@ class Database {
 
     getDeletedProfiles() {
         return new Promise((resolve, reject) => {
-            // Debug Log
             console.log('Fetching deleted profiles...');
             this.db.all("SELECT * FROM profiles WHERE is_deleted = 1 ORDER BY id DESC", [], (err, rows) => {
                 if (err) reject(err);

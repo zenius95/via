@@ -17,6 +17,7 @@ const api = {
             'db:get-settings', 'db:save-settings', 'main:get-chrome-path', 'dialog:open-file',
             // Profile Channels
             'db:get-profiles', 'db:add-profile', 'db:update-profile', 'db:delete-profile',
+            'db:get-deleted-profiles', 'db:restore-profile', 'db:permanent-delete-profile',
             // Automation Channels
             'process:run-profile'
         ];
