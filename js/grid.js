@@ -195,8 +195,7 @@ const columnDefs = [
         headerName: "Thư mục", field: "folder", width: 150, colId: 'folder',
         cellRenderer: (params) => {
             if (params.data.isLoading) return `<div class="skeleton h-3 w-24"></div>`;
-            const folderName = params.value;
-            if (!folderName) return '';
+            const folderName = params.value || 'Chưa phân loại';
 
             // Lookup color
             let colorClass = 'text-slate-400';
@@ -250,12 +249,12 @@ const columnDefs = [
                 else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
 
                 // Container for cell with hover effect
-                return `<div class="process-cell group relative flex items-center justify-between w-full pr-1">
-                            <div class="flex items-center overflow-hidden">
-                                <span class="${badgeClass}">${iconHtml}${status}</span>
+                return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
+                            <div class="flex items-center overflow-hidden flex-1 min-w-0">
+                                <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
                                 <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
                             </div>
-                            <button onclick="openLogViewer('${params.data.uid}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded flex-shrink-0" title="Xem nhật ký">
+                            <button onclick="openLogViewer('${params.data.uid}')" class="log-button opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded flex-shrink-0" >
                                 <i class="ri-file-list-line text-slate-300 hover:text-blue-400"></i>
                             </button>
                         </div>`;

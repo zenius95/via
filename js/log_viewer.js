@@ -27,40 +27,49 @@ function closeLogViewer() {
 }
 
 async function loadLogFiles(uid) {
-    const select = document.getElementById('log-file-select');
-    select.innerHTML = '<option>Đang tải...</option>';
+    const select = $('#log-file-select');
+    select.empty();
+    select.append('<option>Đang tải...</option>');
+
+    // Initialize Select2 if not already
+    if (!select.hasClass("select2-hidden-accessible")) {
+        select.select2({
+            dropdownParent: $('#log-viewer-modal'),
+            minimumResultsForSearch: 10
+        });
+
+        // Bind Change Event (Select2)
+        select.on('select2:select', function (e) {
+            const fileName = e.params.data.id;
+            loadLogContent(uid, fileName);
+        });
+    }
+
     document.getElementById('log-content-view').value = 'Đang tải dữ liệu...';
 
     try {
         const files = await window.api.send('log:get-files', { uid });
-        select.innerHTML = '';
+        select.empty();
 
         if (!files || files.length === 0) {
-            select.innerHTML = '<option value="">Không có nhật ký nào</option>';
+            select.append('<option value="">Không có nhật ký nào</option>');
             document.getElementById('log-content-view').value = 'Không có dữ liệu nhật ký cho tài khoản này.';
             return;
         }
 
         files.forEach(f => {
-            const option = document.createElement('option');
-            option.value = f.name;
-            // Format time nicely if possible, else just name
-            option.text = f.name;
-            select.appendChild(option);
+            const option = new Option(f.name, f.name, false, false);
+            select.append(option);
         });
 
         // Load first file
-        select.value = files[0].name;
+        select.val(files[0].name).trigger('change');
         loadLogContent(uid, files[0].name);
-
-        // Bind Change Event
-        select.onchange = () => {
-            loadLogContent(uid, select.value);
-        }
 
     } catch (err) {
         console.error('Failed to load log files', err);
-        select.innerHTML = '<option>Lỗi tải danh sách</option>';
+        select.empty();
+        select.append('<option>Lỗi tải danh sách</option>');
     }
 }
 

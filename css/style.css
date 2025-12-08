@@ -185,7 +185,7 @@ body {
 }
 
 .ag-theme-alpine-dark .ag-cell {
-    display: block;
+    display: block !important;
     line-height: 55px;
     display: flex;
     align-items: center;
@@ -889,4 +889,12 @@ body {
     border-radius: 50%;
     box-shadow: 0 0 8px #10b981;
     animation: pulse-dot 2s infinite;
+}
+
+.log-button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
