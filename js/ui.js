@@ -1282,6 +1282,7 @@ document.addEventListener('keydown', (e) => {
             { id: 'duplicate-modal', close: closeDuplicateModal },
             { id: 'import-modal', close: closeImportModal },
             { id: 'col-config-modal', close: closeColumnModal },
+            { id: 'copy-account-modal', close: closeCopyAccountModal },
             { id: 'edit-folder-modal', close: closeEditFolderModal }
         ];
 
@@ -1325,16 +1326,38 @@ document.addEventListener('keydown', (e) => {
         }
 
         const duplicateModal = document.getElementById('duplicate-modal');
-        e.preventDefault();
-        return;
-    }
+        if (duplicateModal && !duplicateModal.classList.contains('hidden')) {
+            confirmDuplicateImport();
+            e.preventDefault();
+            return;
+        }
 
-    const editFolderModal = document.getElementById('edit-folder-modal');
-    if (editFolderModal && !editFolderModal.classList.contains('hidden')) {
-        saveEditFolder();
-        e.preventDefault();
-        return;
+        const editFolderModal = document.getElementById('edit-folder-modal');
+        if (editFolderModal && !editFolderModal.classList.contains('hidden')) {
+            saveEditFolder();
+            e.preventDefault();
+            return;
+        }
     }
+});
+
+// --- GLOBAL CLICK TO CLOSE MODALS ---
+document.addEventListener('click', (e) => {
+    const modals = [
+        { id: 'import-modal', close: closeImportModal },
+        { id: 'duplicate-modal', close: closeDuplicateModal },
+        { id: 'col-config-modal', close: closeColumnModal },
+        { id: 'copy-account-modal', close: closeCopyAccountModal },
+        { id: 'edit-folder-modal', close: closeEditFolderModal },
+        { id: 'confirm-modal', close: closeConfirmModal }
+    ];
+
+    modals.forEach(m => {
+        const el = document.getElementById(m.id);
+        if (el && !el.classList.contains('hidden') && e.target === el) {
+            m.close();
+        }
+    });
 });
 
 // --- COPY ACCOUNT MODAL LOGIC (REFACTORED) ---
