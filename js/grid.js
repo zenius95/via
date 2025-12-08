@@ -1,13 +1,15 @@
 /* js/grid.js */
 
+// --- KHỞI TẠO TRẠNG THÁI TỪ LOCAL STORAGE ---
+// LS_KEY: Lưu trạng thái chung của Grid (vị trí cột, ẩn hiện, sort...)
+// LS_PROCESS_KEY: Lưu riêng trạng thái của cột 'Tiến trình' (thu gọn/mở rộng, chiều rộng)
 const LS_KEY = 'ag_grid_column_state_v1';
-const LS_PROCESS_KEY = 'via_process_col_state_v1'; // Key mới lưu trạng thái cột process
+const LS_PROCESS_KEY = 'via_process_col_state_v1';
 
 let saveTimeout;
-let maskedColumns = new Set();
+let maskedColumns = new Set(); // Tập hợp các cột cần che dữ liệu (ẩn)
 
-// --- KHỞI TẠO TRẠNG THÁI TỪ LOCAL STORAGE ---
-// Mặc định: chưa thu gọn, chiều rộng lưu trữ là 220
+// Load trạng thái cột Process. Mặc định: chưa thu gọn, chiều rộng 220px.
 let processState = JSON.parse(localStorage.getItem(LS_PROCESS_KEY)) || { collapsed: false, savedWidth: 220 };
 
 function saveProcessState() {
@@ -89,37 +91,38 @@ class CustomHeader {
     destroy() { }
 }
 
-// --- LOGIC TOGGLE CỘT PROCESS ---
+// --- LOGIC TOGGLE CỘT PROCESS (THU GỌN/MỞ RỘNG) ---
+// Chức năng này cho phép người dùng thu gọn cột tiến trình để tiết kiệm không gian
 function toggleProcessColumn() {
     const col = gridApi.getColumn('process');
     const currentWidth = col.getActualWidth();
 
-    // Đảo trạng thái
+    // Đảo ngược trạng thái hiện tại
     processState.collapsed = !processState.collapsed;
 
     if (processState.collapsed) {
-        // [THU GỌN]
-        // Lưu chiều rộng hiện tại TRƯỚC KHI thu gọn (nếu nó đang > 110px)
+        // [TRẠNG THÁI THU GỌN]
+        // Nếu chiều rộng hiện tại đủ lớn (>150), lưu lại để khôi phục sau này
         if (currentWidth > 150) {
             processState.savedWidth = currentWidth;
         }
 
-        // Set width bé & Khóa resize
+        // Set cứng chiều rộng về 150px và khóa resize
         gridApi.setColumnWidths([{ key: 'process', newWidth: 150 }], true);
-        col.getColDef().resizable = false;
-        col.getColDef().suppressSizeToFit = true;
+        col.getColDef().resizable = false; // Không cho kéo giãn
+        col.getColDef().suppressSizeToFit = true; // Không tự động co giãn theo Grid
         col.getColDef().minWidth = 150;
         col.getColDef().maxWidth = 150;
     } else {
-        // [MỞ RỘNG]
-        // Lấy lại chiều rộng đã lưu (hoặc mặc định 220)
+        // [TRẠNG THÁI MỞ RỘNG]
+        // Khôi phục lại chiều rộng cũ (hoặc mặc định 300)
         const widthToRestore = processState.savedWidth || 300;
 
         gridApi.setColumnWidths([{ key: 'process', newWidth: widthToRestore }], true);
-        col.getColDef().resizable = true;
-        col.getColDef().suppressSizeToFit = false; // Reset size to fit suppression
+        col.getColDef().resizable = true; // Cho phép kéo giãn lại
+        col.getColDef().suppressSizeToFit = false;
         col.getColDef().minWidth = 150;
-        col.getColDef().maxWidth = null; // Bỏ giới hạn
+        col.getColDef().maxWidth = null; // Bỏ giới hạn chiều rộng tối đa
     }
 
     saveProcessState(); // Lưu trạng thái mới vào localStorage
@@ -347,25 +350,28 @@ const gridOptions = {
     },
     onSelectionChanged: updateFooterCount, onRangeSelectionChanged: updateFooterCount,
 
-    // AUTO-SAVE ON EDIT
+    // --- SỰ KIỆN AG GRID ---
+
+    // Tự động lưu khi sửa dữ liệu trên bảng (Inline Edit)
     onCellValueChanged: (params) => {
-        // params.data contains the updated row data
-        // params.colDef.field contains the field that changed
+        // params.data chứa dữ liệu hàng đã cập nhật
         if (params.data && params.data.uid) {
             console.log('Auto-saving account:', params.data.uid);
+            // Gửi IPC xuống Main Process để update DB ngay lập tức
             window.api.send('db:update-account', params.data);
         }
     },
 
-    // BẮT SỰ KIỆN RESIZE ĐỂ LƯU CHIỀU RỘNG MỚI
+    // Bắt sự kiện thay đổi kích thước cột để lưu trạng thái
     onColumnResized: (params) => {
-        onGridStateChanged(); // Lưu state chung
+        onGridStateChanged(); // Lưu cấu hình chung (thứ tự, ẩn hiện)
 
-        // Nếu resize cột process KHI ĐANG MỞ RỘNG -> Lưu width mới
+        // Xử lý riêng cho cột Process: 
+        // Nếu user kéo cột Process khi đang mở rộng -> Lưu chiều rộng mới làm mặc định
         if (params.column && params.column.getColId() === 'process' && params.finished) {
             if (!processState.collapsed) {
                 const currentW = params.column.getActualWidth();
-                // Chỉ lưu nếu chiều rộng hợp lý (tránh trường hợp đang collapse mà bị resize nhầm)
+                // Chỉ lưu nếu chiều rộng hợp lý (>110px) để tránh lỗi UX
                 if (currentW > 110) {
                     processState.savedWidth = currentW;
                     saveProcessState();

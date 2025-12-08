@@ -140,36 +140,6 @@ function getBrowserIcon(browser) {
 
 // --- MODAL & FORM ---
 
-function switchProfileTab(tab) {
-    // Buttons
-    document.getElementById('tab-btn-basic').className = tab === 'basic'
-        ? 'font-medium py-2 px-6 text-sm text-blue-400 border-b-2 border-blue-500 flex items-center gap-2'
-        : 'font-medium py-2 px-6 text-sm text-slate-400 border-b-2 border-transparent flex items-center gap-2';
-
-    document.getElementById('tab-btn-advanced').className = tab === 'advanced'
-        ? 'font-medium py-2 px-6 text-sm text-blue-400 border-b-2 border-blue-500 flex items-center gap-2'
-        : 'font-medium py-2 px-6 text-sm text-slate-400 border-b-2 border-transparent flex items-center gap-2';
-
-    // Content
-    if (tab === 'basic') {
-        document.getElementById('tab-content-basic').classList.remove('hidden');
-        document.getElementById('tab-content-advanced').classList.add('hidden');
-    } else {
-        document.getElementById('tab-content-basic').classList.add('hidden');
-        document.getElementById('tab-content-advanced').classList.remove('hidden');
-    }
-}
-
-function toggleGeoFields() {
-    const mode = document.getElementById('adv-geo-mode').value;
-    const customDiv = document.getElementById('adv-geo-custom');
-    if (mode === 'custom') {
-        customDiv.classList.remove('hidden');
-    } else {
-        customDiv.classList.add('hidden');
-    }
-}
-
 function openProfileModal(profile = null) {
     const modal = document.getElementById('modal-profile');
     const form = document.getElementById('form-profile');
@@ -182,104 +152,34 @@ function openProfileModal(profile = null) {
     // Reset Select2 placeholder/values if needed (REMOVED to fix blank issue)
     // $('#profile-os, #profile-browser, #profile-browser-ver, #profile-resolution').val(null).trigger('change');
 
-    // Reset Tabs
-    switchProfileTab('basic');
-
-    // Default Advanced Values
-    document.getElementById('adv-webrtc').value = 'noise';
-    document.getElementById('adv-canvas').value = 'noise';
-    document.getElementById('adv-webgl-image').value = 'noise';
-    document.getElementById('adv-webgl-meta').value = 'noise';
-    document.getElementById('adv-audio').value = 'noise';
-    document.getElementById('adv-media').value = 'noise';
-    document.getElementById('adv-clientrects').value = 'noise';
-    document.getElementById('adv-concurrency').value = '4';
-    document.getElementById('adv-memory').value = '8';
-    document.getElementById('adv-dnt').checked = true;
-    document.getElementById('adv-geo-mode').value = 'prompt';
-    document.getElementById('adv-geo-lat').value = '';
-    document.getElementById('adv-geo-long').value = '';
-    document.getElementById('adv-geo-acc').value = '10';
-    document.getElementById('adv-timezone').value = 'auto';
-    document.getElementById('adv-language').value = 'vi-VN';
-    document.getElementById('adv-args').value = '';
-    toggleGeoFields();
-
     modal.classList.remove('hidden');
 
     // Destroy previous instances if they exist (using robust data check)
-    // Destroy previous instances if they exist
-    const advSelects = [
-        'adv-webrtc', 'adv-canvas', 'adv-webgl-image', 'adv-webgl-meta',
-        'adv-audio', 'adv-media', 'adv-clientrects', 'adv-concurrency',
-        'adv-memory', 'adv-geo-mode', 'adv-timezone', 'adv-language'
-    ];
-    const allSelects = ['profile-os', 'profile-browser', 'profile-browser-ver', 'profile-resolution', ...advSelects];
-
-    allSelects.forEach(id => {
-        const $el = $(`#${id}`);
-        if ($el.hasClass('select2-hidden-accessible')) {
-            $el.select2('destroy');
+    const $selects = $('#profile-os, #profile-browser, #profile-browser-ver, #profile-resolution');
+    $selects.each(function () {
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
         }
     });
 
-    // Format function for Icons
-    function formatOption(state) {
-        if (!state.id) return state.text;
-        const icons = {
-            'Windows': 'ri-windows-fill text-blue-400',
-            'macOS': 'ri-apple-fill text-slate-200',
-            'Linux': 'ri-ubuntu-fill text-orange-400',
-            'Android': 'ri-android-fill text-green-400',
-            'iOS': 'ri-apple-fill text-slate-200',
-
-            'Chrome': 'ri-chrome-fill text-green-400',
-            'Firefox': 'ri-firefox-fill text-orange-500',
-            'Edge': 'ri-edge-fill text-blue-600',
-            'Opera': 'ri-opera-fill text-red-500',
-            'Safari': 'ri-safari-fill text-blue-500'
-        };
-
-        const key = state.element ? state.element.value : state.id;
-        const iconClass = icons[key];
-
-        if (iconClass) {
-            return $(`<span class="flex items-center"><i class="${iconClass} text-lg mr-2"></i>${state.text}</span>`);
-        }
-        return state.text;
-    }
-
-    // Initialize Select2 with Icons (OS, Browser)
-    $('#profile-os, #profile-browser').select2({
+    // Initialize Select2 (Non-searchable)
+    $('#profile-os, #profile-browser, #profile-resolution').select2({
         minimumResultsForSearch: Infinity,
-        dropdownParent: $('#modal-profile'),
-        templateResult: formatOption,
-        templateSelection: formatOption
+        dropdownParent: $('#modal-profile')
     });
 
-    // Initialize Select2 (Static Icons via CSS)
+    // Initialize Select2 (Searchable - Version)
     $('#profile-browser-ver').select2({
-        dropdownParent: $('#modal-profile'),
-        containerCssClass: ':all:' // Inherit select-with-icon
+        dropdownParent: $('#modal-profile')
     });
 
-    $('#profile-resolution').select2({
-        minimumResultsForSearch: Infinity,
-        dropdownParent: $('#modal-profile'),
-        containerCssClass: ':all:'
-    });
-
-    // Initialize Advanced Selects
-    advSelects.forEach(id => {
-        $(`#${id}`).select2({
-            minimumResultsForSearch: 10, // Show search if > 10 options
-            dropdownParent: $('#modal-profile'),
-            containerCssClass: ':all:'
-        });
-    });
-
-    // Re-bind events for Select2
+    // Re-bind events for Select2 (using jQuery)
     $('#profile-os, #profile-browser, #profile-browser-ver').off('change').on('change', function () {
+        // FORCE SELECT2 TO UPDATE TEXT (Fix for stubborn UI)
+        const text = $(this).find('option:selected').text();
+        const $container = $(this).siblings('.select2-container');
+        $container.find('.select2-selection__rendered').text(text);
+
         generateUserAgent();
     });
 
@@ -303,36 +203,6 @@ function openProfileModal(profile = null) {
         fetchBrowserVersions(profile.browser).then(() => {
             $('#profile-browser-ver').val(profile.browser_version || '120').trigger('change');
         });
-
-        // Load Advanced Config
-        try {
-            const adv = typeof profile.advanced_config === 'string' ? JSON.parse(profile.advanced_config) : (profile.advanced_config || {});
-
-            if (adv.webrtc) document.getElementById('adv-webrtc').value = adv.webrtc;
-            if (adv.canvas) document.getElementById('adv-canvas').value = adv.canvas;
-            if (adv.webgl_image) document.getElementById('adv-webgl-image').value = adv.webgl_image;
-            if (adv.webgl_meta) document.getElementById('adv-webgl-meta').value = adv.webgl_meta;
-            if (adv.audio) document.getElementById('adv-audio').value = adv.audio;
-            if (adv.media) document.getElementById('adv-media').value = adv.media;
-            if (adv.clientrects) document.getElementById('adv-clientrects').value = adv.clientrects;
-            if (adv.concurrency) document.getElementById('adv-concurrency').value = adv.concurrency;
-            if (adv.memory) document.getElementById('adv-memory').value = adv.memory;
-            if (adv.dnt !== undefined) document.getElementById('adv-dnt').checked = adv.dnt;
-
-            if (adv.geo_mode) document.getElementById('adv-geo-mode').value = adv.geo_mode;
-            if (adv.geo_lat) document.getElementById('adv-geo-lat').value = adv.geo_lat;
-            if (adv.geo_long) document.getElementById('adv-geo-long').value = adv.geo_long;
-            if (adv.geo_acc) document.getElementById('adv-geo-acc').value = adv.geo_acc;
-
-            if (adv.timezone) document.getElementById('adv-timezone').value = adv.timezone;
-            if (adv.language) document.getElementById('adv-language').value = adv.language;
-            if (adv.args) document.getElementById('adv-args').value = adv.args;
-
-            toggleGeoFields(); // Refresh visibility
-        } catch (e) {
-            console.error('Error parsing advanced config', e);
-        }
-
     } else {
         title.innerText = 'Thêm mới Profile';
         // New Profile defaults
@@ -358,52 +228,33 @@ async function handleProfileSubmit(e) {
     const notes = document.getElementById('profile-notes').value;
     const ua = document.getElementById('profile-ua').value;
 
-    // Collect Advanced Config
-    const advanced_config = {
-        webrtc: document.getElementById('adv-webrtc').value,
-        canvas: document.getElementById('adv-canvas').value,
-        webgl_image: document.getElementById('adv-webgl-image').value,
-        webgl_meta: document.getElementById('adv-webgl-meta').value,
-        audio: document.getElementById('adv-audio').value,
-        media: document.getElementById('adv-media').value,
-        clientrects: document.getElementById('adv-clientrects').value,
-        concurrency: document.getElementById('adv-concurrency').value,
-        memory: document.getElementById('adv-memory').value,
-        dnt: document.getElementById('adv-dnt').checked,
-
-        geo_mode: document.getElementById('adv-geo-mode').value,
-        geo_lat: document.getElementById('adv-geo-lat').value,
-        geo_long: document.getElementById('adv-geo-long').value,
-        geo_acc: document.getElementById('adv-geo-acc').value,
-
-        timezone: document.getElementById('adv-timezone').value,
-        language: document.getElementById('adv-language').value,
-        args: document.getElementById('adv-args').value
-    };
-
     const profileData = {
         name, os, browser, browser_version: version, user_agent: ua,
-        screen_resolution: resolution, notes, advanced_config
+        screen_resolution: resolution, notes
     };
 
     try {
         if (id) {
-            // Update
+            // Update: Cập nhật thông tin profile hiện có
             await window.api.send('db:update-profile', { ...profileData, id });
             showToast('Cập nhật profile thành công', 'success');
         } else {
-            // Add
+            // Add: Thêm mới profile vào database
             await window.api.send('db:add-profile', profileData);
             showToast('Thêm profile mới thành công', 'success');
         }
         closeProfileModal();
-        loadProfiles(); // Refresh
+        loadProfiles(); // Tải lại danh sách sau khi thay đổi
     } catch (err) {
         console.error('Save profile error:', err);
         showToast('Có lỗi xảy ra', 'error');
     }
 }
 
+/**
+ * Mở modal chỉnh sửa cho một profile cụ thể
+ * @param {number} id - ID của profile cần sửa
+ */
 async function editProfile(id) {
     const profile = currentProfiles.find(p => p.id === id);
     if (profile) {
@@ -411,6 +262,10 @@ async function editProfile(id) {
     }
 }
 
+/**
+ * Xóa một profile cụ thể (nút xóa trên từng dòng)
+ * @param {number} id - ID của profile cần xóa
+ */
 async function deleteProfile(id) {
     if (confirm('Bạn có chắc chắn muốn xóa profile này không?')) {
         try {
@@ -424,12 +279,16 @@ async function deleteProfile(id) {
     }
 }
 
+/**
+ * Tự động tạo chuỗi UserAgent dựa trên OS và Browser người dùng chọn.
+ * Giúp người dùng không phải tự nhập thủ công.
+ */
 function generateUserAgent() {
     const os = $('#profile-os').val();
     const browser = $('#profile-browser').val();
     const version = $('#profile-browser-ver').val() || '120';
 
-    // Improved UA Generator
+    // Logic tạo UA string chuẩn (giả lập)
     let ua = '';
 
     if (browser === 'Chrome') {
