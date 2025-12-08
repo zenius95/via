@@ -293,7 +293,7 @@ function updateNodeStatus(node, status, msg) {
         window.api.send('log:write', {
             uid: node.data.uid,
             fileName: node.data.logFileName,
-            message: msg
+            message: `[${status}] ${msg}`
         });
     }
 
