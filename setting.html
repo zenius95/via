@@ -79,7 +79,7 @@
 
         <!-- Sidebar -->
         <div class="w-64 bg-slate-900/50 border-r border-white/5 flex flex-col pt-6 pb-4 backdrop-blur-sm">
-            <div class="px-6 mb-6">
+            <div class="px-6 mb-3">
                 <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest mb-2">Danh mục</div>
             </div>
 
@@ -88,13 +88,13 @@
                     class="sidebar-item active group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
                     onclick="switchTab('general')">
                     <i class="ri-equalizer-line text-lg w-5"></i>
-                    Chung
+                    Cài đặt chung
                 </button>
                 <button
                     class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
                     onclick="switchTab('browser')">
                     <i class="ri-chrome-fill text-lg w-5"></i>
-                    Cấu hình Browser
+                    Cài đặt Browser
                 </button>
                 <button
                     class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
@@ -218,6 +218,51 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Performance Config (Moved from Browser) -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i class="ri-speed-fill text-blue-400"></i> Hiệu suất & Luồng
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Số luồng (Threads)</label>
+                                </div>
+                                <input type="number" id="input-max-threads" min="1" max="50" value="3"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Số lượng tab mở cùng lúc</div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Delay mở tab (giây)</label>
+                                </div>
+                                <input type="number" id="input-launch-delay" min="1" max="60" value="2"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Thời gian chờ giữa các lần mở tab</div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Timeout (giây)</label>
+                                </div>
+                                <input type="number" id="input-timeout" min="0" max="3600" value="0"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">0 = Không giới hạn thời gian</div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-medium text-slate-400">Số lần thử lại (Retry)</label>
+                                </div>
+                                <input type="number" id="input-retry-count" min="0" max="10" value="0"
+                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                <div class="text-[10px] text-slate-600 mt-1">Tự động chạy lại khi gặp lỗi</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -256,50 +301,7 @@
                         </div>
                     </div>
 
-                    <!-- Performance Config -->
-                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
-                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                            <i class="ri-speed-fill text-orange-400"></i> Hiệu suất & Luồng
-                        </h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-medium text-slate-400">Số luồng (Threads)</label>
-                                </div>
-                                <input type="number" id="input-max-threads" min="1" max="50" value="3"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
-                                <div class="text-[10px] text-slate-600 mt-1">Số lượng tab mở cùng lúc</div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-medium text-slate-400">Delay mở tab (giây)</label>
-                                </div>
-                                <input type="number" id="input-launch-delay" min="1" max="60" value="2"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
-                                <div class="text-[10px] text-slate-600 mt-1">Thời gian chờ giữa các lần mở tab</div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-medium text-slate-400">Timeout (giây)</label>
-                                </div>
-                                <input type="number" id="input-timeout" min="0" max="3600" value="0"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
-                                <div class="text-[10px] text-slate-600 mt-1">0 = Không giới hạn thời gian</div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-medium text-slate-400">Số lần thử lại (Retry)</label>
-                                </div>
-                                <input type="number" id="input-retry-count" min="0" max="10" value="0"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
-                                <div class="text-[10px] text-slate-600 mt-1">Tự động chạy lại khi gặp lỗi</div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Window Config -->
                     <div
@@ -383,79 +385,14 @@
                                 <th class="px-6 py-4">Tên Profile</th>
                                 <th class="px-6 py-4">Hệ điều hành</th>
                                 <th class="px-6 py-4">Trình duyệt</th>
-                                <th class="px-6 py-4 text-center">User Agent</th>
                                 <th class="px-6 py-4 text-right">Hành động</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
-                            <tr class="hover:bg-white/5 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center">
-                                        <input type="checkbox"
-                                            class="w-4 h-4 rounded border-gray-600 bg-slate-700 text-blue-600 focus:ring-offset-gray-900 focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-white">Windows Standard</td>
-                                <td class="px-6 py-4"><i class="ri-windows-fill text-blue-400 mr-2"></i>Windows 10</td>
-                                <td class="px-6 py-4"><i class="ri-chrome-fill text-green-400 mr-2"></i>Chrome 120</td>
-                                <td class="px-6 py-4 text-center text-xs truncate max-w-[150px]" title="Mozilla/5.0...">
-                                    Mozilla/5.0...</td>
-                                <td class="px-6 py-4 text-right">
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i
-                                            class="ri-edit-line"></i></button>
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i
-                                            class="ri-delete-bin-line"></i></button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-white/5 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center">
-                                        <input type="checkbox"
-                                            class="w-4 h-4 rounded border-gray-600 bg-slate-700 text-blue-600 focus:ring-offset-gray-900 focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-white">MacBook Pro M1</td>
-                                <td class="px-6 py-4"><i class="ri-apple-fill text-slate-200 mr-2"></i>macOS 14</td>
-                                <td class="px-6 py-4"><i class="ri-safari-fill text-blue-500 mr-2"></i>Safari 17</td>
-                                <td class="px-6 py-4 text-center text-xs truncate max-w-[150px]" title="Mozilla/5.0...">
-                                    Mozilla/5.0...</td>
-                                <td class="px-6 py-4 text-right">
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i
-                                            class="ri-edit-line"></i></button>
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i
-                                            class="ri-delete-bin-line"></i></button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-white/5 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center">
-                                        <input type="checkbox"
-                                            class="w-4 h-4 rounded border-gray-600 bg-slate-700 text-blue-600 focus:ring-offset-gray-900 focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-white">iPhone 14 Pro Max</td>
-                                <td class="px-6 py-4"><i class="ri-apple-fill text-slate-200 mr-2"></i>iOS 17</td>
-                                <td class="px-6 py-4"><i class="ri-safari-line text-blue-400 mr-2"></i>Safari Mobile
-                                </td>
-                                <td class="px-6 py-4 text-center text-xs truncate max-w-[150px]" title="Mozilla/5.0...">
-                                    Mozilla/5.0...</td>
-                                <td class="px-6 py-4 text-right">
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"><i
-                                            class="ri-edit-line"></i></button>
-                                    <button
-                                        class="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-red-400 transition-colors"><i
-                                            class="ri-delete-bin-line"></i></button>
-                                </td>
-                            </tr>
+
                         </tbody>
                     </table>
                     <div class="px-6 py-4 border-t border-white/5 text-center text-xs text-slate-500">
-                        Hiển thị 3 / 3 profiles
                     </div>
                 </div>
             </div>

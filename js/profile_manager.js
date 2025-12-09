@@ -145,9 +145,6 @@ function renderProfiles(profiles) {
             <td class="px-6 py-4 select-none">
                 <i class="${getBrowserIcon(p.browser)} mr-2"></i>${p.browser} <span class="text-xs text-slate-500">v${p.browser_version || '?'}</span>
             </td>
-            <td class="px-6 py-4 text-center text-xs truncate max-w-[150px] text-slate-500 select-none" title="${p.user_agent}">
-                ${p.user_agent ? p.user_agent.substring(0, 20) + '...' : 'Auto'}
-            </td>
             <td class="px-6 py-4 text-right">
                 ${isTrashView ? `
                     <button onclick="restoreProfile(${p.id})" title="Khôi phục" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded text-xs font-medium transition-colors border border-green-500/20">
