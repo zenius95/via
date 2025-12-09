@@ -374,6 +374,7 @@ function openProfileModal(profile = null) {
 
     // Initialize Select2 (Searchable - Version)
     $('#profile-browser-ver').select2({
+        minimumResultsForSearch: Infinity,
         dropdownParent: $('#modal-profile')
     });
 
