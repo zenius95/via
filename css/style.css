@@ -614,12 +614,15 @@ body {
 .filter-item {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 8px 10px;
+    border: 1px solid transparent !important;
+    /* Remove visible border */
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
+    margin-bottom: 4px;
+    background: transparent;
 }
 
 .filter-item:not(:last-child) {
@@ -630,34 +633,58 @@ body {
     background: rgba(255, 255, 255, 0.05);
 }
 
+.filter-item.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
 .custom-checkbox {
-    width: 16px;
-    height: 16px;
-    border: 1px solid #475569;
-    border-radius: 4px;
-    display: grid;
-    place-content: center;
-    transition: all 0.2s;
+    width: 32px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.custom-checkbox::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    background: #94a3b8;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .filter-item.active .custom-checkbox {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
+.filter-item.active .custom-checkbox::before {
+    transform: translateX(14px);
+    background: #60a5fa;
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.filter-item.active .status-dot {
+    box-shadow: 0 0 8px currentColor;
+    transform: scale(1.2);
+    transition: all 0.3s;
+}
+
+/* Remove old checkmark style */
 .custom-checkbox::after {
-    content: "✓";
-    font-size: 10px;
-    color: white;
-    font-weight: bold;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s;
+    display: none;
 }
 
 .filter-item.active .custom-checkbox::after {
-    opacity: 1;
-    transform: scale(1);
+    display: none;
 }
 
 .status-dot {
