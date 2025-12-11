@@ -1285,7 +1285,9 @@ document.addEventListener('keydown', (e) => {
             { id: 'import-modal', close: closeImportModal },
             { id: 'col-config-modal', close: closeColumnModal },
             { id: 'copy-account-modal', close: closeCopyAccountModal },
-            { id: 'edit-folder-modal', close: closeEditFolderModal }
+            { id: 'edit-folder-modal', close: closeEditFolderModal },
+            { id: 'twofa-modal', close: close2FAModal },
+            { id: 'log-viewer-modal', close: closeLogViewer }
         ];
 
         let modalClosed = false;
@@ -1351,7 +1353,9 @@ document.addEventListener('click', (e) => {
         { id: 'col-config-modal', close: closeColumnModal },
         { id: 'copy-account-modal', close: closeCopyAccountModal },
         { id: 'edit-folder-modal', close: closeEditFolderModal },
-        { id: 'confirm-modal', close: closeConfirmModal }
+        { id: 'confirm-modal', close: closeConfirmModal },
+        { id: 'twofa-modal', close: close2FAModal },
+        { id: 'log-viewer-modal', close: closeLogViewer }
     ];
 
     modals.forEach(m => {

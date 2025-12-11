@@ -224,8 +224,8 @@ const columnDefs = [
                             ${maskedColumns.has('twoFa') ? '*******' : secret}
                         </div>
                          ${!maskedColumns.has('twoFa') ?
-                    `<button onclick="show2FAModal('${secret}')" title="Lấy mã 2FA" 
-                                class="opacity-0 group-hover:opacity-100 transition-all w-7 h-7 rounded flex items-center justify-center bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:scale-110 cursor-pointer">
+                    `<button onclick="show2FAModal('${secret}')" data-tooltip="Lấy mã 2FA" 
+                                class="tooltip-left opacity-0 group-hover:opacity-100 transition-all w-7 h-7 rounded flex items-center justify-center bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:scale-110 cursor-pointer">
                                 <i class="ri-shield-keyhole-line text-xs"></i>
                             </button>` : ''
                 }
@@ -274,7 +274,8 @@ const columnDefs = [
                                 <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
                                 <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
                             </div>
-                            <button onclick="openLogViewer('${params.data.uid}')" class="log-button opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded flex-shrink-0" >
+                            <button onclick="openLogViewer('${params.data.uid}')" data-tooltip="Xem nhật ký"
+                                class="tooltip-left log-button opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded flex-shrink-0" >
                                 <i class="ri-file-list-line text-slate-300 hover:text-blue-400"></i>
                             </button>
                         </div>`;
