@@ -210,26 +210,40 @@ const columnDefs = [
             let badgeClass = 'badge-base ';
             let iconHtml = '';
 
-            if (status === 'running') {
-                badgeClass += 'badge-primary';
-                iconHtml = '<i class="ri-loader-4-line animate-spin mr-1"></i>';
-            } else if (status === 'success') {
-                badgeClass += 'badge-success';
-                iconHtml = '<i class="ri-check-double-line mr-1"></i>';
-            } else if (status === 'error') {
-                badgeClass += 'badge-danger';
-                iconHtml = '<i class="ri-error-warning-line mr-1"></i>';
-            } else {
-                badgeClass += 'badge-neutral';
-            }
+            if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
+            else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
+            else if (status === 'READY') { badgeClass += 'badge-neutral text-slate-400 bg-slate-500/10 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; } // READY distinct style
+            else if (status === 'RETRY') { badgeClass += 'badge-warning'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
+            else if (status === 'ERROR') { badgeClass += 'badge-danger'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
+            else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; } // SUCCESS or others
 
-            return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
-                        <div class="flex items-center overflow-hidden flex-1 min-w-0">
-                            <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
-                            <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
-                        </div>
-                    </div>`;
-        }
+            // RENDER DỰA TRÊN TRẠNG THÁI
+            if (processState.collapsed) {
+                // Thu gọn: Icon + Text ngắn, căn giữa
+                return `<div class="process-cell justify-center w-full"><span class="${badgeClass} !mr-0">${iconHtml} <span class="ml-1">${status}</span></span></div>`;
+            } else {
+                // Mở rộng: Full option
+                // Thêm margin cho icon
+                if (status === 'RUNNING') iconHtml = '<i class="ri-loader-4-line icon-spin text-xs mr-1"></i>';
+                else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
+                else if (status === 'READY') iconHtml = '<i class="ri-hourglass-line text-xs mr-1"></i>';
+                else if (status === 'RETRY') iconHtml = '<i class="ri-restart-line icon-spin text-xs mr-1"></i>';
+                else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
+
+                // Container for cell with hover effect
+                return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
+                            <div class="flex items-center overflow-hidden flex-1 min-w-0">
+                                <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
+                                <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
+                            </div>
+                            <button onclick="openLogViewer('${params.data.uid}')" data-tooltip="Xem nhật ký"
+                                class="tooltip-left log-button opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded flex-shrink-0" >
+                                <i class="ri-file-list-line text-slate-300 hover:text-blue-400"></i>
+                            </button>
+                        </div>`;
+            }
+        },
+        getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.value + ' ' + (params.data.processMessage || '')); }
     }
 ];
 
@@ -311,9 +325,54 @@ function onQuickFilterChanged() {
     if (gridApi) gridApi.setGridOption('quickFilterText', cleanVal);
 }
 
+// --- DEMO DATA GENERATOR ---
+function generateDemoData() {
+    const statuses = ['ACTIVE', 'DISABLED', 'NEED_PAYMENT', 'PENDING_RISK_REVIEW', 'IN_GRACE_PERIOD'];
+    const currencies = ['VND', 'USD', 'EUR'];
+    const accountTypes = ['CN', 'BM', 'Agency'];
+
+    return Array.from({ length: 15 }, (_, i) => {
+        const randStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const randCurrency = currencies[Math.floor(Math.random() * currencies.length)];
+        const balance = (Math.random() * 10000000).toFixed(0);
+
+        return {
+            status: randStatus,
+            name: `Tài khoản quảng cáo ${i + 1}`,
+            accountId: `10000${Math.floor(Math.random() * 90000) + 10000}`,
+            balance: new Intl.NumberFormat('vi-VN').format(balance) + ' ' + randCurrency,
+            threshold: new Intl.NumberFormat('vi-VN').format(20000000) + ' ' + randCurrency,
+            thresholdRemaining: new Intl.NumberFormat('vi-VN').format(5000000) + ' ' + randCurrency,
+            adLimit: 'Unlimited',
+            totalSpent: new Intl.NumberFormat('vi-VN').format(Math.floor(Math.random() * 50000000)) + ' ' + randCurrency,
+            currency: randCurrency,
+            adminCount: Math.floor(Math.random() * 5) + 1,
+            ownership: Math.random() > 0.5 ? 'Cá nhân' : 'BM',
+            paymentMethod: Math.random() > 0.5 ? 'Visa •••• 1234' : 'Momo',
+            nextBillDate: '2025-01-01',
+            daysToBill: Math.floor(Math.random() * 30),
+            country: 'VN',
+            createdDate: '2024-12-01',
+            accountType: accountTypes[Math.floor(Math.random() * accountTypes.length)],
+            bmId: Math.random() > 0.7 ? `BM_${Math.floor(Math.random() * 10000)}` : '',
+            timezone: '+07:00 (Asia/Ho_Chi_Minh)',
+            processStatus: 'success',
+            processMessage: 'Đang hoạt động bình thường',
+            uid: `100000${i}`,
+            avatar: 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=Ads+' + (i + 1),
+            folder: 'Thư mục mặc định',
+            twoFa: 'JBSWY3DPEHPK3PXP',
+            email: `admin${i}@example.com`,
+            emailPassword: 'password123',
+            emailRecover: 'recover@example.com',
+            cookie: 'c_user=1000...; xs=...'
+        };
+    });
+}
+
 const gridOptions = {
     theme: "legacy", suppressContextMenu: true, enableRangeSelection: true,
-    columnDefs: columnDefs, rowData: generateSkeletonData(15),
+    columnDefs: columnDefs, rowData: generateDemoData(),
     defaultColDef: {
         resizable: true,
         sortable: true,

@@ -78,9 +78,9 @@
     height: 32px;
     /* Flexible width: Grow 0, Shrink 1, Basis 170px */
     flex: 0 1 170px;
-    min-width: 40px;
+    min-width: 60px;
     /* Width for icon */
-    max-width: 170px;
+    max-width: 200px;
     padding: 0 8px 0 10px;
     /* Right padding for close btn */
 
@@ -173,6 +173,7 @@
     color: #60a5fa;
     border: 1px solid rgba(59, 130, 246, 0.3);
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+    width: 170px;
 }
 
 .account-tab.has-divider::after {

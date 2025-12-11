@@ -293,8 +293,8 @@ function createWindow() {
 
     // Bounds logic
     mainWindow.on('resize', updateViewBounds)
-    mainWindow.on('maximize', updateViewBounds)
-    mainWindow.on('unmaximize', updateViewBounds)
+    // Bounds logic & Events
+    mainWindow.on('resize', updateViewBounds);
 
     // Shortcuts for Main Window
     mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -313,17 +313,26 @@ function createWindow() {
     })
 
     // Window Controls
-    ipcMain.on('window-minimize', () => mainWindow.minimize())
-    ipcMain.on('window-maximize', () => {
+    // Maximize events: send to renderer
+    mainWindow.on('maximize', () => {
+        updateViewBounds();
+        mainWindow.webContents.send('window-maximized');
+    });
+    mainWindow.on('unmaximize', () => {
+        updateViewBounds();
+        mainWindow.webContents.send('window-unmaximized');
+    });
+}
+
+// Global Window Control IPCs
+ipcMain.on('window-minimize', () => { if (mainWindow) mainWindow.minimize(); });
+ipcMain.on('window-maximize', () => {
+    if (mainWindow) {
         if (mainWindow.isMaximized()) mainWindow.unmaximize();
         else mainWindow.maximize();
-    })
-    ipcMain.on('window-close', () => mainWindow.close())
-
-    // Maximize events
-    mainWindow.on('maximize', () => mainWindow.webContents.send('window-maximized'))
-    mainWindow.on('unmaximize', () => mainWindow.webContents.send('window-unmaximized'))
-}
+    }
+});
+ipcMain.on('window-close', () => { if (mainWindow) mainWindow.close(); });
 
 app.whenReady().then(() => {
     createWindow()
