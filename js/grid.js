@@ -187,7 +187,20 @@ const columnDefs = [
             if (params.data.isLoading) return `<div class="account-cell"><div class="skeleton w-[34px] h-[34px] rounded-full mr-3 flex-shrink-0"></div><div class="flex flex-col gap-1.5 w-full"><div class="skeleton h-3 w-24"></div><div class="skeleton h-2 w-16"></div></div></div>`;
             if (maskedColumns.has('accountInfo')) return `<div class="account-cell"><span class="masked-data">*******</span></div>`;
 
-            return `<div class="account-cell"><img src="${params.data.avatar}" class="account-avatar"><div class="account-details"><span class="account-name">${params.data.name}</span><span class="account-uid-sub">${params.data.uid}</span></div></div>`;
+            return `<div class="account-cell justify-between group pr-2">
+                        <div class="flex items-center">
+                            <img src="${params.data.avatar}" class="account-avatar">
+                            <div class="account-details">
+                                <span class="account-name">${params.data.name}</span>
+                                <span class="account-uid-sub">${params.data.uid}</span>
+                            </div>
+                        </div>
+                        <button onclick="openUserTab('${params.data.uid}', '${params.data.name}', '${params.data.avatar}')" 
+                            data-tooltip="Mở tab mới"
+                            class="tooltip-left w-7 h-7 rounded-lg flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-blue-400 transition-all opacity-0 group-hover:opacity-100 hover:scale-110">
+                            <i class="ri-external-link-line"></i>
+                        </button>
+                    </div>`;
         },
         getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.data.name + ' ' + params.data.uid); }
     },
@@ -380,7 +393,7 @@ const gridOptions = {
         // params.data contains the updated row data
         // params.colDef.field contains the field that changed
         if (params.data && params.data.uid) {
-            console.log('Auto-saving account:', params.data.uid);
+            // console.log("Row clicked:", event.node.data);
             window.api.send('db:update-account', params.data);
         }
     },
@@ -434,3 +447,10 @@ const gridOptions = {
         return pass;
     }
 };
+
+// Open User Tab
+function openUserTab(uid, name, avatar) {
+    if (window.api && window.api.send) {
+        window.api.send('main:open-user-tab', { uid, name, avatar });
+    }
+}

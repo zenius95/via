@@ -125,9 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // if (tabData.id) newTab.id = 'tab-' + tabData.id; // Optional
         newTab.dataset.id = tabData.id || ('tab-' + Date.now());
 
+        let iconHtml = `<i class="${tabData.icon || 'ri-global-line'}"></i>`;
+        if (tabData.avatar) {
+            iconHtml = `<img src="${tabData.avatar}" class="w-4 h-4 rounded-full object-cover mr-2" />`;
+        }
+
         newTab.innerHTML = `
             <div class="tab-content">
-                <i class="${tabData.icon || 'ri-global-line'}"></i>
+                ${iconHtml}
                 <span class="tab-title">${tabData.title || 'New Tab'}</span>
             </div>
             <i class="ri-close-line tab-close-btn"></i>

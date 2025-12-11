@@ -14,7 +14,7 @@ const api = {
             'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder',
             'open-settings-tab', 'switch-view',
             // Settings Channels
-            'db:get-settings', 'db:save-settings', 'main:get-chrome-path', 'dialog:open-file',
+            'db:get-settings', 'db:save-settings', 'main:get-chrome-path', 'dialog:open-file', 'main:open-user-tab',
             // Profile Channels
             'db:get-profiles', 'db:add-profile', 'db:update-profile', 'db:delete-profile',
             'db:get-deleted-profiles', 'db:restore-profile', 'db:permanent-delete-profile',

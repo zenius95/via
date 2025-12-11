@@ -722,6 +722,27 @@ function menuAction(action) {
             return;
         }
         openCopyAccountModal(selectedData);
+    } else if (action === 'openAdsTabs') {
+        const selectedData = gridApi.getSelectedRows();
+        if (selectedData.length === 0) {
+            showToast('Chưa chọn tài khoản nào', 'warning');
+            return;
+        }
+
+        // Limit warning if too many?
+        if (selectedData.length > 20) {
+            showConfirmDialog('Xác nhận mở nhiều tab', `Bạn đang mở ${selectedData.length} tab cùng lúc. Điều này có thể làm chậm máy.\nTiếp tục?`, () => {
+                selectedData.forEach(row => {
+                    if (typeof openUserTab === 'function') openUserTab(row.uid, row.name, row.avatar);
+                });
+                showToast(`Đang mở ${selectedData.length} tab...`, 'success');
+            });
+        } else {
+            selectedData.forEach(row => {
+                if (typeof openUserTab === 'function') openUserTab(row.uid, row.name, row.avatar);
+            });
+            showToast(`Đang mở ${selectedData.length} tab...`, 'success');
+        }
     }
 }
 

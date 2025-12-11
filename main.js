@@ -93,6 +93,30 @@ ipcMain.handle('open-settings-tab', async (event) => {
     }
 });
 
+ipcMain.handle('main:open-user-tab', async (event, { uid, name, avatar }) => {
+    if (mainWindow) {
+        const id = `user-${uid}`;
+        if (!views[id]) {
+            createView(id, 'ads.html');
+        }
+
+        mainWindow.webContents.send('create-tab', {
+            title: name,
+            avatar: avatar,
+            id: id,
+            active: true
+        });
+
+        // Switch logic is handled by 'create-tab' in titlebar? No, titlebar sends 'switch-view'.
+        // But we want to switch immediately.
+        // Titlebar 'create-tab' handler has: if (tabData.active) activateTab(newTab) -> sends 'switch-view'.
+        // So we don't strictly need to switch here IF the renderer does it.
+        // However, 'switch-view' IPC handler (line 47) does the actual switching.
+        // If we switch here AND renderer sends switch-view, it's double but harmless.
+        // Let's rely on renderer sending 'switch-view' to keep state in sync (UI tab active class).
+    }
+});
+
 // Database IPCs
 ipcMain.handle('db:get-accounts', async () => await database.getAllAccounts());
 ipcMain.handle('db:add-accounts', async (event, accounts) => await database.insertAccounts(accounts));
