@@ -98,6 +98,15 @@ ipcMain.handle('main:open-user-tab', async (event, { uid, name, avatar }) => {
         const id = `user-${uid}`;
         if (!views[id]) {
             createView(id, 'ads.html');
+            // Wait for finish load to send data?
+            views[id].webContents.once('did-finish-load', () => {
+                views[id].webContents.send('setup-ads-view', { uid, name, avatar });
+            });
+        }
+
+        // If view already exists, maybe update it?
+        if (views[id] && views[id].webContents) {
+            views[id].webContents.send('setup-ads-view', { uid, name, avatar });
         }
 
         mainWindow.webContents.send('create-tab', {

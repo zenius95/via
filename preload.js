@@ -31,7 +31,7 @@ const api = {
         }
     },
     on: (channel, func) => {
-        let validChannels = ['window-maximized', 'window-unmaximized', 'create-tab', 'process:update-status'];
+        let validChannels = ['window-maximized', 'window-unmaximized', 'create-tab', 'process:update-status', 'setup-ads-view'];
         if (validChannels.includes(channel)) {
             // Deliberately strip event as it includes `sender` 
             ipcRenderer.on(channel, (event, ...args) => func(...args));
