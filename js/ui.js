@@ -885,7 +885,7 @@ document.addEventListener('click', function (e) {
 });
 
 function calculateStatusCounts() {
-    const counts = { 'LIVE': 0, 'DIE': 0, 'CHECKPOINT': 0 };
+    const counts = { 'LIVE': 0, 'DIE': 0, 'CHECKPOINT': 0, 'UNCHECKED': 0 };
     if (!gridApi) return counts;
     gridApi.forEachNode(node => {
         if (node.data && !node.data.isLoading && counts.hasOwnProperty(node.data.status)) {
@@ -900,7 +900,8 @@ function updateFilterCounts() {
     const totalSelected = selectedStatuses.size;
     const badge = document.getElementById('filter-badge-count');
 
-    if (totalSelected === 3) badge.innerText = 'All';
+    // Logic fix: 4 status types
+    if (totalSelected === Object.keys(statusMap).length) badge.innerText = 'All';
     else badge.innerText = totalSelected;
 
     const dropdown = document.getElementById('filter-dropdown-menu');
@@ -913,6 +914,19 @@ function renderFilterItems() {
     const container = document.getElementById('filter-list-container');
     const counts = calculateStatusCounts();
     container.innerHTML = '';
+
+    // Action Buttons Row
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'flex items-center gap-2 mb-2 pb-2 border-b border-white/10';
+    actionsDiv.innerHTML = `
+        <button onclick="setAllFilters(true, event)" class="flex-1 text-xs py-1.5 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+            Chọn tất cả
+        </button>
+        <button onclick="setAllFilters(false, event)" class="flex-1 text-xs py-1.5 rounded bg-slate-500/20 text-slate-400 hover:bg-slate-500/30 transition-colors">
+            Bỏ chọn
+        </button>
+    `;
+    container.appendChild(actionsDiv);
 
     Object.keys(statusMap).forEach(key => {
         const info = statusMap[key];
@@ -933,11 +947,27 @@ function renderFilterItems() {
     });
 }
 
+function setAllFilters(enable, event) {
+    if (event) event.stopPropagation();
+    if (enable) {
+        Object.keys(statusMap).forEach(key => selectedStatuses.add(key));
+    } else {
+        selectedStatuses.clear();
+        // Giữ lại ít nhất 1 cái? User request nut "Bỏ chọn tất cả", thường sẽ clear hết -> grid trống.
+        // Tuy nhiên grid filter logic có thể cần check rỗng.
+        // Ở đây mình cứ clear hết, grid filter nên handle empty. 
+        // Nhưng nếu logic cũ chặn "Phải chọn ít nhất 1" thì mình nên cân nhắc.
+        // User muốn "Bỏ chọn tất cả", cho phép clear hết.
+    }
+    renderFilterItems();
+    updateFilterCounts();
+    if (gridApi) gridApi.onFilterChanged();
+}
+
 function toggleStatusFilter(status, event) {
     event.stopPropagation();
     if (selectedStatuses.has(status)) {
-        if (selectedStatuses.size > 1) selectedStatuses.delete(status);
-        else showToast('Phải chọn ít nhất 1 trạng thái', 'info');
+        selectedStatuses.delete(status); // Cho phép bỏ chọn hết để đúng ý button "Bỏ chọn"
     } else {
         selectedStatuses.add(status);
     }
