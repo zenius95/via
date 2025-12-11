@@ -359,7 +359,7 @@ const gridOptions = {
         resizable: true,
         sortable: true,
         filter: false,
-        editable: true, // Enable editing
+        editable: false, // Enable editing
         suppressHeaderMenuButton: true,
         headerComponent: CustomHeader,
         lockPinned: true,
