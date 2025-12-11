@@ -212,6 +212,10 @@ body {
     border-right: 1px solid #334155 !important;
 }
 
+.ag-theme-alpine-dark .ag-cell-wrapper {
+    height: 100%;
+}
+
 .ag-header-cell-resize {
     background: #334155;
     touch-action: none;
