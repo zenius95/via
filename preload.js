@@ -22,7 +22,9 @@ const api = {
             // Automation Channels
             'process:run-profile',
             // Logger
-            'log:init', 'log:write', 'log:get-files', 'log:read-file'
+            'log:init', 'log:write', 'log:get-files', 'log:read-file',
+            // Utils
+            'util:get-2fa'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);

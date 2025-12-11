@@ -564,6 +564,43 @@
         </div>
     </div>
 
+    <div id="twofa-modal"
+        class="fixed inset-0 z-[10003] hidden flex items-center justify-center bg-black/60 backdrop-blur-[2px] opacity-0 transition-all duration-300">
+        <div class="relative w-full max-w-[320px] transform scale-95 transition-all duration-300 p-4">
+            <div class="glass-modal-box flex flex-col items-center p-6 text-center">
+                <button onclick="close2FAModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+
+                <div
+                    class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20 mb-4 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                    <i class="ri-shield-keyhole-line text-2xl text-purple-400"></i>
+                </div>
+
+                <h3 class="text-base font-bold text-white mb-1">Mã xác thực 2FA</h3>
+                <p class="text-xs text-slate-400 mb-6">Mã sẽ tự động làm mới sau <span id="twofa-countdown"
+                        class="text-purple-400 font-bold">30</span>s</p>
+
+                <div class="relative group w-full mb-6">
+                    <div
+                        class="text-3xl font-mono font-bold text-white tracking-[0.2em] bg-black/30 border border-white/10 rounded-lg py-3 px-2 select-all hover:border-purple-500/50 transition-colors">
+                        <span id="twofa-code">--- ---</span>
+                    </div>
+                </div>
+
+                <div class="w-full bg-white/5 rounded-full h-1.5 mb-6 overflow-hidden">
+                    <div id="twofa-progress" class="h-full bg-purple-500 transition-all duration-1000 ease-linear"
+                        style="width: 100%"></div>
+                </div>
+
+                <button onclick="copy2FACode()"
+                    class="w-full py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 shadow-lg shadow-purple-900/40 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <i class="ri-file-copy-line"></i> Sao chép mã
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast"
         class="fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-2xl transform translate-y-32 z-50 flex items-center gap-3 border backdrop-blur-md min-w-[300px]">
         <div id="toast-icon-container" class="p-1 rounded-full"></div>

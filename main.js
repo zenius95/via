@@ -144,6 +144,22 @@ ipcMain.handle('log:read-file', async (event, { uid, fileName }) => {
     return await logger.readLogFile(uid, fileName);
 });
 
+// --- UTILS IPC ---
+const { authenticator } = require('otplib');
+ipcMain.handle('util:get-2fa', async (event, secret) => {
+    try {
+        if (!secret) return { error: 'Secret không hợp lệ' };
+        // Clean secret
+        const cleanSecret = secret.replace(/\s/g, '');
+        const token = authenticator.generate(cleanSecret);
+        const timeRemaining = authenticator.timeRemaining();
+        return { token, timeRemaining };
+    } catch (err) {
+        return { error: err.message };
+    }
+});
+
+
 // --- AUTOMATION IPC ---
 const automation = require('./js/automation');
 const scriptExecutor = require('./js/script_executor');

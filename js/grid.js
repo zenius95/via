@@ -211,7 +211,27 @@ const columnDefs = [
     },
     { headerName: "UID", field: "uid", colId: 'uidRaw', cellRenderer: textCellRenderer, editable: false },
     { headerName: "Mật khẩu", field: "password", width: 120, colId: 'password', cellRenderer: textCellRenderer },
-    { headerName: "Mã 2FA", field: "twoFa", colId: 'twoFa', cellRenderer: textCellRenderer },
+    {
+        headerName: "Mã 2FA", field: "twoFa", colId: 'twoFa', minWidth: 150,
+        cellRenderer: (params) => {
+            if (params.data && params.data.isLoading) return `<div class="skeleton h-3 w-24"></div>`;
+            const secret = params.value || '';
+            if (!secret) return '';
+
+            // Chỉ hiển thị 1 phần secret để gọn
+            return `<div class="flex items-center justify-between w-full h-full group pr-1">
+                        <div class="truncate text-slate-500 text-xs flex-1 mr-2 font-mono" title="${secret}">
+                            ${maskedColumns.has('twoFa') ? '*******' : secret}
+                        </div>
+                         ${!maskedColumns.has('twoFa') ?
+                    `<button onclick="show2FAModal('${secret}')" title="Lấy mã 2FA" 
+                                class="opacity-0 group-hover:opacity-100 transition-all w-7 h-7 rounded flex items-center justify-center bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:scale-110 cursor-pointer">
+                                <i class="ri-shield-keyhole-line text-xs"></i>
+                            </button>` : ''
+                }
+                    </div>`;
+        }
+    },
     { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },

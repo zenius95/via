@@ -809,6 +809,7 @@ function colMenuAction(action) {
         let textToCopy = "";
         let count = 0;
 
+        // Lấy dữ liệu của tất cả row sau khi filter
         gridApi.forEachNodeAfterFilter(node => {
             if (node.data && node.data[field] !== undefined && node.data[field] !== null) {
                 textToCopy += node.data[field] + "\n";
@@ -826,6 +827,7 @@ function colMenuAction(action) {
             showToast('Không có dữ liệu để copy', 'warning');
         }
     }
+
     else if (action === 'pin') {
         const col = gridApi.getColumn(currentTargetColId);
         const isPinned = col.isPinned();
@@ -1582,16 +1584,84 @@ function updateCopyPreviewRefactored() {
 
 function copyToClipboard() {
     const textarea = document.getElementById('copy-account-textarea');
-    textarea.select();
-    document.execCommand('copy');
-
-    // UI Feedback
-    const btn = document.querySelector('#copy-account-modal button i.ri-file-copy-line').parentNode;
-    const originalContent = btn.innerHTML;
-    btn.innerHTML = '<i class="ri-check-line"></i> Đã chép';
-    setTimeout(() => {
-        btn.innerHTML = originalContent;
-        closeCopyAccountModal();
-        showToast(`Đã copy ${currentCopyData.length} tài khoản`, 'success');
-    }, 800);
+    if (!textarea.value) {
+        showToast('Không có dữ liệu để copy', 'warning');
+        return;
+    }
+    navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast('Đã copy vào clipboard');
+    }).catch(() => showToast('Lỗi copy', 'error'));
 }
+
+// --- 2FA MODAL LOGIC ---
+let twoFAInterval;
+let current2FASecret = '';
+
+function show2FAModal(secret) {
+    if (!secret) return;
+    current2FASecret = secret;
+
+    const m = document.getElementById('twofa-modal');
+    m.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        m.classList.remove('opacity-0');
+        m.querySelector('div.relative').classList.replace('scale-95', 'scale-100');
+    });
+
+    update2FAInfo();
+    twoFAInterval = setInterval(update2FAInfo, 1000);
+}
+
+function close2FAModal() {
+    clearInterval(twoFAInterval);
+    const m = document.getElementById('twofa-modal');
+    m.classList.add('opacity-0');
+    m.querySelector('div.relative').classList.replace('scale-100', 'scale-95');
+    setTimeout(() => { m.classList.add('hidden'); }, 300);
+}
+
+async function update2FAInfo() {
+    if (!current2FASecret) return;
+    try {
+        const res = await window.api.send('util:get-2fa', current2FASecret);
+        if (res.error) {
+            document.getElementById('twofa-code').innerText = 'ERROR';
+            return;
+        }
+
+        // Format code xxx xxx
+        const token = res.token;
+        const formatted = token.slice(0, 3) + ' ' + token.slice(3);
+        document.getElementById('twofa-code').innerText = formatted;
+
+        // Countdown
+        const fullDuration = 30; // TOTP step usually 30s
+        const remaining = res.timeRemaining;
+        document.getElementById('twofa-countdown').innerText = remaining;
+
+        // Progress Style
+        const percent = (remaining / fullDuration) * 100;
+        const progEl = document.getElementById('twofa-progress');
+        progEl.style.width = `${percent}%`;
+
+        // Color logic based on urgency
+        if (remaining <= 5) {
+            progEl.className = 'h-full bg-red-500 transition-all duration-1000 ease-linear';
+        } else {
+            progEl.className = 'h-full bg-purple-500 transition-all duration-1000 ease-linear';
+        }
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function copy2FACode() {
+    const code = document.getElementById('twofa-code').innerText.replace(/\s/g, '');
+    if (!code || code === '---' || code === 'ERROR') return;
+    navigator.clipboard.writeText(code).then(() => {
+        showToast('Đã copy mã 2FA');
+    }).catch(() => showToast('Lỗi copy', 'error'));
+}
+
+
