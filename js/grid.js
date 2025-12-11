@@ -155,7 +155,7 @@ function restoreProcessColDef() {
 
 // --- RENDERERS ---
 const textCellRenderer = (params) => {
-    if (params.data && params.data.isLoading) return `<div class="skeleton h-3 w-32"></div>`;
+    if (params.data && params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-32"></div></div>`;
     if (maskedColumns.has(params.colDef.colId)) return `<span class="masked-data">*******</span>`;
     // Added overflow-hidden text-ellipsis whitespace-nowrap flex-1 block
     const val = params.value || '';
@@ -207,7 +207,7 @@ const columnDefs = [
     {
         headerName: "Thư mục", field: "folder", width: 150, colId: 'folder',
         cellRenderer: (params) => {
-            if (params.data.isLoading) return `<div class="skeleton h-3 w-24"></div>`;
+            if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-24"></div></div>`;
             const folderName = params.value || 'Chưa phân loại';
 
             // Lookup color

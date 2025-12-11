@@ -115,13 +115,10 @@
         </div>
     </div>
 
-    <!-- Context Menu kept simple -->
+    <!-- Context Menu: Select Range & Export Only -->
     <div id="context-menu">
         <div id="menu-select-range" class="menu-item" onclick="menuAction('selectRange')">
             <i class="ri-checkbox-multiple-fill text-purple-400"></i> Chọn vùng bôi đen
-        </div>
-        <div class="menu-item" onclick="menuAction('openCopyAccountModal')">
-            <i class="ri-file-copy-2-fill text-pink-400"></i> Copy tài khoản
         </div>
         <div class="menu-item">
             <i class="ri-share-forward-line text-blue-400"></i> Xuất dữ liệu
@@ -135,7 +132,6 @@
                 </div>
             </div>
         </div>
-        <div class="h-px bg-white/10 my-1 mx-2"></div>
     </div>
 
     <div id="column-menu" class="glass-dropdown-menu"
@@ -202,10 +198,13 @@
         </div>
     </div>
 
+    <!-- LOG VIEWER MODAL REMOVED -->
+
     <!-- Scripts -->
     <script src="js/utils.js"></script>
+    <!-- log_viewer.js REMOVED -->
     <script src="js/ui.js"></script>
-    <script src="js/grid.js"></script>
+    <script src="js/ads_grid.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

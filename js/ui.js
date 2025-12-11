@@ -1406,7 +1406,7 @@ document.addEventListener('click', (e) => {
         { id: 'edit-folder-modal', close: closeEditFolderModal },
         { id: 'confirm-modal', close: closeConfirmModal },
         { id: 'twofa-modal', close: close2FAModal },
-        { id: 'log-viewer-modal', close: closeLogViewer }
+        { id: 'log-viewer-modal', close: (typeof closeLogViewer !== 'undefined' ? closeLogViewer : () => { }) }
     ];
 
     modals.forEach(m => {
