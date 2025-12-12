@@ -204,6 +204,9 @@ const columnDefs = [
         },
         getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.data.name + ' ' + params.data.uid); }
     },
+    { headerName: "Họ tên", field: "name", width: 150, colId: 'name', cellRenderer: textCellRenderer },
+    { headerName: "Ngày sinh", field: "birthday", width: 120, colId: 'birthday', cellRenderer: textCellRenderer },
+    { headerName: "Bạn bè", field: "friends", width: 100, colId: 'friends', cellRenderer: textCellRenderer },
     {
         headerName: "Thư mục", field: "folder", width: 150, colId: 'folder',
         cellRenderer: (params) => {

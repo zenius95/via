@@ -126,6 +126,12 @@ async function execute(page, item, config, onLog = () => { }) {
 
         if (loginStatus.status === 'success') {
             onLog(`Đăng nhập thành công! Token: ${loginStatus.accessToken.substring(0, 15)}...`);
+
+            // Get Cookies
+            const cookies = await page.context().cookies();
+            const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+            loginStatus.cookie = cookieStr;
+
             if (loginStatus.userData) {
                 console.log(loginStatus.userData)
             }

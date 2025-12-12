@@ -235,6 +235,33 @@ async function runThread(node) {
                 }
 
                 // Success - Message from automation
+                if (result && result.status === 'SUCCESS' && result.data) {
+                    const data = result.data;
+
+                    // Update Node Data
+                    node.data.token = data.accessToken;
+                    node.data.dtsg = data.dtsg;
+                    node.data.lsd = data.lsd;
+                    node.data.cookie = data.cookie; // Update Cookie
+                    node.data.status = 'Live'; // Assume Live on success
+
+                    if (data.userData) {
+                        node.data.name = data.userData.name;
+                        node.data.birthday = data.userData.birthday;
+                        node.data.friends = data.userData.friends;
+
+                        if (data.userData.picture && data.userData.picture.data) {
+                            node.data.avatar = data.userData.picture.data.url;
+                        }
+                    }
+
+                    // Save to DB
+                    await window.api.send('db:update-account', node.data);
+
+                    // Refresh Grid Row (to show Name/Avatar/Token/Status changes)
+                    gridApi.applyTransaction({ update: [node.data] });
+                }
+
                 return;
             })();
 
