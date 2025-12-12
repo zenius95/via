@@ -1420,7 +1420,7 @@ document.addEventListener('click', (e) => {
 // --- COPY ACCOUNT MODAL LOGIC (REFACTORED) ---
 let currentCopyData = [];
 // Default columns
-let copyActiveColumns = ['uid', 'password', 'twoFa', 'email', 'emailPassword'];
+let copyActiveColumns = ['uid', 'password', '2fa', 'email', 'email_pass'];
 
 function openCopyAccountModal(data) {
     currentCopyData = data;
@@ -1624,10 +1624,10 @@ function updateCopyPreviewRefactored() {
             // Map colType strings (from COL_TYPES keys) to row properties
             if (colType === 'uid') return row.uid || '';
             if (colType === 'password') return row.password || '';
-            if (colType === 'twoFa') return row.twoFa || '';
+            if (colType === '2fa') return row.twoFa || '';
             if (colType === 'email') return row.email || '';
-            if (colType === 'emailPassword') return row.emailPassword || '';
-            if (colType === 'emailRecover') return row.emailRecover || '';
+            if (colType === 'email_pass') return row.emailPassword || '';
+            if (colType === 'email_recover') return row.emailRecover || '';
             if (colType === 'cookie') return row.cookie || '';
             if (colType === 'token') return row.token || '';
             return '';
