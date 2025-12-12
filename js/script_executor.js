@@ -1,4 +1,6 @@
 const { authenticator } = require('otplib');
+const fs = require('fs');
+const path = require('path');
 
 async function execute(page, item, config, onLog = () => { }) {
     try {
@@ -84,6 +86,64 @@ async function execute(page, item, config, onLog = () => { }) {
         }
 
         // Wait final check
+        // --- LOGIN VERIFICATION & TOKEN GET ---
+        onLog('Đang kiểm tra trạng thái đăng nhập...');
+
+        // Wait a bit for final load
+        await page.waitForTimeout(5000);
+
+        // Read FacebookAPI class source
+        const apiSource = fs.readFileSync(path.join(__dirname, 'facebook_api.js'), 'utf8');
+
+        // Execute in browser
+        const loginStatus = await page.evaluate(async ({ apiSource, item }) => {
+            // Inject Class Definition
+            try {
+                // Use window.eval to execute in global scope
+                window.eval(apiSource);
+
+                // Instantiate from window
+                const FacebookAPI = window.FacebookAPI;
+                const fb = new FacebookAPI(item);
+
+                // Run check
+                const status = await fb.getAccessToken();
+
+                if (status.status === 'success') {
+                    // Try getting User Info if token is valid
+                    try {
+                        const userData = await fb.getUserInfo();
+                        if (userData) status.userData = userData;
+                    } catch (e) { }
+                }
+
+                return status;
+            } catch (evalErr) {
+                return { status: 'error', message: 'Evaluation Error: ' + evalErr.toString() };
+            }
+
+        }, { apiSource, item });
+
+        if (loginStatus.status === 'success') {
+            onLog(`Đăng nhập thành công! Token: ${loginStatus.accessToken.substring(0, 15)}...`);
+            if (loginStatus.userData) {
+                console.log(loginStatus.userData)
+            }
+            // You might want to save this token or return it
+            return { status: 'SUCCESS', data: loginStatus };
+        } else if (loginStatus.status === 'not_login') {
+            onLog('Chưa đăng nhập thành công.');
+            throw new Error('NotLoggedIn');
+        } else if (loginStatus.status === '282') {
+            onLog('Checkpoint 282!');
+            throw new Error('Checkpoint 282');
+        } else if (loginStatus.status === '956') {
+            onLog('Checkpoint 956!');
+            throw new Error('Checkpoint 956');
+        } else {
+            onLog(`Trạng thái không xác định: ${loginStatus.message || loginStatus.status}`);
+        }
+
         await page.waitForTimeout(500000);
 
         return;

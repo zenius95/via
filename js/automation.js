@@ -14,7 +14,9 @@ async function launchBrowser(account, config) {
             '--disable-infobars',
             '--ignore-certificate-errors',
             '--ignore-certificate-errors-spki-list',
-            '--disable-blink-features=AutomationControlled'
+            '--disable-blink-features=AutomationControlled',
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins,site-per-process'
         ];
 
         // --- AUTO SPLIT WINDOW LOGIC ---
