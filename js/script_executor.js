@@ -1,4 +1,4 @@
-async function execute(page, config, onLog = () => { }) {
+async function execute(page, item, config, onLog = () => { }) {
     try {
         // Timeout handling for navigation
         const navTimeout = config.timeout && config.timeout > 0 ? config.timeout * 1000 : 30000;
@@ -7,7 +7,10 @@ async function execute(page, config, onLog = () => { }) {
         // Demo nav
         await page.goto('https://www.facebook.com/', { timeout: navTimeout, waitUntil: 'domcontentloaded' });
 
-        onLog('Đang kiểm tra tiêu đề...');
+        await page.locator('[name="email"]').fill(item.uid)
+        await page.locator('[name="pass"]').fill(item.password)
+
+        await page.locator('[name="login"]').click()
 
         // Wait? Or just perform check?
         // If config.timeout is set for the whole process, we might want to wait OR do specific actions.
@@ -17,7 +20,7 @@ async function execute(page, config, onLog = () => { }) {
         // Let's verify login
         // Check for specific element
 
-        await page.waitForTimeout(5000); // Wait 5s to see
+        await page.waitForTimeout(500000); // Wait 5s to see
 
         return;
 

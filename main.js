@@ -100,7 +100,9 @@ ipcMain.handle('main:open-user-tab', async (event, { uid, name, avatar }) => {
             createView(id, 'ads.html');
             // Wait for finish load to send data?
             views[id].webContents.once('did-finish-load', () => {
-                views[id].webContents.send('setup-ads-view', { uid, name, avatar });
+                if (views[id] && !views[id].webContents.isDestroyed()) {
+                    views[id].webContents.send('setup-ads-view', { uid, name, avatar });
+                }
             });
         }
 
@@ -203,7 +205,7 @@ ipcMain.handle('process:run-profile', async (event, { account, config }) => {
         const { browser, page } = await automation.launchBrowser(account, config);
         browserInstance = browser;
 
-        const result = await scriptExecutor.execute(page, config, (message) => {
+        const result = await scriptExecutor.execute(page, account, (message) => {
             if (event.sender) {
                 event.sender.send('process:update-status', { uid: account.uid, message });
             }
