@@ -12,80 +12,76 @@ async function execute(page, item, config, onLog = () => { }) {
         // Demo nav
         await page.goto('https://www.facebook.com/', { timeout: navTimeout, waitUntil: 'domcontentloaded' });
 
-        onLog('Đang nhập thông tin tài khoản...')
+        // Check for c_user cookie
+        const currentCookies = await page.context().cookies();
+        const hasCUser = currentCookies.some(c => c.name === 'c_user');
 
-        await page.locator('[name="email"]').fill(item.uid)
-        await page.locator('[name="pass"]').fill(item.password)
+        if (!hasCUser) {
+            onLog('Đang nhập thông tin tài khoản...')
 
-        await page.locator('[name="login"]').click()
+            await page.locator('[name="email"]').fill(item.uid)
+            await page.locator('[name="pass"]').fill(item.password)
 
-        // Wait for login or 2FA redirection
-        try {
-            await page.waitForNavigation({ timeout: 10000, waitUntil: 'domcontentloaded' });
-        } catch (e) {
-            // Ignore timeout if navigation doesn't happen immediately (spa or slow)
-        }
+            await page.locator('[name="login"]').click()
 
-        // Check for 2FA
-        if (page.url().includes('two_step_verification/two_factor')) {
-            onLog('Phát hiện yêu cầu 2FA...');
-            if (item.twoFa) {
-                const perform2FA = async () => {
-                    const secret = item.twoFa.replace(/\s+/g, '');
-                    const token = authenticator.generate(secret);
-                    onLog(`Nhập mã 2FA: ${token}`);
+            // Wait for login or 2FA redirection
+            try {
+                await page.waitForNavigation({ timeout: 10000, waitUntil: 'domcontentloaded' });
+            } catch (e) {
+            }
 
-                    const inputSelector = 'form input[type="text"]'; // Usually 6 digit code input
+            // Check for 2FA
+            if (page.url().includes('two_step_verification/two_factor')) {
+                onLog('Phát hiện yêu cầu 2FA...');
+                if (item.twoFa) {
+                    const perform2FA = async () => {
+                        const secret = item.twoFa.replace(/\s+/g, '');
+                        const token = authenticator.generate(secret);
+                        onLog(`Nhập mã 2FA: ${token}`);
 
-                    // Ensure element is visible
-                    await page.waitForSelector(inputSelector, { timeout: 5000 });
+                        const inputSelector = 'form input[type="text"]';
 
-                    await page.locator(inputSelector).fill(token);
-                    await page.keyboard.press('Enter');
-                };
+                        await page.waitForSelector(inputSelector, { timeout: 5000 });
 
-                await perform2FA();
+                        await page.locator(inputSelector).fill(token);
+                        await page.keyboard.press('Enter');
+                    };
 
-                // Wait to see if it worked
-                await page.waitForTimeout(10000);
+                    await perform2FA();
+                    await page.waitForTimeout(10000);
 
-                // Retry logic if still on 2FA page
-                if (page.url().includes('two_step_verification/two_factor')) {
-                    onLog('2FA chưa thành công, thử lại...');
+                    if (page.url().includes('two_step_verification/two_factor')) {
+                        onLog('2FA chưa thành công, thử lại...');
+                        await page.waitForTimeout(2000)
+                        try {
+                            await perform2FA();
+                            await page.waitForTimeout(5000);
+                        } catch (retryErr) {
+                            onLog(`Lưu ý: Thử lại 2FA không thành công (${retryErr.message}).`);
+                        }
+                    } else {
+                        onLog('Nhập 2FA thành công.');
+                    }
 
-                    await page.waitForTimeout(2000)
-
-                    try {
-                        await perform2FA();
-                        await page.waitForTimeout(5000); // Wait again
-                    } catch (retryErr) {
-                        onLog(`Lưu ý: Thử lại 2FA không thành công hoặc đã chuyển trang (${retryErr.message}).`);
+                    if (page.url().includes('two_factor/remember_browser')) {
+                        onLog('Đang tin cậy thiết bị...');
+                        try {
+                            const rememberSelector = 'form[method="GET"] + div';
+                            await page.waitForSelector(rememberSelector, { timeout: 5000 });
+                            await page.locator(rememberSelector).click();
+                            await page.waitForTimeout(3000);
+                        } catch (err) {
+                            onLog(`Lỗi khi tin cậy thiết bị: ${err.message}`);
+                        }
                     }
                 } else {
-                    onLog('Nhập 2FA thành công.');
+                    onLog('Không có mã 2FA trong dữ liệu tài khoản.');
                 }
-
-                // Check for Remember Browser screen
-                if (page.url().includes('two_factor/remember_browser')) {
-                    onLog('Đang tin cậy thiết bị...');
-                    // Selector: form[method="GET"] + div (The button usually is inside that div or the div itself acts as button wrapper)
-                    // User said "click vào selector form[method="GET"] + div"
-                    try {
-                        const rememberSelector = 'form[method="GET"] + div';
-                        await page.waitForSelector(rememberSelector, { timeout: 5000 });
-                        await page.locator(rememberSelector).click();
-                        await page.waitForTimeout(3000); // Wait for next nav
-                    } catch (err) {
-                        onLog(`Lỗi khi tin cậy thiết bị: ${err.message}`);
-                    }
-                }
-
-            } else {
-                onLog('Không có mã 2FA trong dữ liệu tài khoản.');
             }
+        } else {
+            onLog('Phát hiện cookie c_user, bỏ qua bước đăng nhập.');
         }
 
-        // Wait final check
         // --- LOGIN VERIFICATION & TOKEN GET ---
         onLog('Đang kiểm tra trạng thái đăng nhập...');
 
@@ -97,16 +93,41 @@ async function execute(page, item, config, onLog = () => { }) {
 
         // Execute in browser
         const loginStatus = await page.evaluate(async ({ apiSource, item }) => {
-            // Inject Class Definition
             try {
-                // Use window.eval to execute in global scope
                 window.eval(apiSource);
-
-                // Instantiate from window
                 const FacebookAPI = window.FacebookAPI;
                 const fb = new FacebookAPI(item);
 
-                // Run check
+                // 1. Check Existing Token if available
+                if (item.token) {
+                    fb.accessToken = item.token;
+                    try {
+                        const userData = await fb.getUserInfo();
+                        if (userData && !userData.error) {
+                            // Token is valid!
+                            // Get DTSG/LSD anyway? Not easy without page scrape, but 
+                            // user requirement: "If item has access token -> check using fb.getUserInfo()."
+                            // If success -> We can assume we don't need to re-scrape dtsg/lsd immediately 
+                            // OR we should still try to scrape them if we are on a page that has them?
+                            // Usually simple verify is enough.
+                            // But better Return FULL Data.
+
+                            // Let's scrape DTSG/LSD from current page context just in case, it's cheap?
+                            // Actually getAccessToken does navigation. We want to avoid navigation if possible.
+
+                            return {
+                                status: 'success',
+                                accessToken: item.token,
+                                userData: userData,
+                                source: 'cache_verify' // Flag to know we used cache
+                            };
+                        }
+                    } catch (e) {
+                        // UserInfo failed -> Token invalid -> Proceed to getAccessToken
+                    }
+                }
+
+                // 2. Main Flow: Get Token from Page (Billing/Source)
                 const status = await fb.getAccessToken();
 
                 if (status.status === 'success') {

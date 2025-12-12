@@ -174,8 +174,8 @@ const columnDefs = [
 
             let badgeClass = 'badge-base '; let label = status;
             if (status === 'LIVE') { badgeClass += 'badge-success'; label = 'HOẠT ĐỘNG'; }
-            else if (status === 'DIE') { badgeClass += 'badge-danger'; label = 'VÔ HIỆU'; }
-            else if (status === 'CHECKPOINT') { badgeClass += 'badge-warning'; label = 'CHECKPOINT'; }
+            else if (status === 'Checkpoint 282') { badgeClass += 'badge-danger'; label = 'CP 282'; }
+            else if (status === 'Checkpoint 956') { badgeClass += 'badge-danger'; label = 'CP 956'; }
             else if (status === 'UNCHECKED') { badgeClass += 'badge-neutral'; label = 'Chưa check'; }
 
             return `<div class="h-full flex items-center"><span class="${badgeClass}"><span class="dot-pulse"></span>${label}</span></div>`;
@@ -251,6 +251,7 @@ const columnDefs = [
     { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
+    { headerName: "Token", field: "token", width: 150, colId: 'token', cellRenderer: textCellRenderer },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',

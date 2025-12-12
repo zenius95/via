@@ -709,6 +709,27 @@ body {
     box-shadow: 0 0 5px #fbbf24;
 }
 
+.bg-282 {
+    background-color: #fbbf24;
+    box-shadow: 0 0 5px #fbbf24;
+}
+
+.bg-956 {
+    background-color: #a855f7;
+    box-shadow: 0 0 5px #a855f7;
+}
+
+.badge-purple {
+    background-color: rgba(168, 85, 247, 0.1);
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+.badge-purple .dot-pulse {
+    background-color: #c084fc;
+    box-shadow: 0 0 5px #c084fc;
+}
+
 /* --- GLASS CONTEXT MENU --- */
 #context-menu,
 #column-menu {

@@ -872,11 +872,12 @@ function colMenuAction(action) {
 }
 
 // --- FILTER DROPDOWN LOGIC ---
-let selectedStatuses = new Set(['LIVE', 'DIE', 'CHECKPOINT', 'UNCHECKED']); // Mặc định chọn tất
+// --- FILTER DROPDOWN LOGIC ---
+let selectedStatuses = new Set(['LIVE', 'Checkpoint 282', 'Checkpoint 956', 'UNCHECKED']); // Mặc định chọn tất
 const statusMap = {
     'LIVE': { label: 'Hoạt động (Live)', colorClass: 'bg-live', textClass: 'text-emerald-400' },
-    'DIE': { label: 'Vô hiệu (Die)', colorClass: 'bg-die', textClass: 'text-red-400' },
-    'CHECKPOINT': { label: 'Checkpoint', colorClass: 'bg-checkpoint', textClass: 'text-amber-400' },
+    'Checkpoint 282': { label: 'Checkpoint 282', colorClass: 'bg-die', textClass: 'text-red-400' },
+    'Checkpoint 956': { label: 'Checkpoint 956', colorClass: 'bg-die', textClass: 'text-red-400' },
     'UNCHECKED': { label: 'Chưa check', colorClass: 'bg-slate-500', textClass: 'text-slate-400' }
 };
 
@@ -906,7 +907,7 @@ document.addEventListener('click', function (e) {
 });
 
 function calculateStatusCounts() {
-    const counts = { 'LIVE': 0, 'DIE': 0, 'CHECKPOINT': 0, 'UNCHECKED': 0 };
+    const counts = { 'LIVE': 0, 'Checkpoint 282': 0, 'Checkpoint 956': 0, 'UNCHECKED': 0 };
     if (!gridApi) return counts;
     gridApi.forEachNode(node => {
         if (node.data && !node.data.isLoading && counts.hasOwnProperty(node.data.status)) {

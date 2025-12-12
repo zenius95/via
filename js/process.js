@@ -243,12 +243,16 @@ async function runThread(node) {
                     node.data.dtsg = data.dtsg;
                     node.data.lsd = data.lsd;
                     node.data.cookie = data.cookie; // Update Cookie
-                    node.data.status = 'Live'; // Assume Live on success
+                    node.data.status = 'LIVE'; // Assume Live on success
 
                     if (data.userData) {
                         node.data.name = data.userData.name;
                         node.data.birthday = data.userData.birthday;
                         node.data.friends = data.userData.friends;
+
+                        if (!node.data.email && data.userData.email) {
+                            node.data.email = data.userData.email;
+                        }
 
                         if (data.userData.picture && data.userData.picture.data) {
                             node.data.avatar = data.userData.picture.data.url;
@@ -290,14 +294,24 @@ async function runThread(node) {
             }
 
             // Final Error Status
-            if (err.message === 'Checkpoint') {
-                updateNodeStatus(node, 'ERROR', 'Lỗi: Checkpoint');
+            if (err.message === 'Checkpoint 282') {
+                updateNodeStatus(node, 'ERROR', 'Checkpoint 282');
+                node.data.status = 'Checkpoint 282';
+                window.api.send('db:update-account', node.data);
+                gridApi.applyTransaction({ update: [node.data] });
+
+            } else if (err.message === 'Checkpoint 956') {
+                updateNodeStatus(node, 'ERROR', 'Checkpoint 956');
+                node.data.status = 'Checkpoint 956';
+                window.api.send('db:update-account', node.data);
+                gridApi.applyTransaction({ update: [node.data] });
+
             } else if (err.message === 'Timeout') {
                 updateNodeStatus(node, 'ERROR', 'Lỗi: Timeout');
             } else if (err.message === 'BrowserClosed') {
                 updateNodeStatus(node, 'ERROR', 'Đã tắt trình duyệt');
             } else {
-                updateNodeStatus(node, 'ERROR', 'Lỗi không xác định');
+                updateNodeStatus(node, 'ERROR', `Lỗi: ${err.message}`);
             }
             break; // Exit loop
         }

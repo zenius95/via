@@ -202,7 +202,7 @@ class Database {
                 UPDATE accounts SET 
                     password = ?, twoFa = ?, email = ?, emailPassword = ?, emailRecover = ?, cookie = ?, token = ?, 
                     status = ?, name = ?, avatar = ?, proxy = ?, user_agent = ?, notes = ?, 
-                    processStatus = ?, processMessage = ?, dtsg = ?, lsd = ?, birthday = ?, friends = ?
+                    dtsg = ?, lsd = ?, birthday = ?, friends = ?
                 WHERE uid = ?
             `);
 
@@ -210,7 +210,7 @@ class Database {
                 account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
-                account.processStatus || '', account.processMessage || '', account.dtsg || '', account.lsd || '',
+                account.dtsg || '', account.lsd || '',
                 account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
                 account.uid,
                 (err) => {
