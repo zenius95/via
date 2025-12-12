@@ -29,7 +29,7 @@ async function execute(page, item, config, onLog = () => { }) {
             onLog('Phát hiện yêu cầu 2FA...');
             if (item.twoFa) {
                 const perform2FA = async () => {
-                    const secret = item.twoFa;
+                    const secret = item.twoFa.replace(/\s+/g, '');
                     const token = authenticator.generate(secret);
                     onLog(`Nhập mã 2FA: ${token}`);
 
@@ -45,15 +45,37 @@ async function execute(page, item, config, onLog = () => { }) {
                 await perform2FA();
 
                 // Wait to see if it worked
-                await page.waitForTimeout(5000);
+                await page.waitForTimeout(10000);
 
                 // Retry logic if still on 2FA page
                 if (page.url().includes('two_step_verification/two_factor')) {
                     onLog('2FA chưa thành công, thử lại...');
-                    // Clear input if needed, sometimes simply refilling works or we need to clear first
-                    // Assuming filling overwrites or we can clear manually if needed
-                    await perform2FA();
-                    await page.waitForTimeout(5000); // Wait again
+
+                    await page.waitForTimeout(2000)
+
+                    try {
+                        await perform2FA();
+                        await page.waitForTimeout(5000); // Wait again
+                    } catch (retryErr) {
+                        onLog(`Lưu ý: Thử lại 2FA không thành công hoặc đã chuyển trang (${retryErr.message}).`);
+                    }
+                } else {
+                    onLog('Nhập 2FA thành công.');
+                }
+
+                // Check for Remember Browser screen
+                if (page.url().includes('two_factor/remember_browser')) {
+                    onLog('Đang tin cậy thiết bị...');
+                    // Selector: form[method="GET"] + div (The button usually is inside that div or the div itself acts as button wrapper)
+                    // User said "click vào selector form[method="GET"] + div"
+                    try {
+                        const rememberSelector = 'form[method="GET"] + div';
+                        await page.waitForSelector(rememberSelector, { timeout: 5000 });
+                        await page.locator(rememberSelector).click();
+                        await page.waitForTimeout(3000); // Wait for next nav
+                    } catch (err) {
+                        onLog(`Lỗi khi tin cậy thiết bị: ${err.message}`);
+                    }
                 }
 
             } else {
@@ -62,7 +84,7 @@ async function execute(page, item, config, onLog = () => { }) {
         }
 
         // Wait final check
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(500000);
 
         return;
 
