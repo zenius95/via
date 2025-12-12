@@ -205,7 +205,7 @@ ipcMain.handle('process:run-profile', async (event, { account, config }) => {
         const { browser, page } = await automation.launchBrowser(account, config);
         browserInstance = browser;
 
-        const result = await scriptExecutor.execute(page, account, (message) => {
+        const result = await scriptExecutor.execute(page, account, config, (message) => {
             if (event.sender) {
                 event.sender.send('process:update-status', { uid: account.uid, message });
             }
