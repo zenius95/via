@@ -912,11 +912,23 @@ function colMenuAction(action) {
 // --- FILTER DROPDOWN LOGIC ---
 // --- FILTER DROPDOWN LOGIC ---
 let selectedStatuses = new Set(['LIVE', 'Checkpoint 282', 'Checkpoint 956', 'UNCHECKED']); // Mặc định chọn tất
-const statusMap = {
-    'LIVE': { label: 'Hoạt động (Live)', colorClass: 'bg-live', textClass: 'text-emerald-400' },
-    'Checkpoint 282': { label: 'Checkpoint 282', colorClass: 'bg-die', textClass: 'text-red-400' },
-    'Checkpoint 956': { label: 'Checkpoint 956', colorClass: 'bg-die', textClass: 'text-red-400' },
+window.selectedStatuses = selectedStatuses; // Expose for grid filtering
+let statusMap = {
+    'LIVE': { label: 'Hoạt động (Live)', colorClass: 'bg-emerald-500', textClass: 'text-emerald-400' },
+    'Checkpoint 282': { label: 'Checkpoint 282', colorClass: 'bg-red-500', textClass: 'text-red-400' },
+    'Checkpoint 956': { label: 'Checkpoint 956', colorClass: 'bg-red-500', textClass: 'text-red-400' },
     'UNCHECKED': { label: 'Chưa check', colorClass: 'bg-slate-500', textClass: 'text-slate-400' }
+};
+
+window.setStatusMap = function (newMap, defaultKeys) {
+    statusMap = newMap;
+    if (defaultKeys) {
+        selectedStatuses = new Set(defaultKeys);
+    } else {
+        // Default select all
+        selectedStatuses = new Set(Object.keys(newMap));
+    }
+    window.selectedStatuses = selectedStatuses; // Update global reference
 };
 
 function toggleFilterDropdown() {

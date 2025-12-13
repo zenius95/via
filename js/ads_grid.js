@@ -455,18 +455,56 @@ const gridOptions = {
         restoreProcessColDef();
     },
     isExternalFilterPresent: () => {
-        // Simplified for now
-        return false;
+        if (typeof window.selectedStatuses === 'undefined') return false;
+        // If setStatusMap hasn't been called yet or size mismatch, assume no filter or show all
+        // Ideally check against total keys.
+        // For now, if size < total potential statuses (10), we filter? 
+        // Better: assume if we have a set, we filter. But if it contains ALL, we might return false for performance.
+        // Let's just return true if it's not empty, and filter logic handles "all selected".
+        // Actually, returning false when all are selected is better.
+        // But we need the map keys to know what is "all".
+        // We'll rely on the fact that doesExternalFilterPass is cheap enough.
+        return true;
     },
     doesExternalFilterPass: (node) => {
-        return true;
+        if (!node.data || !window.selectedStatuses) return true;
+        return window.selectedStatuses.has(String(node.data.status));
     }
 };
 
 // --- INITIALIZATION ---
 let gridApi;
 
+const AD_STATUS_MAP = {
+    '1': { label: 'Hoạt động', colorClass: 'bg-emerald-500', textClass: 'text-emerald-400' },
+    '2': { label: 'Vô hiệu hóa', colorClass: 'bg-red-500', textClass: 'text-red-400' },
+    '3': { label: 'Cần thanh toán', colorClass: 'bg-amber-500', textClass: 'text-amber-400' },
+    '4': { label: 'Đang kháng 3 dòng', colorClass: 'bg-amber-500', textClass: 'text-amber-400' },
+    '5': { label: 'Die 3 dòng', colorClass: 'bg-red-500', textClass: 'text-red-400' },
+    '6': { label: 'Die XMDT', colorClass: 'bg-red-500', textClass: 'text-red-400' },
+    '7': { label: 'Die vĩnh viễn', colorClass: 'bg-red-500', textClass: 'text-red-400' },
+    '100': { label: 'Đóng', colorClass: 'bg-blue-500', textClass: 'text-blue-400' },
+    '101': { label: 'Khác', colorClass: 'bg-blue-500', textClass: 'text-blue-400' },
+    '999': { label: 'Hold', colorClass: 'bg-slate-500', textClass: 'text-slate-400' }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup Filter for Ads
+    if (window.setStatusMap) {
+        window.setStatusMap(AD_STATUS_MAP);
+    }
+
+    // Also update `window.selectedStatuses` reference if `setStatusMap` recreated it? 
+    // My ui.js implementation re-assigns the variable `selectedStatuses`.
+    // But `window.selectedStatuses` holds the reference to the *initial* object if I defined it as `window.selectedStatuses = selectedStatuses`.
+    // If `setStatusMap` does `selectedStatuses = new Set(...)`, then `window.selectedStatuses` still points to the OLD Set (or undefined if not updated).
+    // Accessing `selectedStatuses` inside `ui.js` works for `ui.js` functions.
+    // But accessing `window.selectedStatuses` from `ads_grid.js` might see the old one if `ui.js` logic isn't careful.
+
+    // FIX: Update `setStatusMap` in `ui.js` to also update `window.selectedStatuses`. 
+    // OR: `ads_grid.js` should not rely on `window.selectedStatuses` being static. 
+    // It should access it dynamically.
+
     const gridDiv = document.querySelector('#myGrid');
     if (gridDiv) {
         gridApi = agGrid.createGrid(gridDiv, gridOptions);
