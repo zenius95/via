@@ -33,6 +33,7 @@ const elFbCookie = document.getElementById('input-fb-cookie');
 const elFbFriends = document.getElementById('input-fb-friends');
 const elFbInfo = document.getElementById('input-fb-info');
 const elFbQuality = document.getElementById('input-fb-quality');
+const elFbAds = document.getElementById('input-fb-ads');
 
 // Data
 let currentSettings = {};
@@ -79,6 +80,7 @@ async function loadSettings() {
         if (elFbFriends) elFbFriends.checked = currentSettings.fbGetFriends === 'true';
         if (elFbInfo) elFbInfo.checked = currentSettings.fbGetInfo === 'true';
         if (elFbQuality) elFbQuality.checked = currentSettings.fbGetQuality === 'true';
+        if (elFbAds) elFbAds.checked = currentSettings.fbGetAdAccounts === 'true';
 
 
         toggleLayoutConfig();
@@ -117,7 +119,8 @@ const saveSettings = debounce(async () => {
         fbLoginCookie: elFbCookie ? String(elFbCookie.checked) : 'false',
         fbGetFriends: elFbFriends ? String(elFbFriends.checked) : 'false',
         fbGetInfo: elFbInfo ? String(elFbInfo.checked) : 'false',
-        fbGetQuality: elFbQuality ? String(elFbQuality.checked) : 'false'
+        fbGetQuality: elFbQuality ? String(elFbQuality.checked) : 'false',
+        fbGetAdAccounts: elFbAds ? String(elFbAds.checked) : 'false'
     };
 
     try {
@@ -135,7 +138,7 @@ function setupListeners() {
         if (el) el.addEventListener('input', saveSettings);
     });
 
-    const checks = [elHeadless, elFbCookie, elFbFriends, elFbInfo, elFbQuality];
+    const checks = [elHeadless, elFbCookie, elFbFriends, elFbInfo, elFbQuality, elFbAds];
     checks.forEach(el => {
         if (el) el.addEventListener('change', saveSettings);
     });

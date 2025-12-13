@@ -86,6 +86,7 @@ async function startProcess(targetNodes = null, configOverrides = {}) {
             PROCESS_CONFIG.fbGetFriends = settings.fbGetFriends;
             PROCESS_CONFIG.fbGetInfo = settings.fbGetInfo;
             PROCESS_CONFIG.fbGetQuality = settings.fbGetQuality;
+            PROCESS_CONFIG.fbGetAdAccounts = settings.fbGetAdAccounts;
         }
 
         if (!PROCESS_CONFIG.chromePath) {

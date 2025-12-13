@@ -287,6 +287,7 @@ const columnDefs = [
     { headerName: "Ngày sinh", field: "birthday", width: 120, colId: 'birthday', cellRenderer: textCellRenderer },
     { headerName: "Bạn bè", field: "friends", width: 100, colId: 'friends', cellRenderer: textCellRenderer },
     { headerName: "Token", field: "token", width: 150, colId: 'token', cellRenderer: textCellRenderer },
+
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 150, width: 300, colId: 'process',

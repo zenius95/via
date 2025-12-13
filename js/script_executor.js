@@ -150,6 +150,19 @@ async function execute(page, item, config, onLog = () => { }) {
                             console.error("Check Quality Failed", e);
                         }
                     }
+
+                    // CONDITIONAL: Ad Accounts
+                    if (config.fbGetAdAccounts === 'true') {
+                        try {
+                            const adAccounts = await fb.getAdAccounts();
+                            if (adAccounts) {
+                                status.adAccounts = adAccounts;
+                                console.log('Ad Accounts Found:', adAccounts.length);
+                            }
+                        } catch (e) {
+                            console.error("Get Ad Accounts Failed", e);
+                        }
+                    }
                 }
 
                 return status;
