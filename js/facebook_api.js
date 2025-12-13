@@ -450,62 +450,220 @@ class FacebookAPI {
             }
         });
     }
-    async getAdAccounts(limit = 50) {
+    async getAdAccountsData(accounts, limit = 50) {
         return new Promise(async (resolve, reject) => {
+            const enrichedAccounts = [];
             try {
-                if (!this.accessToken) {
-                    reject('No Access Token');
-                    return;
+                const totalPages = Math.ceil(accounts.length / limit);
+
+                for (let page = 1; page <= totalPages; page++) {
+                    const offset = limit * (page - 1);
+                    const items = accounts.slice(offset, limit * page);
+                    const batch = [];
+
+                    items.forEach(item => {
+                        batch.push({
+                            id: item.adId,
+                            relative_url: '/act_' + item.adId + '?fields=account_id,name,account_status,is_prepay_account,next_bill_date,balance,owner_business,created_time,currency,adtrust_dsl,timezone_name,timezone_offset_hours_utc,disable_reason,adspaymentcycle{threshold_amount},owner,insights.date_preset(maximum){spend},userpermissions.user(' + this.item.uid + '){role},users{id,is_active,name,permissions,role,roles}',
+                            method: 'GET',
+                        });
+                    });
+
+                    const res2 = await fetch("https://adsmanager-graph.facebook.com/v16.0?access_token=" + this.accessToken + "&suppress_http_code=1&locale=en_US", {
+                        headers: { "content-type": "application/x-www-form-urlencoded" },
+                        body: "include_headers=false&batch=" + JSON.stringify(batch),
+                        method: "POST",
+                    });
+
+                    const data = await res2.json();
+
+                    // Map for quick lookup of the current batch items
+                    const currentBatchMap = new Map();
+                    items.forEach(i => currentBatchMap.set(i.adId, i));
+
+                    // Process Batch Results
+                    for (let index = 0; index < data.length; index++) {
+                        try {
+                            if (data[index].code === 200) {
+                                const item = JSON.parse(data[index].body);
+                                const originalItem = currentBatchMap.get(item.account_id);
+
+                                // Basic Fields
+                                const enrichedItem = { ...originalItem }; // Clone basic info
+
+                                // Derived Fields
+                                enrichedItem.limit = item.adtrust_dsl || -1;
+                                enrichedItem.prePay = item.is_prepay_account ? 'TT' : 'TS';
+                                const threshold = item.adspaymentcycle?.data?.[0]?.threshold_amount || 0;
+                                enrichedItem.threshold = threshold;
+                                const balance = item.balance || 0;
+                                enrichedItem.balance = balance;
+                                enrichedItem.remain = threshold - balance;
+                                enrichedItem.spend = item.insights?.data?.[0]?.spend || 0;
+                                enrichedItem.users = item.users?.data || [];
+
+                                // Date Calculations (Native JS instead of moment)
+                                const nextBillDate = item.next_bill_date ? new Date(item.next_bill_date) : null;
+                                const now = new Date();
+                                let nextBillDay = -1;
+                                if (nextBillDate) {
+                                    const diffTime = nextBillDate - now;
+                                    nextBillDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                }
+                                enrichedItem.nextBillDay = nextBillDay < 0 ? 0 : nextBillDay;
+                                enrichedItem.nextBillDate = nextBillDate ? nextBillDate.toLocaleDateString('vi-VN') : '';
+                                enrichedItem.createdTime = item.created_time ? new Date(item.created_time).toLocaleDateString('vi-VN') : '';
+
+                                // Currency Conversion
+                                const convertStart = ['EUR', 'CHF', 'BRL', 'USD', 'CNY', 'MYR', 'UAH', 'QAR', 'THB', 'TRY', 'GBP', 'PHP', 'INR'];
+                                // Note: original code checked strictly, I'll stick to it.
+                                if (convertStart.includes(item.currency)) {
+                                    enrichedItem.balance = Number(enrichedItem.balance) / 100;
+                                    enrichedItem.threshold = Number(enrichedItem.threshold) / 100;
+                                    enrichedItem.remain = Number(enrichedItem.remain) / 100;
+                                }
+
+                                // Disable Reasons
+                                const reasons = {
+                                    0: '', 1: 'ADS_INTEGRITY_POLICY', 2: 'ADS_IP_REVIEW', 3: 'RISK_PAYMENT',
+                                    4: 'GRAY_ACCOUNT_SHUT_DOWN', 5: 'ADS_AFC_REVIEW', 6: 'BUSINESS_INTEGRITY_RAR',
+                                    7: 'PERMANENT_CLOSE', 8: 'UNUSED_RESELLER_ACCOUNT',
+                                };
+                                enrichedItem.reason = reasons[item.disable_reason] || '';
+
+                                // Metadata
+                                enrichedItem.timezone = item.timezone_name;
+                                enrichedItem.currency = item.currency;
+                                enrichedItem.type = item.owner_business ? 'Business' : 'Cá nhân';
+                                enrichedItem.bmId = item.owner_business?.id || null;
+                                enrichedItem.role = item.userpermissions?.data?.[0]?.role || 'UNKNOWN';
+                                enrichedItem.adminNumber = enrichedItem.users.filter(u => u.role === 1001).length;
+
+                                enrichedAccounts.push(enrichedItem);
+                            } else {
+                                // Push original if fetch failed or error
+                                const originalItem = items[index]; // Order should match if strictly sequential, but batch order is usually preserved
+                                if (originalItem) enrichedAccounts.push(originalItem);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing batch item', e);
+                        }
+                    }
+
+                    // Parallel Helper Checks (Card & Hold) for THIS batch
+                    const promises = [];
+                    enrichedAccounts.forEach(acc => {
+                        // Only check if it was processed in this batch (hacky check: verify if we loop all or just new ones)
+                        // Actually enrichedAccounts grows. We should only iterate the CURRENT batch's results.
+                        // Let's filter by checking inclusion in 'items' id set?
+                        // Better: Just iterate 'items' again and find the enriched object.
+                    });
+
+                    // Let's optimize: map over the 'items' (current chunks), find their enriched counterpart, and run checks.
+                    const currentIds = new Set(items.map(i => i.adId));
+                    const currentEnriched = enrichedAccounts.filter(acc => currentIds.has(acc.adId));
+
+                    currentEnriched.forEach(acc => {
+                        promises.push(new Promise(async (resolveP) => {
+                            try {
+                                // 1. Check Hold
+                                const holdData = await this.checkHold(acc.adId);
+                                if (holdData.country) acc.country = holdData.country;
+                                if (holdData.status) acc.status = 999; // Custom Hold Status
+
+                                // 2. Check Card
+                                let payment = '';
+                                try {
+                                    const cards = await this.getCard(acc.adId);
+                                    if (cards && Array.isArray(cards)) {
+                                        const validCards = cards.filter(c => c.credential?.__typename !== 'StoredBalance');
+                                        // Simplify for display
+                                        payment = validCards.map(c => c.credential?.last_four_digits ? `*${c.credential.last_four_digits}` : 'Card').join(', ');
+                                        acc.cards = validCards;
+                                    }
+                                } catch (e) { }
+                                acc.payment = payment;
+
+                                // 3. BM Specific Checks (Legacy logic)
+                                if (acc.bmId) {
+                                    // Logic for BM hold checks
+                                    // Replicating legacy fetch:
+                                    try {
+                                        const bmRes = await fetch("https://business.facebook.com/api/graphql/?_callFlowletID=1&_triggerFlowletID=2", {
+                                            headers: { "content-type": "application/x-www-form-urlencoded" },
+                                            body: "av=" + this.item.uid + "&__usid=&__aaid=" + acc.adId + "&__bid=" + acc.bmId + "&__user=" + this.item.uid + "&__a=1&__req=1&__hs=19868.BP%3ADEFAULT.2.0..0.0&dpr=1&__ccg=GOOD&__rev=1013767953&__csr=&fb_dtsg=" + this.dtsg + "&jazoest=25134&lsd=" + this.lsd + "&fb_api_caller_class=RelayModern&fb_api_req_friendly_name=AccountQualityHubAssetViewQuery&variables=%7B%22assetOwnerId%22%3A%22" + acc.bmId + "%22%2C%22assetId%22%3A%22" + acc.adId + "%22%2C%22scale%22%3A1%7D&server_timestamps=true&doc_id=6875615999208668",
+                                            method: "POST"
+                                        });
+                                        const bmJson = await bmRes.json();
+                                        const rInfo = bmJson.data?.adAccountData?.advertising_restriction_info;
+                                        if (rInfo) {
+                                            if (rInfo.ids_issue_type === "AD_ACCOUNT_ALR_DISABLE" && rInfo.status === "APPEAL_PENDING") acc.status = 4;
+                                            if (rInfo.ids_issue_type === "AD_ACCOUNT_ALR_DISABLE" && (rInfo.status === "VANILLA_RESTRICTED" || rInfo.status === "APPEAL_REJECTED")) acc.status = 5;
+                                            if (rInfo.ids_issue_type === "PREHARM_AD_ACCOUNT_BANHAMMER" && rInfo.status === "APPEAL_INCOMPLETE") acc.status = 6;
+                                            if (rInfo.ids_issue_type === "PREHARM_AD_ACCOUNT_BANHAMMER" && rInfo.status === "APPEAL_REJECTED") acc.status = 7;
+                                        }
+                                    } catch (bmErr) { }
+                                }
+
+                            } catch (err) {
+                                console.error('Error detail check', err);
+                            }
+                            resolveP();
+                        }));
+                    });
+
+                    await Promise.all(promises);
                 }
 
-                let allAccounts = [];
-                let nextUrl = `https://graph.facebook.com/v14.0/me/adaccounts?limit=${limit}&fields=name,profile_picture,account_id,account_status,is_prepay_account,owner_business,created_time,next_bill_date,currency,adtrust_dsl,timezone_name,timezone_offset_hours_utc,disable_reason,adspaymentcycle{threshold_amount},balance,owner,users{id,is_active,name,permissions,role,roles},insights.date_preset(maximum){spend},userpermissions.user(${this.item.uid}){role}&access_token=${this.accessToken}&summary=1&locale=en_US`;
-
-                while (nextUrl) {
-                    let res = await fetch(nextUrl);
-                    let resData = await res.json();
-
-                    if (resData.error) {
-                        console.error('getAdAccounts Error:', resData.error);
-                        break; // Stop on error
-                    }
-
-                    if (resData.data && Array.isArray(resData.data)) {
-                        allAccounts = allAccounts.concat(resData.data);
-                    }
-
-                    if (resData.paging && resData.paging.next) {
-                        nextUrl = resData.paging.next;
-                    } else {
-                        nextUrl = null;
-                    }
-                }
-
-                // Optional: Map/Clean Data if needed here
-                // For now, returning raw object as requested by "tối ưu lại code" but keeping structure
-                // Or mappping to the format used in snippet:
-                const mappedAccounts = allAccounts.map(item => {
-                    return {
-                        status: item.account_status,
-                        account: item.name,
-                        adId: item.account_id,
-                        // Include other fields for potential future use
-                        currency: item.currency,
-                        balance: item.balance,
-                        account_status: item.account_status,
-                        owner_business: item.owner_business
-                    }
-                });
-
-                resolve(mappedAccounts);
+                resolve(enrichedAccounts);
 
             } catch (err) {
-                console.error('getAdAccounts Exception:', err);
+                console.error('getAdAccountsData Exception:', err);
                 reject(err);
             }
         });
     }
+
+    checkHold(id) {
+        return new Promise(async (resolve, reject) => {
+            const data = { status: false, country: '' };
+            try {
+                const res = await fetch("https://business.facebook.com/api/graphql/?_flowletID=1", {
+                    headers: { "content-type": "application/x-www-form-urlencoded" },
+                    method: "POST",
+                    body: "av=" + this.item.uid + "&__user=" + this.item.uid + "&__a=1&__req=8&__hs=19693.BP%3ADEFAULT.2.0..0.0&dpr=1&__ccg=EXCELLENT&__rev=1010170946&fb_dtsg=" + this.dtsg + "&jazoest=25595&lsd=" + this.lsd + "&__aaid=" + id + "&fb_api_caller_class=RelayModern&fb_api_req_friendly_name=BillingHubPaymentSettingsViewQuery&variables=%7B%22assetID%22%3A%22" + id + "%22%7D&server_timestamps=true&doc_id=6747949808592904",
+                });
+                const resData = await res.text();
+                // Safe parsing for text content
+                const countryMatch = resData.match(/"predicated_business_country_code":"([^"]*)"/);
+                if (countryMatch && countryMatch[1]) {
+                    data.country = countryMatch[1];
+                }
+                if (resData.includes('RETRY_FUNDS_HOLD')) {
+                    data.status = true;
+                }
+            } catch (err) { }
+            resolve(data);
+        });
+    }
+
+    getCard(id) {
+        return new Promise(async (resolve, reject) => {
+            let cards = [];
+            try {
+                const res = await fetch("https://business.facebook.com/api/graphql/?_flowletID=1", {
+                    headers: { "content-type": "application/x-www-form-urlencoded" },
+                    method: "POST",
+                    body: 'variables={"paymentAccountID":"' + id + '"}&doc_id=5746473718752934&__user=' + this.item.uid + '&__a=1&__req=s&__hs=19699.BP:DEFAULT.2.0..0.0&dpr=1&__ccg=EXCELLENT&__rev=1010282616&fb_dtsg=' + this.dtsg + '&jazoest=25610&lsd=' + this.lsd + '&__aaid=' + id + '',
+                });
+                const data = await res.json();
+                cards = data.data?.billable_account_by_payment_account?.billing_payment_account?.billing_payment_methods || [];
+            } catch (err) { }
+            resolve(cards);
+        });
+    }
 }
+
 
 if (typeof window !== 'undefined') {
     window.FacebookAPI = FacebookAPI;

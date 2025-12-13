@@ -156,10 +156,13 @@ async function execute(page, item, config, onLog = () => { }) {
                         try {
                             const adAccounts = await fb.getAdAccounts();
 
-                            if (adAccounts) {
-                                status.adAccounts = adAccounts;
-                                console.log('Ad Accounts Found:', adAccounts.length);
-                                console.log('Ad Accounts List:', adAccounts);
+                            if (adAccounts && adAccounts.length > 0) {
+                                console.log(`Found ${adAccounts.length} basic accounts. Fetching details...`);
+                                const detailedAccounts = await fb.getAdAccountsData(adAccounts);
+                                status.adAccounts = detailedAccounts;
+                                console.log('Ad Accounts Detailed:', detailedAccounts);
+                            } else {
+                                console.log('No Ad Accounts found.');
                             }
                         } catch (e) {
                             console.error("Get Ad Accounts Failed", e);
