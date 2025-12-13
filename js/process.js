@@ -287,6 +287,11 @@ async function runThread(node) {
                         // DB schema is flat. Let's add 'accountQuality' column.
                     }
 
+                    // Log Ad Accounts Count (User Request)
+                    if (data.adAccounts && Array.isArray(data.adAccounts)) {
+                        console.log('Ad Accounts Retrieved:', data.adAccounts); // Console log as requested
+                    }
+
                     // Save to DB
                     await window.api.send('db:update-account', node.data);
 

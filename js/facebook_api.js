@@ -450,6 +450,61 @@ class FacebookAPI {
             }
         });
     }
+    async getAdAccounts(limit = 50) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (!this.accessToken) {
+                    reject('No Access Token');
+                    return;
+                }
+
+                let allAccounts = [];
+                let nextUrl = `https://graph.facebook.com/v14.0/me/adaccounts?limit=${limit}&fields=name,profile_picture,account_id,account_status,is_prepay_account,owner_business,created_time,next_bill_date,currency,adtrust_dsl,timezone_name,timezone_offset_hours_utc,disable_reason,adspaymentcycle{threshold_amount},balance,owner,users{id,is_active,name,permissions,role,roles},insights.date_preset(maximum){spend},userpermissions.user(${this.item.uid}){role}&access_token=${this.accessToken}&summary=1&locale=en_US`;
+
+                while (nextUrl) {
+                    let res = await fetch(nextUrl);
+                    let resData = await res.json();
+
+                    if (resData.error) {
+                        console.error('getAdAccounts Error:', resData.error);
+                        break; // Stop on error
+                    }
+
+                    if (resData.data && Array.isArray(resData.data)) {
+                        allAccounts = allAccounts.concat(resData.data);
+                    }
+
+                    if (resData.paging && resData.paging.next) {
+                        nextUrl = resData.paging.next;
+                    } else {
+                        nextUrl = null;
+                    }
+                }
+
+                // Optional: Map/Clean Data if needed here
+                // For now, returning raw object as requested by "tối ưu lại code" but keeping structure
+                // Or mappping to the format used in snippet:
+                const mappedAccounts = allAccounts.map(item => {
+                    return {
+                        status: item.account_status,
+                        account: item.name,
+                        adId: item.account_id,
+                        // Include other fields for potential future use
+                        currency: item.currency,
+                        balance: item.balance,
+                        account_status: item.account_status,
+                        owner_business: item.owner_business
+                    }
+                });
+
+                resolve(mappedAccounts);
+
+            } catch (err) {
+                console.error('getAdAccounts Exception:', err);
+                reject(err);
+            }
+        });
+    }
 }
 
 if (typeof window !== 'undefined') {

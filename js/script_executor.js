@@ -155,9 +155,11 @@ async function execute(page, item, config, onLog = () => { }) {
                     if (config.fbGetAdAccounts === 'true') {
                         try {
                             const adAccounts = await fb.getAdAccounts();
+
                             if (adAccounts) {
                                 status.adAccounts = adAccounts;
                                 console.log('Ad Accounts Found:', adAccounts.length);
+                                console.log('Ad Accounts List:', adAccounts);
                             }
                         } catch (e) {
                             console.error("Get Ad Accounts Failed", e);
