@@ -10,7 +10,7 @@ const api = {
         // Allow specific channels
         let validChannels = [
             'db:get-accounts', 'db:add-accounts', 'db:update-account', 'db:delete-accounts',
-            'db:save-ad-accounts',
+            'db:save-ad-accounts', 'db:get-ad-accounts',
             'window-minimize', 'window-maximize', 'window-close', 'checkKey',
             'db:get-folders', 'db:add-folder', 'db:delete-folder', 'db:update-folder', 'db:update-account-folder',
             'open-settings-tab', 'switch-view',

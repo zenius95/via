@@ -151,6 +151,7 @@ function restoreProcessColDef() {
 const textCellRenderer = (params) => {
     if (params.data && params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-32"></div></div>`;
     if (maskedColumns.has(params.colDef.colId)) return `<span class="masked-data">*******</span>`;
+    // Added overflow-hidden text-ellipsis whitespace-nowrap flex-1 block
     const val = params.value || '';
     return `<div class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${params.colDef.cellStyleClass || ''}" title="${val}">${val}</div>`;
 };
@@ -163,24 +164,46 @@ const columnDefs = [
             if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-4 w-20 rounded"></div></div>`;
             if (maskedColumns.has('status')) return `<span class="masked-data">*******</span>`;
 
-            const status = params.value;
-            if (!status) return '';
-
-            let badgeClass = 'badge-base '; let label = status;
-            // Map Ads Status (Active, Disabled, etc.)
-            // Adjust colors based on typical Ads Manager states
-            if (status === 'ACTIVE' || status === 1) { badgeClass += 'badge-success'; label = 'HOẠT ĐỘNG'; }
-            else if (status === 'DISABLED' || status === 2) { badgeClass += 'badge-danger'; label = 'VÔ HIỆU'; }
-            else if (status === 'UNSETTLED' || status === 3) { badgeClass += 'badge-warning'; label = 'NỢ'; }
-            else if (status === 'PENDING_RISK_REVIEW' || status === 7) { badgeClass += 'badge-danger'; label = 'CHECKPOINT'; }
-            else if (status === 'IN_GRACE_PERIOD' || status === 9) { badgeClass += 'badge-warning'; label = 'DƯ NỢ'; }
-            else if (status === 'CLOSE' || status === 100) { badgeClass += 'badge-neutral'; label = 'ĐÓNG'; }
-            else { badgeClass += 'badge-neutral'; }
+            const status = parseInt(params.value);
+            let label = params.value;
+            let badgeClass = 'badge-base ';
+            // Map logic
+            if (status === 101) { badgeClass += 'badge-info'; label = 'Khác'; }
+            else if (status === 100) { badgeClass += 'badge-info'; label = 'Đóng'; }
+            else if (status === 999) { badgeClass += 'badge-neutral'; label = 'Hold'; }
+            else if (status === 1) { badgeClass += 'badge-success'; label = 'Hoạt động'; }
+            else if (status === 2) { badgeClass += 'badge-danger'; label = 'Vô hiệu hóa'; }
+            else if (status === 3) { badgeClass += 'badge-warning'; label = 'Cần thanh toán'; }
+            else if (status === 4) { badgeClass += 'badge-warning'; label = 'Đang kháng 3 dòng'; }
+            else if (status === 5) { badgeClass += 'badge-danger'; label = 'Die 3 dòng'; }
+            else if (status === 6) { badgeClass += 'badge-danger'; label = 'Die XMDT'; }
+            else if (status === 7) { badgeClass += 'badge-danger'; label = 'Die vĩnh viễn'; }
+            else { badgeClass += 'badge-neutral'; } // Default
 
             return `<div class="h-full flex items-center"><span class="${badgeClass}"><span class="dot-pulse"></span>${label}</span></div>`;
         },
     },
-    { headerName: "Tài khoản", field: "name", colId: 'name', minWidth: 200, cellRenderer: textCellRenderer },
+    {
+        headerName: "Tài khoản", field: "name", minWidth: 230, cellClass: 'account-row', colId: 'name',
+        cellRenderer: (params) => {
+            if (params.data.isLoading) return `<div class="account-cell"><div class="skeleton w-[34px] h-[34px] rounded-full mr-3 flex-shrink-0"></div><div class="flex flex-col gap-1.5 w-full"><div class="skeleton h-3 w-24"></div><div class="skeleton h-2 w-16"></div></div></div>`;
+            if (maskedColumns.has('name')) return `<div class="account-cell"><span class="masked-data">*******</span></div>`;
+
+            // Avatar logic
+            const avatarUrl = params.data.avatar || `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(params.data.name || 'Ad')}&size=64`;
+
+            return `<div class="account-cell justify-between group pr-2">
+                        <div class="flex items-center">
+                            <img src="${avatarUrl}" class="account-avatar rounded-full w-8 h-8 mr-3 object-cover border border-white/10" onError="this.src='../assets/icons/ads_icon_placeholder.png'">
+                            <div class="account-details flex flex-col justify-center">
+                                <span class="account-name text-sm font-medium text-slate-200 leading-tight">${params.data.name || 'Unknown'}</span>
+                                <span class="account-uid-sub text-[10px] text-slate-500 font-mono">${params.data.accountId}</span>
+                            </div>
+                        </div>
+                    </div>`;
+        },
+        getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones((params.data.name || '') + ' ' + (params.data.accountId || '')); }
+    },
     { headerName: "ID TKQC", field: "accountId", colId: 'accountId', width: 160, cellRenderer: textCellRenderer },
     { headerName: "Số dư", field: "balance", colId: 'balance', width: 120, cellRenderer: textCellRenderer },
     { headerName: "Ngưỡng", field: "threshold", colId: 'threshold', width: 120, cellRenderer: textCellRenderer },
@@ -194,6 +217,7 @@ const columnDefs = [
     { headerName: "Ngày lập hóa đơn", field: "nextBillDate", colId: 'nextBillDate', width: 140, cellRenderer: textCellRenderer },
     { headerName: "Số ngày đến hạn TT", field: "daysToBill", colId: 'daysToBill', width: 150, cellRenderer: textCellRenderer },
     { headerName: "Quốc gia", field: "country", colId: 'country', width: 80, cellRenderer: textCellRenderer },
+    { headerName: "Lý do khóa", field: "reason", colId: 'reason', width: 150, cellRenderer: textCellRenderer },
     { headerName: "Ngày tạo", field: "createdDate", colId: 'createdDate', width: 120, cellRenderer: textCellRenderer },
     { headerName: "Loại", field: "accountType", colId: 'accountType', width: 100, cellRenderer: textCellRenderer },
     { headerName: "BM", field: "bmId", colId: 'bmId', width: 150, cellRenderer: textCellRenderer },
@@ -325,54 +349,60 @@ function onQuickFilterChanged() {
     if (gridApi) gridApi.setGridOption('quickFilterText', cleanVal);
 }
 
-// --- DEMO DATA GENERATOR ---
-function generateDemoData() {
-    const statuses = ['ACTIVE', 'DISABLED', 'NEED_PAYMENT', 'PENDING_RISK_REVIEW', 'IN_GRACE_PERIOD'];
-    const currencies = ['VND', 'USD', 'EUR'];
-    const accountTypes = ['CN', 'BM', 'Agency'];
+// --- DATA LOADING ---
+async function loadAdAccounts(uid) {
+    if (!uid) return;
 
-    return Array.from({ length: 15 }, (_, i) => {
-        const randStatus = statuses[Math.floor(Math.random() * statuses.length)];
-        const randCurrency = currencies[Math.floor(Math.random() * currencies.length)];
-        const balance = (Math.random() * 10000000).toFixed(0);
+    try {
+        const rawData = await window.api.send('db:get-ad-accounts', uid);
 
-        return {
-            status: randStatus,
-            name: `Tài khoản quảng cáo ${i + 1}`,
-            accountId: `10000${Math.floor(Math.random() * 90000) + 10000}`,
-            balance: new Intl.NumberFormat('vi-VN').format(balance) + ' ' + randCurrency,
-            threshold: new Intl.NumberFormat('vi-VN').format(20000000) + ' ' + randCurrency,
-            thresholdRemaining: new Intl.NumberFormat('vi-VN').format(5000000) + ' ' + randCurrency,
-            adLimit: 'Unlimited',
-            totalSpent: new Intl.NumberFormat('vi-VN').format(Math.floor(Math.random() * 50000000)) + ' ' + randCurrency,
-            currency: randCurrency,
-            adminCount: Math.floor(Math.random() * 5) + 1,
-            ownership: Math.random() > 0.5 ? 'Cá nhân' : 'BM',
-            paymentMethod: Math.random() > 0.5 ? 'Visa •••• 1234' : 'Momo',
-            nextBillDate: '2025-01-01',
-            daysToBill: Math.floor(Math.random() * 30),
-            country: 'VN',
-            createdDate: '2024-12-01',
-            accountType: accountTypes[Math.floor(Math.random() * accountTypes.length)],
-            bmId: Math.random() > 0.7 ? `BM_${Math.floor(Math.random() * 10000)}` : '',
-            timezone: '+07:00 (Asia/Ho_Chi_Minh)',
-            processStatus: 'success',
-            processMessage: 'Đang hoạt động bình thường',
-            uid: `100000${i}`,
-            avatar: 'https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=Ads+' + (i + 1),
-            folder: 'Thư mục mặc định',
-            twoFa: 'JBSWY3DPEHPK3PXP',
-            email: `admin${i}@example.com`,
-            emailPassword: 'password123',
-            emailRecover: 'recover@example.com',
-            cookie: 'c_user=1000...; xs=...'
-        };
-    });
+        if (rawData && Array.isArray(rawData)) {
+            // Map DB columns to Grid fields
+            const mappedData = rawData.map(item => ({
+                status: item.status,
+                name: item.name,
+                accountId: item.ad_id,
+                balance: item.balance,
+                threshold: item.threshold,
+                thresholdRemaining: item.remain,
+                adLimit: item.account_limit,
+                totalSpent: item.spend,
+                currency: item.currency + '-' + item.pre_pay,
+                adminCount: item.admin_number,
+                ownership: item.role, // Vai trò (Admin, etc.)
+                paymentMethod: item.payment,
+                nextBillDate: item.next_bill_date,
+                daysToBill: item.next_bill_day,
+                daysToBill: item.next_bill_day,
+                country: item.country,
+                reason: item.reason,
+                createdDate: item.created_time,
+                accountType: item.type, // Loại tài khoản (Business/Cá nhân)
+                bmId: item.bm_id,
+                timezone: item.timezone,
+                // Hidden/Extra fields
+                processStatus: 'READY', // Default status for viewing
+                processMessage: 'Chọn chức năng để chạy',
+                uid: item.account_uid,
+                // Extra data for context if needed
+                users: item.users,
+                cards: item.cards
+            }));
+
+            if (gridApi) {
+                gridApi.setGridOption('rowData', mappedData);
+                updateFooterCount();
+            }
+        }
+
+    } catch (e) {
+        console.error('Load Ads Error:', e);
+    }
 }
 
 const gridOptions = {
     theme: "legacy", suppressContextMenu: true, enableRangeSelection: true,
-    columnDefs: columnDefs, rowData: generateDemoData(),
+    columnDefs: columnDefs, rowData: generateSkeletonData(15),
     defaultColDef: {
         resizable: true,
         sortable: true,
@@ -381,15 +411,27 @@ const gridOptions = {
         suppressHeaderMenuButton: true,
         headerComponent: CustomHeader,
         lockPinned: true,
-        minWidth: 100,
-        getQuickFilterText: (p) => p.value ? (p.value.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "")) : ''
+        minWidth: 180,
+        getQuickFilterText: (p) => p.value ? removeVietnameseTones(p.value.toString()) : ''
     },
-    rowHeight: 48, headerHeight: 48, pagination: false, animateRows: true, tooltipShowDelay: 0,
+    rowHeight: 56, headerHeight: 48, pagination: false, animateRows: true, tooltipShowDelay: 0,
     rowSelection: { mode: 'multiRow', enableClickSelection: false },
+    selectionColumnDef: {
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
+        pinned: 'left',
+        lockPosition: true,
+        suppressMenu: true,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        headerName: '',
+    },
     onCellContextMenu: (params) => { if (params.data && !params.data.isLoading && typeof showContextMenu === 'function') showContextMenu(params.event); },
     onModelUpdated: () => {
         updateFooterCount();
-        if (typeof updateFilterCounts === 'function') updateFilterCounts(); // Might be undefined in ads view if ui.js not adapted
+        if (typeof updateFilterCounts === 'function') updateFilterCounts();
     },
     onSelectionChanged: updateFooterCount, onRangeSelectionChanged: updateFooterCount,
     onCellValueChanged: (params) => {
@@ -438,8 +480,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Listen for data from Main Process (if manual load is needed later)
         if (window.api && window.api.on) {
-            window.api.on('ads-data-update', (data) => {
-                if (gridApi) gridApi.setGridOption('rowData', data);
+            window.api.on('setup-ads-view', (data) => {
+                if (data && data.uid) {
+                    loadAdAccounts(data.uid);
+                }
             });
         }
     } else {

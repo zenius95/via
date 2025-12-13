@@ -353,14 +353,14 @@ body {
 
 .account-name {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     color: #f1f5f9;
+    margin-bottom: 2px;
 }
 
 .account-uid-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: #64748b;
-    font-family: 'Courier New', monospace;
     letter-spacing: -0.5px;
 }
 
@@ -991,7 +991,6 @@ body {
 }
 
 .stat-value {
-    font-family: 'Courier New', monospace;
     font-weight: 700;
     font-size: 13px;
 }
