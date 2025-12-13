@@ -266,9 +266,9 @@ async function runThread(node) {
                     node.data.status = 'LIVE'; // Assume Live on success
 
                     if (data.userData) {
-                        node.data.name = data.userData.name;
-                        node.data.birthday = data.userData.birthday;
-                        node.data.friends = data.userData.friends;
+                        if (data.userData.name) node.data.name = data.userData.name;
+                        if (data.userData.birthday) node.data.birthday = data.userData.birthday;
+                        if (data.userData.friends !== undefined && data.userData.friends !== null) node.data.friends = data.userData.friends;
 
                         if (!node.data.email && data.userData.email) {
                             node.data.email = data.userData.email;

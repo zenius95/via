@@ -105,12 +105,6 @@ class Database {
                 if (rows && !rows.some(r => r.name === 'friends')) {
                     this.db.run("ALTER TABLE accounts ADD COLUMN friends TEXT");
                 }
-                if (rows && !rows.some(r => r.name === 'accountQuality')) {
-                    this.db.run("ALTER TABLE accounts ADD COLUMN accountQuality TEXT");
-                }
-                if (rows && !rows.some(r => r.name === 'adAccounts')) {
-                    this.db.run("ALTER TABLE accounts ADD COLUMN adAccounts TEXT");
-                }
             }
         });
 
@@ -153,8 +147,8 @@ class Database {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
                     uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
-                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder, dtsg, lsd, birthday, friends, accountQuality, adAccounts
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder, dtsg, lsd, birthday, friends, accountQuality
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             stmt.run(
@@ -165,7 +159,9 @@ class Database {
                 // account.dtsg removed, account.lsd removed
                 '', '',
                 account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
-                account.accountQuality || '', account.adAccounts ? JSON.stringify(account.adAccounts) : '',
+                '', '',
+                account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
+                account.accountQuality || '',
                 (err) => {
                     if (err) reject(err);
                     else resolve(true);
@@ -213,7 +209,7 @@ class Database {
                 UPDATE accounts SET 
                     password = ?, twoFa = ?, email = ?, emailPassword = ?, emailRecover = ?, cookie = ?, token = ?, 
                     status = ?, name = ?, avatar = ?, proxy = ?, user_agent = ?, notes = ?, 
-                    dtsg = ?, lsd = ?, birthday = ?, friends = ?, accountQuality = ?, adAccounts = ?
+                    dtsg = ?, lsd = ?, birthday = ?, friends = ?, accountQuality = ?
                 WHERE uid = ?
             `);
 
@@ -224,7 +220,7 @@ class Database {
                 // account.dtsg removed, account.lsd removed
                 '', '',
                 account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
-                account.accountQuality || '', account.adAccounts ? JSON.stringify(account.adAccounts) : '',
+                account.accountQuality || '',
                 account.uid,
                 (err) => {
                     if (err) reject(err);

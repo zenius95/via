@@ -191,11 +191,11 @@ const columnDefs = [
                         <div class="flex items-center">
                             <img src="${params.data.avatar}" class="account-avatar">
                             <div class="account-details">
-                                <span class="account-name">${params.data.name}</span>
+                                <span class="account-name">${params.data.name || 'Unknown'}</span>
                                 <span class="account-uid-sub">${params.data.uid}</span>
                             </div>
                         </div>
-                        <button onclick="openUserTab('${params.data.uid}', '${params.data.name}', '${params.data.avatar}')" 
+                        <button onclick="openUserTab('${params.data.uid}', '${params.data.name || 'Unknown'}', '${params.data.avatar}')" 
                             data-tooltip="Mở tab mới"
                             class="tooltip-left w-7 h-7 rounded-lg flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-blue-400 transition-all opacity-0 group-hover:opacity-100 hover:scale-110">
                             <i class="ri-external-link-line"></i>
