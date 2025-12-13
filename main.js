@@ -211,7 +211,9 @@ ipcMain.handle('process:run-profile', async (event, { account, config }) => {
             }
         });
 
-        await browser.close();
+        if (!config.keepOpen) {
+            await browser.close();
+        }
         return result;
 
     } catch (err) {

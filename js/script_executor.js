@@ -146,7 +146,7 @@ async function execute(page, item, config, onLog = () => { }) {
         }, { apiSource, item });
 
         if (loginStatus.status === 'success') {
-            onLog(`Đăng nhập thành công! Token: ${loginStatus.accessToken.substring(0, 15)}...`);
+            onLog(`Đăng nhập thành công!`);
 
             // Get Cookies
             const cookies = await page.context().cookies();
@@ -171,7 +171,7 @@ async function execute(page, item, config, onLog = () => { }) {
             onLog(`Trạng thái không xác định: ${loginStatus.message || loginStatus.status}`);
         }
 
-        await page.waitForTimeout(500000);
+        await page.waitForTimeout(config.keepOpen ? 100 : 2000);
 
         return;
 

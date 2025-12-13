@@ -743,6 +743,39 @@ function menuAction(action) {
             });
             showToast(`Đang mở ${selectedData.length} tab...`, 'success');
         }
+    } else if (action === 'openBrowser') {
+        const selectedData = gridApi.getSelectedRows();
+        if (selectedData.length === 0) {
+            showToast('Vui lòng chọn tài khoản', 'warning');
+            return;
+        }
+
+        const executeOpen = () => {
+            // Lấy danh sách nodes thực sự từ grid API để process.js xử lý được
+            const nodesToRun = [];
+
+            // Vì selectedData chỉ là data object, ta cần truyền Nodes để process.js cập nhật status UI
+            // Tuy nhiên process.js logic: processQueue = [...selectedNodes] <- nodes này là RowNode
+
+            // Vậy logic đúng là lấy Selected Nodes trực tiếp trong ui.js?
+            // gridApi.getSelectedRows() trả về data array (nếu rowData đơn giản?) -> NO, ag-grid getSelectedRows returns data objects.
+            // gridApi.getSelectedNodes() returns Node objects.
+
+            const selectedNodes = gridApi.getSelectedNodes();
+            if (typeof startManualBrowser === 'function') {
+                startManualBrowser(selectedNodes);
+            } else {
+                showToast('Lỗi: Hàm startManualBrowser chưa được tải', 'error');
+            }
+        };
+
+        const running = selectedData.filter(row => row.processStatus === 'RUNNING');
+        if (running.length > 0) {
+            showToast(`Có ${running.length} tài khoản đang chạy. Vui lòng đợi xong hoặc dừng lại trước khi mở!`, 'error');
+            return;
+        }
+
+        executeOpen();
     }
 }
 

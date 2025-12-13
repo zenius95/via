@@ -60,77 +60,87 @@ function toggleProcess() {
     }
 }
 
-async function startProcess() {
+// Enhanced startProcess to support manual partial runs
+async function startProcess(targetNodes = null, configOverrides = {}) {
     if (!gridApi) return;
 
-    // Load Settings
+    // Load Settings (Base Config)
     try {
         const settings = await window.api.send('db:get-settings');
         if (settings) {
             PROCESS_CONFIG.maxThreads = parseInt(settings.maxThreads) || 3;
+            // Launch Delay is for automation. Manual might override.
             PROCESS_CONFIG.delay = (parseInt(settings.launchDelay) || 2) * 1000;
             PROCESS_CONFIG.retry = parseInt(settings.retryCount) || 0;
             PROCESS_CONFIG.timeout = parseInt(settings.timeout) || 0;
             PROCESS_CONFIG.chromePath = settings.chromePath || '';
-
-            // Auto Split Config
             PROCESS_CONFIG.autoSplit = settings.autoSplit === 'true';
             PROCESS_CONFIG.splitRows = parseInt(settings.splitRows) || 2;
             PROCESS_CONFIG.splitCols = parseInt(settings.splitCols) || 2;
-
-            console.log('Loaded Config:', PROCESS_CONFIG);
+            // Reset defaults that might have been overridden previously
+            PROCESS_CONFIG.keepOpen = false;
+            PROCESS_CONFIG.headless = true; // Default automation is headless (usually) or as per settings?
+            // Actually previous code didn't explicitly set headless to true, relying on script_executor defaults or main.js defaults?
+            // main.js checks config.headless. standard startProcess usually implies automation.
         }
 
-        // Validate Chrome Path
         if (!PROCESS_CONFIG.chromePath) {
             console.log('Chrome Path missing, attempting auto-detect...');
             const detectedPath = await window.api.send('main:get-chrome-path');
-            if (detectedPath) {
-                PROCESS_CONFIG.chromePath = detectedPath;
-            } else {
-                showToast('Chưa cấu hình đường dẫn Chrome! Vui lòng vào Cài đặt.', 'error');
-                return;
-            }
+            if (detectedPath) PROCESS_CONFIG.chromePath = detectedPath;
+            else { showToast('Chưa cấu hình đường dẫn Chrome!', 'error'); return; }
         }
 
-    } catch (err) {
-        console.error('Failed to load process config', err);
-    }
+    } catch (err) { console.error('Failed to load config', err); }
 
-    const selectedNodes = gridApi.getSelectedNodes();
-    if (selectedNodes.length === 0) {
+    // APPLY OVERRIDES (For Manual Open Browser)
+    Object.assign(PROCESS_CONFIG, configOverrides);
+
+    const nodesToRun = targetNodes || gridApi.getSelectedNodes();
+    if (nodesToRun.length === 0) {
         showToast('Vui lòng chọn tài khoản để chạy', 'warning');
         return;
     }
 
-    // UPDATE UI
+    // UPDATE UI (Common for both)
     const btn = document.getElementById('btn-start-process');
-    btn.classList.add('bg-red-600', 'hover:bg-red-500', '!from-red-600', '!to-red-500', 'shadow-red-900/40');
-    // Remove default gradient classes if they conflict, or override with !important via class/style
-    // Simple way: Change innerHTML and style
-    btn.innerHTML = `
-        <i class="ri-stop-fill text-lg"></i>
-        <span class="ml-1">Dừng lại</span>
-    `;
-    // We might need to handle the gradient background via style if classes are stubborn
-    btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
-    btn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
+    if (btn) {
+        btn.classList.add('bg-red-600', 'hover:bg-red-500', '!from-red-600', '!to-red-500', 'shadow-red-900/40');
+        btn.innerHTML = `<i class="ri-stop-fill text-lg"></i><span class="ml-1">Dừng lại</span>`;
+        btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+        btn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
+    }
 
     isProcessRunning = true;
     forceStop = false;
-    processQueue = [...selectedNodes]; // Copy selected nodes
+    processQueue = [...nodesToRun];
 
     // Reset status and Assign Layout Index
     processQueue.forEach((node, index) => {
         if (node.data) {
-            node.data.layoutIndex = index; // Assign index for Auto Split
+            node.data.layoutIndex = index;
             node.setDataValue('processStatus', 'WAITING');
-            node.setDataValue('processMessage', 'Đang chờ...');
+            node.setDataValue('processMessage', configOverrides.keepOpen ? 'Đang chờ mở...' : 'Đang chờ...');
         }
     });
 
-    showToast(`Bắt đầu chạy với ${processQueue.length} tài khoản`, 'info');
+    const modeLabel = configOverrides.keepOpen ? 'trình duyệt thủ công' : 'tài khoản';
+    showToast(`Bắt đầu chạy với ${processQueue.length} ${modeLabel}`, 'info');
     runQueueLoop();
+}
+
+async function startManualBrowser(targetNodes) {
+    if (isProcessRunning) {
+        showToast('Vui lòng dừng tiến trình hiện tại trước', 'error');
+        return;
+    }
+    // Reuse startProcess with specific overrides
+    await startProcess(targetNodes, {
+        maxThreads: targetNodes.length,
+        delay: 1000,
+        keepOpen: true,
+        headless: false
+    });
 }
 
 function stopProcess() {
@@ -299,6 +309,9 @@ async function runThread(node) {
                 node.data.status = 'Checkpoint 282';
                 window.api.send('db:update-account', node.data);
                 gridApi.applyTransaction({ update: [node.data] });
+
+            } else if (err.message === 'notLogin') {
+                updateNodeStatus(node, 'ERROR', 'Đăng nhập thất bại');
 
             } else if (err.message === 'Checkpoint 956') {
                 updateNodeStatus(node, 'ERROR', 'Checkpoint 956');
