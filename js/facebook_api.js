@@ -450,6 +450,55 @@ class FacebookAPI {
             }
         });
     }
+    async getAdAccounts(limit = 50) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (!this.accessToken) {
+                    reject('No Access Token');
+                    return;
+                }
+
+                let allAccounts = [];
+                let nextUrl = `https://graph.facebook.com/v14.0/me/adaccounts?limit=${limit}&fields=account_id,name,account_status,is_prepay_account,owner_business,currency&access_token=${this.accessToken}&summary=1&locale=en_US`;
+
+                while (nextUrl) {
+                    let res = await fetch(nextUrl);
+                    let resData = await res.json();
+
+                    if (resData.error) {
+                        console.error('getAdAccounts Error:', resData.error);
+                        break;
+                    }
+
+                    if (resData.data && Array.isArray(resData.data)) {
+                        allAccounts = allAccounts.concat(resData.data);
+                    }
+
+                    if (resData.paging && resData.paging.next) {
+                        nextUrl = resData.paging.next;
+                    } else {
+                        nextUrl = null;
+                    }
+                }
+
+                // Map to format required by getAdAccountsData (needs adId)
+                const mappedAccounts = allAccounts.map(item => {
+                    return {
+                        adId: item.account_id,
+                        account_status: item.account_status,
+                        name: item.name
+                    }
+                });
+
+                resolve(mappedAccounts);
+
+            } catch (err) {
+                console.error('getAdAccounts Exception:', err);
+                reject(err);
+            }
+        });
+    }
+
     async getAdAccountsData(accounts, limit = 50) {
         return new Promise(async (resolve, reject) => {
             const enrichedAccounts = [];
