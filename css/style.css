@@ -1,8 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap'); */
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('../fonts/SF-Pro-Display-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('../fonts/SF-Pro-Display-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('../fonts/SF-Pro-Display-Semibold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('../fonts/SF-Pro-Display-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+}
 
 /* css/style.css */
 body {
-    font-family: 'Google Sans', sans-serif;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #0f172a;
     color: #e2e8f0;
     margin: 0;
@@ -52,6 +80,7 @@ body {
 }
 
 /* --- BADGE STYLES --- */
+/*
 .badge-base {
     display: inline-flex;
     align-items: center;
@@ -65,6 +94,7 @@ body {
     backdrop-filter: blur(4px);
     border: 1px solid transparent;
 }
+*/
 
 .dot-pulse {
     width: 6px;
@@ -111,6 +141,7 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/*
 .badge-success {
     background-color: rgba(16, 185, 129, 0.1);
     color: #34d399;
@@ -155,6 +186,7 @@ body {
     color: #94a3b8;
     border-color: rgba(100, 116, 139, 0.2);
 }
+*/
 
 /* --- AG Grid Customization --- */
 .ag-theme-alpine-dark {
@@ -166,7 +198,7 @@ body {
     --ag-foreground-color: #cbd5e1;
     --ag-row-hover-color: #1e293b;
     --ag-font-size: 13px;
-    --ag-font-family: 'Google Sans', sans-serif;
+    --ag-font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     --ag-cell-horizontal-padding: 16px;
     --ag-selected-row-background-color: transparent;
     --ag-range-selection-border-color: #3b82f6;
@@ -390,6 +422,7 @@ body {
 }
 
 /* --- START BUTTON (NEON) --- */
+/* 
 .btn-start-pro {
     position: relative;
     display: flex;
@@ -400,7 +433,7 @@ body {
     height: 38px;
     border-radius: 8px;
     border: none;
-    font-family: 'Google Sans', sans-serif;
+    font-family: 'SF Pro Display', sans-serif;
     font-weight: 600;
     font-size: 13px;
     text-transform: uppercase;
@@ -454,6 +487,7 @@ body {
         background-position: 0% 50%;
     }
 }
+*/
 
 /* --- GLASS TOOLBAR & INPUTS --- */
 .glass-toolbar {
@@ -472,6 +506,7 @@ body {
     flex-shrink: 0;
 }
 
+/* 
 .glass-input-style {
     background: rgba(30, 41, 59, 0.4) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -487,6 +522,7 @@ body {
     box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.1);
     outline: none;
 }
+*/
 
 .glass-divider {
     height: 24px;
@@ -496,6 +532,7 @@ body {
 }
 
 /* --- GLASS BORDERED BUTTON --- */
+/*
 .glass-btn-border {
     display: flex;
     align-items: center;
@@ -520,6 +557,7 @@ body {
     color: #fff;
     box-shadow: 0 0 10px rgba(96, 165, 250, 0.1);
 }
+*/
 
 /* --- ABSOLUTE CENTER SEARCH --- */
 /* --- ABSOLUTE CENTER SEARCH REMOVED (Replaced by Flex layout in index.html) --- */

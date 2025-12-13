@@ -173,12 +173,16 @@ const columnDefs = [
             if (!status) return ''; // Bỏ trống nếu không có trạng thái
 
             let badgeClass = 'badge-base '; let label = status;
-            if (status === 'LIVE') { badgeClass += 'badge-success'; label = 'HOẠT ĐỘNG'; }
-            else if (status === 'Checkpoint 282') { badgeClass += 'badge-danger'; label = 'CP 282'; }
-            else if (status === 'Checkpoint 956') { badgeClass += 'badge-danger'; label = 'CP 956'; }
-            else if (status === 'UNCHECKED') { badgeClass += 'badge-neutral'; label = 'Chưa check'; }
+            let dotColor = '';
 
-            return `<div class="h-full flex items-center"><span class="${badgeClass}"><span class="dot-pulse"></span>${label}</span></div>`;
+            if (status === 'LIVE') { badgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'; label = 'HOẠT ĐỘNG'; dotColor = 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'; }
+            else if (status === 'Checkpoint 282') { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'CP 282'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else if (status === 'Checkpoint 956') { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'CP 956'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else if (status === 'UNCHECKED') { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; label = 'Chưa check'; dotColor = 'bg-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.5)]'; }
+            else { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; dotColor = 'bg-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.5)]'; } // Default fallback
+
+            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide border backdrop-blur-sm shadow-sm transition-all duration-200 whitespace-nowrap';
+            return `<div class="h-full flex items-center"><span class="${baseClasses} ${badgeClass}"><span class="dot-pulse ${dotColor}"></span>${label}</span></div>`;
         },
     },
     {
@@ -298,20 +302,21 @@ const columnDefs = [
             const status = params.value;
             if (!status) return '';
 
-            let badgeClass = 'badge-base ';
+            let badgeClass = '';
             let iconHtml = '';
+            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm border transition-all duration-200 shadow-sm whitespace-nowrap';
 
-            if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
-            else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
-            else if (status === 'READY') { badgeClass += 'badge-neutral text-slate-400 bg-slate-500/10 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; } // READY distinct style
-            else if (status === 'RETRY') { badgeClass += 'badge-warning'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
-            else if (status === 'ERROR') { badgeClass += 'badge-danger'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
-            else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; } // SUCCESS or others
+            if (status === 'RUNNING') { badgeClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
+            else if (status === 'STOPPED') { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
+            else if (status === 'READY') { badgeClass = 'bg-slate-500/10 text-slate-400 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; }
+            else if (status === 'RETRY') { badgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
+            else if (status === 'ERROR') { badgeClass = 'bg-red-500/30 text-red-200 border-red-500/40 text-[11px]'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
+            else { badgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; }
 
             // RENDER DỰA TRÊN TRẠNG THÁI
             if (processState.collapsed) {
                 // Thu gọn: Icon + Text ngắn, căn giữa
-                return `<div class="process-cell justify-center w-full"><span class="${badgeClass} !mr-0">${iconHtml} <span class="ml-1">${status}</span></span></div>`;
+                return `<div class="process-cell justify-center w-full"><span class="${baseClasses} ${badgeClass} !mr-0">${iconHtml} <span class="ml-1">${status}</span></span></div>`;
             } else {
                 // Mở rộng: Full option
                 // Thêm margin cho icon
@@ -324,7 +329,7 @@ const columnDefs = [
                 // Container for cell with hover effect
                 return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
                             <div class="flex items-center overflow-hidden flex-1 min-w-0">
-                                <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
+                                <span class="${baseClasses} ${badgeClass} flex-shrink-0">${iconHtml} <span class="ml-1">${status}</span></span>
                                 <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
                             </div>
                             <button onclick="openLogViewer('${params.data.uid}')" data-tooltip="Xem nhật ký"

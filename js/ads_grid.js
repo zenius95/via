@@ -167,20 +167,22 @@ const columnDefs = [
             const status = parseInt(params.value);
             let label = params.value;
             let badgeClass = 'badge-base ';
+            let dotColor = '';
             // Map logic
-            if (status === 101) { badgeClass += 'badge-info'; label = 'Khác'; }
-            else if (status === 100) { badgeClass += 'badge-info'; label = 'Đóng'; }
-            else if (status === 999) { badgeClass += 'badge-neutral'; label = 'Hold'; }
-            else if (status === 1) { badgeClass += 'badge-success'; label = 'Hoạt động'; }
-            else if (status === 2) { badgeClass += 'badge-danger'; label = 'Vô hiệu hóa'; }
-            else if (status === 3) { badgeClass += 'badge-warning'; label = 'Cần thanh toán'; }
-            else if (status === 4) { badgeClass += 'badge-warning'; label = 'Đang kháng 3 dòng'; }
-            else if (status === 5) { badgeClass += 'badge-danger'; label = 'Die 3 dòng'; }
-            else if (status === 6) { badgeClass += 'badge-danger'; label = 'Die XMDT'; }
-            else if (status === 7) { badgeClass += 'badge-danger'; label = 'Die vĩnh viễn'; }
-            else { badgeClass += 'badge-neutral'; } // Default
+            if (status === 101) { badgeClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30'; label = 'Khác'; dotColor = 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]'; }
+            else if (status === 100) { badgeClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30'; label = 'Đóng'; dotColor = 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]'; }
+            else if (status === 999) { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; label = 'Hold'; dotColor = 'bg-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.5)]'; }
+            else if (status === 1) { badgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'; label = 'Hoạt động'; dotColor = 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'; }
+            else if (status === 2) { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'Vô hiệu hóa'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else if (status === 3) { badgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30'; label = 'Cần thanh toán'; dotColor = 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]'; }
+            else if (status === 4) { badgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30'; label = 'Đang kháng 3 dòng'; dotColor = 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]'; }
+            else if (status === 5) { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'Die 3 dòng'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else if (status === 6) { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'Die XMDT'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else if (status === 7) { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'Die vĩnh viễn'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
+            else { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; dotColor = 'bg-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.5)]'; } // Default
 
-            return `<div class="h-full flex items-center"><span class="${badgeClass}"><span class="dot-pulse"></span>${label}</span></div>`;
+            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide border backdrop-blur-sm shadow-sm transition-all duration-200 whitespace-nowrap';
+            return `<div class="h-full flex items-center"><span class="${baseClasses} ${badgeClass}"><span class="dot-pulse ${dotColor}"></span>${label}</span></div>`;
         },
     },
     {
@@ -231,33 +233,31 @@ const columnDefs = [
             const status = params.value;
             if (!status) return '';
 
-            let badgeClass = 'badge-base ';
+            let badgeClass = '';
             let iconHtml = '';
+            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm border transition-all duration-200 shadow-sm whitespace-nowrap';
 
-            if (status === 'RUNNING') { badgeClass += 'badge-info'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
-            else if (status === 'STOPPED') { badgeClass += 'badge-neutral'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
-            else if (status === 'READY') { badgeClass += 'badge-neutral text-slate-400 bg-slate-500/10 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; } // READY distinct style
-            else if (status === 'RETRY') { badgeClass += 'badge-warning'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
-            else if (status === 'ERROR') { badgeClass += 'badge-danger'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
-            else { badgeClass += 'badge-success'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; } // SUCCESS or others
+            if (status === 'RUNNING') { badgeClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
+            else if (status === 'STOPPED') { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
+            else if (status === 'READY') { badgeClass = 'bg-slate-500/10 text-slate-400 border-slate-500/20'; iconHtml = '<i class="ri-hourglass-line text-xs"></i>'; }
+            else if (status === 'RETRY') { badgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30'; iconHtml = '<i class="ri-restart-line icon-spin text-xs"></i>'; }
+            else if (status === 'ERROR') { badgeClass = 'bg-red-500/30 text-red-200 border-red-500/40 text-[11px]'; iconHtml = '<i class="ri-error-warning-line text-xs"></i>'; }
+            else { badgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'; iconHtml = '<i class="ri-check-double-line text-xs"></i>'; }
 
             // RENDER DỰA TRÊN TRẠNG THÁI
             if (processState.collapsed) {
                 // Thu gọn: Icon + Text ngắn, căn giữa
-                return `<div class="process-cell justify-center w-full"><span class="${badgeClass} !mr-0">${iconHtml} <span class="ml-1">${status}</span></span></div>`;
+                return `<div class="process-cell justify-center w-full"><span class="${baseClasses} ${badgeClass} !mr-0">${iconHtml} <span class="ml-1">${status}</span></span></div>`;
             } else {
                 // Mở rộng: Full option
                 // Thêm margin cho icon
-                if (status === 'RUNNING') iconHtml = '<i class="ri-loader-4-line icon-spin text-xs mr-1"></i>';
-                else if (status === 'STOPPED') iconHtml = '<i class="ri-pause-circle-line text-xs mr-1"></i>';
-                else if (status === 'READY') iconHtml = '<i class="ri-hourglass-line text-xs mr-1"></i>';
-                else if (status === 'RETRY') iconHtml = '<i class="ri-restart-line icon-spin text-xs mr-1"></i>';
-                else iconHtml = '<i class="ri-check-double-line text-xs mr-1"></i>';
+                // Re-assign icon with margin for expanded view if needed, or just rely on flex gap
+                // But simplified logic: use same icon, just consistent styling.
 
                 // Container for cell with hover effect
                 return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
                             <div class="flex items-center overflow-hidden flex-1 min-w-0">
-                                <span class="${badgeClass} flex-shrink-0">${iconHtml}${status}</span>
+                                <span class="${baseClasses} ${badgeClass} flex-shrink-0">${iconHtml} <span class="ml-1">${status}</span></span>
                                 <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
                             </div>
                             <button onclick="openLogViewer('${params.data.uid}')" data-tooltip="Xem nhật ký"

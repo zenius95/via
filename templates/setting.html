@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cài đặt</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="../fonts/remixicon/remixicon.css" rel="stylesheet">
     <!-- Select2 & jQuery -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -236,7 +236,7 @@
                                     <label class="text-xs font-medium text-slate-400">Số luồng (Threads)</label>
                                 </div>
                                 <input type="number" id="input-max-threads" min="1" max="50" value="3"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
                                 <div class="text-[10px] text-slate-600 mt-1">Số lượng tab mở cùng lúc</div>
                             </div>
 
@@ -245,7 +245,7 @@
                                     <label class="text-xs font-medium text-slate-400">Delay mở tab (giây)</label>
                                 </div>
                                 <input type="number" id="input-launch-delay" min="1" max="60" value="2"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
                                 <div class="text-[10px] text-slate-600 mt-1">Thời gian chờ giữa các lần mở tab</div>
                             </div>
 
@@ -254,7 +254,7 @@
                                     <label class="text-xs font-medium text-slate-400">Timeout (giây)</label>
                                 </div>
                                 <input type="number" id="input-timeout" min="0" max="3600" value="0"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
                                 <div class="text-[10px] text-slate-600 mt-1">0 = Không giới hạn thời gian</div>
                             </div>
 
@@ -263,7 +263,7 @@
                                     <label class="text-xs font-medium text-slate-400">Số lần thử lại (Retry)</label>
                                 </div>
                                 <input type="number" id="input-retry-count" min="0" max="10" value="0"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-blue-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
                                 <div class="text-[10px] text-slate-600 mt-1">Tự động chạy lại khi gặp lỗi</div>
                             </div>
                         </div>
@@ -293,9 +293,9 @@
                                 <div class="flex gap-2">
                                     <input type="text" id="input-chrome-path"
                                         placeholder="Để trống để tự động nhận diện..."
-                                        class="glass-input-style flex-1 rounded-lg px-4 py-2.5 text-sm w-full focus:border-orange-500/50">
+                                        class="flex-1 rounded-lg px-4 py-2.5 text-sm w-full bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/15 focus:outline-none transition-all shadow-inner">
                                     <button onclick="browseChromePath()"
-                                        class="px-4 py-2 glass-btn-border hover:bg-orange-500/10 hover:border-orange-500/30 text-slate-300 transition-colors rounded-lg">
+                                        class="px-4 py-2 flex items-center gap-2 h-[38px] bg-slate-800/40 border border-white/15 rounded-lg text-slate-300 text-[13px] font-medium backdrop-blur transition-all duration-200 hover:bg-slate-700/60 hover:border-orange-500/50 hover:text-white hover:shadow-[0_0_10px_rgba(249,115,22,0.1)]">
                                         <i class="ri-folder-open-line mr-1"></i> Browse
                                     </button>
                                 </div>
