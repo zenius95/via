@@ -263,7 +263,7 @@ body {
     top: 15px;
     bottom: 15px;
     height: initial;
-    width: 3px;
+    width: 2px;
 }
 
 .ag-pinned-right-header .ag-header-cell-resize {
@@ -1079,6 +1079,7 @@ body {
     gap: 10px;
     /* Pill shape */
     transition: all 0.2s;
+    width: 220px;
 }
 
 .profile-widget img {
