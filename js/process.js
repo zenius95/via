@@ -79,9 +79,7 @@ async function startProcess(targetNodes = null, configOverrides = {}) {
             PROCESS_CONFIG.splitCols = parseInt(settings.splitCols) || 2;
             // Reset defaults that might have been overridden previously
             PROCESS_CONFIG.keepOpen = false;
-            PROCESS_CONFIG.headless = true; // Default automation is headless (usually) or as per settings?
-            // Actually previous code didn't explicitly set headless to true, relying on script_executor defaults or main.js defaults?
-            // main.js checks config.headless. standard startProcess usually implies automation.
+            PROCESS_CONFIG.headless = settings.headless; // Read from settings
         }
 
         if (!PROCESS_CONFIG.chromePath) {
@@ -139,7 +137,12 @@ async function startManualBrowser(targetNodes) {
         maxThreads: targetNodes.length,
         delay: 1000,
         keepOpen: true,
-        headless: false
+        headless: false // Force visible for manual mode
+        // headless override removed to respect specific settings or global config if merged correctly above
+        // But wait, startProcess loads settings which overwrites PROCESS_CONFIG values from DB
+        // And then applies configOverrides (which is this object).
+        // So if we don't pass headless here, it uses what startProcess loaded from DB.
+        // Correct.
     });
 }
 

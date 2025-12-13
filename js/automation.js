@@ -50,7 +50,7 @@ async function launchBrowser(account, config) {
         // 1. Launch Browser
         browser = await chromium.launch({
             executablePath: config.chromePath,
-            headless: config.headless === 'true',
+            headless: String(config.headless) === 'true',
             args: args
         });
 
