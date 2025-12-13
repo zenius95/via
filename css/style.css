@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+
 /* css/style.css */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Google Sans', sans-serif;
     background-color: #0f172a;
     color: #e2e8f0;
     margin: 0;
@@ -164,7 +166,7 @@ body {
     --ag-foreground-color: #cbd5e1;
     --ag-row-hover-color: #1e293b;
     --ag-font-size: 13px;
-    --ag-font-family: 'Inter', sans-serif;
+    --ag-font-family: 'Google Sans', sans-serif;
     --ag-cell-horizontal-padding: 16px;
     --ag-selected-row-background-color: transparent;
     --ag-range-selection-border-color: #3b82f6;
@@ -398,7 +400,7 @@ body {
     height: 38px;
     border-radius: 8px;
     border: none;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Google Sans', sans-serif;
     font-weight: 600;
     font-size: 13px;
     text-transform: uppercase;

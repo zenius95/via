@@ -23,6 +23,10 @@
     --tab-active-border: rgba(59, 130, 246, 0.3);
 }
 
+body {
+    font-family: 'Google Sans', sans-serif;
+}
+
 #titlebar {
     display: flex;
     justify-content: space-between;
