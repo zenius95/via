@@ -150,7 +150,7 @@ function restoreProcessColDef() {
 // --- RENDERERS ---
 const textCellRenderer = (params) => {
     if (params.data && params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-32"></div></div>`;
-    if (maskedColumns.has(params.colDef.colId)) return `<span class="masked-data">*******</span>`;
+    if (maskedColumns.has(params.colDef.colId)) return `<span class="text-slate-500 font-mono tracking-[2px] select-none">*******</span>`;
     // Added overflow-hidden text-ellipsis whitespace-nowrap flex-1 block
     const val = params.value || '';
     return `<div class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${params.colDef.cellStyleClass || ''}" title="${val}">${val}</div>`;
@@ -162,7 +162,7 @@ const columnDefs = [
         headerName: "Trạng thái", field: "status", colId: 'status', width: 140,
         cellRenderer: (params) => {
             if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-4 w-20 rounded"></div></div>`;
-            if (maskedColumns.has('status')) return `<span class="masked-data">*******</span>`;
+            if (maskedColumns.has('status')) return `<span class="text-slate-500 font-mono tracking-[2px] select-none">*******</span>`;
 
             const status = parseInt(params.value);
             let label = params.value;
@@ -181,25 +181,25 @@ const columnDefs = [
             else if (status === 7) { badgeClass = 'bg-red-500/15 text-red-300 border-red-500/30'; label = 'Die vĩnh viễn'; dotColor = 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]'; }
             else { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; dotColor = 'bg-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.5)]'; } // Default
 
-            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide border backdrop-blur-sm shadow-sm transition-all duration-200 whitespace-nowrap';
+            const baseClasses = 'inline-flex items-center px-2.5 py-1 rounded-[5px] text-[11px] font-bold uppercase tracking-wide border backdrop-blur-sm shadow-sm transition-all duration-200 whitespace-nowrap leading-none';
             return `<div class="h-full flex items-center"><span class="${baseClasses} ${badgeClass}"><span class="dot-pulse ${dotColor}"></span>${label}</span></div>`;
         },
     },
     {
         headerName: "Tài khoản", field: "name", minWidth: 230, cellClass: 'account-row', colId: 'name',
         cellRenderer: (params) => {
-            if (params.data.isLoading) return `<div class="account-cell"><div class="skeleton w-[34px] h-[34px] rounded-full mr-3 flex-shrink-0"></div><div class="flex flex-col gap-1.5 w-full"><div class="skeleton h-3 w-24"></div><div class="skeleton h-2 w-16"></div></div></div>`;
-            if (maskedColumns.has('name')) return `<div class="account-cell"><span class="masked-data">*******</span></div>`;
+            if (params.data.isLoading) return `<div class="flex items-center h-full"><div class="skeleton w-[34px] h-[34px] rounded-full mr-3 flex-shrink-0"></div><div class="flex flex-col gap-1.5 w-full"><div class="skeleton h-3 w-24"></div><div class="skeleton h-2 w-16"></div></div></div>`;
+            if (maskedColumns.has('name')) return `<div class="flex items-center h-full"><span class="text-slate-500 font-mono tracking-[2px] select-none">*******</span></div>`;
 
             // Avatar logic
             const avatarUrl = params.data.avatar || `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(params.data.name || 'Ad')}&size=64`;
 
-            return `<div class="account-cell justify-between group pr-2">
+            return `<div class="flex items-center h-full justify-between group pr-2">
                         <div class="flex items-center">
-                            <img src="${avatarUrl}" class="account-avatar rounded-full w-8 h-8 mr-3 object-cover border border-white/10" onError="this.src='../assets/icons/ads_icon_placeholder.png'">
-                            <div class="account-details flex flex-col justify-center">
-                                <span class="account-name text-sm font-medium text-slate-200 leading-tight">${params.data.name || 'Unknown'}</span>
-                                <span class="account-uid-sub text-[10px] text-slate-500 font-mono">${params.data.accountId}</span>
+                            <img src="${avatarUrl}" class="w-[34px] h-[34px] rounded-full mr-3 bg-slate-800 object-cover border border-slate-700" onError="this.src='../assets/icons/ads_icon_placeholder.png'">
+                            <div class="flex flex-col justify-center leading-tight">
+                                <span class="font-semibold text-[14px] text-slate-100 mb-0.5">${params.data.name || 'Unknown'}</span>
+                                <span class="text-[13px] text-slate-500 tracking-[-0.5px] font-mono">${params.data.accountId}</span>
                             </div>
                         </div>
                     </div>`;
@@ -227,15 +227,15 @@ const columnDefs = [
     {
         headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',
         cellRenderer: (params) => {
-            if (params.data.isLoading) return `<div class="process-cell"><div class="skeleton h-4 w-20 rounded mr-2"></div></div>`;
-            if (maskedColumns.has('process')) return `<span class="masked-data">*******</span>`;
+            if (params.data.isLoading) return `<div class="flex items-center h-full gap-2.5"><div class="skeleton h-4 w-20 rounded mr-2"></div></div>`;
+            if (maskedColumns.has('process')) return `<span class="text-slate-500 font-mono tracking-[2px] select-none">*******</span>`;
 
             const status = params.value;
             if (!status) return '';
 
             let badgeClass = '';
             let iconHtml = '';
-            const baseClasses = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm border transition-all duration-200 shadow-sm whitespace-nowrap';
+            const baseClasses = 'inline-flex items-center px-2.5 py-1 rounded-[5px] text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm border transition-all duration-200 shadow-sm whitespace-nowrap leading-none';
 
             if (status === 'RUNNING') { badgeClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30'; iconHtml = '<i class="ri-loader-4-line icon-spin text-xs"></i>'; }
             else if (status === 'STOPPED') { badgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/30'; iconHtml = '<i class="ri-pause-circle-line text-xs"></i>'; }
@@ -255,10 +255,10 @@ const columnDefs = [
                 // But simplified logic: use same icon, just consistent styling.
 
                 // Container for cell with hover effect
-                return `<div class="process-cell group relative flex items-center justify-between w-full h-full pr-1">
+                return `<div class="group relative flex items-center justify-between w-full h-full gap-2.5 pr-1">
                             <div class="flex items-center overflow-hidden flex-1 min-w-0">
                                 <span class="${baseClasses} ${badgeClass} flex-shrink-0">${iconHtml} <span class="ml-1">${status}</span></span>
-                                <span class="process-msg truncate ml-2 text-slate-400 text-[11px]">${params.data.processMessage || ''}</span>
+                                <span class="truncate ml-2 text-slate-400 whitespace-nowrap overflow-hidden text-ellipsis">${params.data.processMessage || ''}</span>
                             </div>
                             <button onclick="openLogViewer('${params.data.uid}')" data-tooltip="Xem nhật ký"
                                 class="tooltip-left log-button opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded flex-shrink-0" >

@@ -24,48 +24,8 @@
         }
 
 
-
-        /* Custom sidebar active state */
-        .sidebar-item.active {
-            background: rgba(59, 130, 246, 0.15);
-            border-left-color: #3b82f6;
-            color: #fff;
-        }
-
-        .setting-section {
-            display: none;
-            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .setting-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Toggle Switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #3b82f6;
-        }
-
-        .toggle-checkbox:checked+.toggle-label {
-            background-color: #3b82f6;
-        }
-
         /* Custom Titlebar Override */
         #titlebar {
-            /* border-bottom restored */
             background: transparent !important;
         }
     </style>
@@ -84,7 +44,7 @@
 
             <div class="flex flex-col gap-1 px-3">
                 <button
-                    class="sidebar-item active group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium bg-blue-500/15 border-l-2 border-blue-500 text-white transition-all"
                     onclick="switchTab('general')">
                     <i class="ri-equalizer-line text-lg w-5"></i>
                     Cài đặt chung
@@ -144,7 +104,7 @@
         <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-900/30 p-8 shadow-inner">
 
             <!-- SECTION : GENERAL -->
-            <div id="section-general" class="setting-section active max-w-3xl mx-auto">
+            <div id="section-general" class="setting-section block animate-[fadeIn_0.3s_ease-out] max-w-3xl mx-auto">
                 <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                     <span class="w-1.5 h-8 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]"></span>
                     Cài đặt chung
@@ -160,9 +120,9 @@
                             </div>
                             <div class="relative w-48">
                                 <select
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer">
-                                    <option value="vi" class="bg-slate-800">Tiếng Việt</option>
-                                    <option value="en" class="bg-slate-800">English</option>
+                                    class="w-full rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
+                                    <option value="vi" class="bg-slate-800 text-slate-200">Tiếng Việt</option>
+                                    <option value="en" class="bg-slate-800 text-slate-200">English</option>
                                 </select>
                                 <i
                                     class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
@@ -344,12 +304,12 @@
                             <div>
                                 <label class="block text-xs font-medium text-slate-400 mb-2">Số hàng (Rows)</label>
                                 <input type="number" id="input-split-rows" min="1" max="10" value="2"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/15 focus:outline-none transition-all shadow-inner">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-400 mb-2">Số cột (Columns)</label>
                                 <input type="number" id="input-split-cols" min="1" max="10" value="2"
-                                    class="glass-input-style w-full rounded-lg px-3 py-2 text-sm focus:border-orange-500/50">
+                                    class="w-full rounded-lg px-3 py-2 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/15 focus:outline-none transition-all shadow-inner">
                             </div>
                         </div>
                     </div>
@@ -582,7 +542,7 @@
                             <div class="relative">
                                 <i class="ri-link absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
                                 <input type="text" value="https://api.ipify.org?format=json"
-                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-purple-500/50">
+                                    class="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/15 focus:outline-none transition-all shadow-inner">
                             </div>
                             <p class="text-[10px] text-slate-500 mt-2">Dùng để kiểm tra IP khi mở profile mới.</p>
                         </div>
@@ -718,7 +678,7 @@
                             <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Tên
                                 Profile <span class="text-red-500">*</span></label>
                             <input type="text" id="profile-name" required
-                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm focus:border-blue-500/50"
+                                class="w-full rounded-lg px-4 py-2.5 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner"
                                 placeholder="Nhập tên gợi nhớ...">
                         </div>
 
@@ -730,10 +690,10 @@
                                 <i
                                     class="ri-computer-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                 <select id="profile-os"
-                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
-                                    <option value="Windows">Windows</option>
-                                    <option value="macOS">macOS</option>
-                                    <option value="Linux">Linux</option>
+                                    class="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
+                                    <option value="Windows" class="bg-slate-800">Windows</option>
+                                    <option value="macOS" class="bg-slate-800">macOS</option>
+                                    <option value="Linux" class="bg-slate-800">Linux</option>
                                 </select>
                             </div>
                         </div>
@@ -746,10 +706,10 @@
                                 <i
                                     class="ri-chrome-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                 <select id="profile-browser"
-                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
-                                    <option value="Chrome">Chrome</option>
-                                    <option value="Firefox">Firefox</option>
-                                    <option value="Edge">Microsoft Edge</option>
+                                    class="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
+                                    <option value="Chrome" class="bg-slate-800">Chrome</option>
+                                    <option value="Firefox" class="bg-slate-800">Firefox</option>
+                                    <option value="Edge" class="bg-slate-800">Microsoft Edge</option>
                                 </select>
                             </div>
                         </div>
@@ -762,10 +722,10 @@
                                 <i
                                     class="ri-price-tag-3-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                 <select id="profile-browser-ver"
-                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
-                                    <option value="120">Version 120 (Latest)</option>
-                                    <option value="119">Version 119</option>
-                                    <option value="118">Version 118</option>
+                                    class="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
+                                    <option value="120" class="bg-slate-800">Version 120 (Latest)</option>
+                                    <option value="119" class="bg-slate-800">Version 119</option>
+                                    <option value="118" class="bg-slate-800">Version 118</option>
                                 </select>
                             </div>
                         </div>
@@ -778,12 +738,12 @@
                                 <i
                                     class="ri-aspect-ratio-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10"></i>
                                 <select id="profile-resolution"
-                                    class="glass-input-style w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer">
-                                    <option value="1920x1080">1920 x 1080</option>
-                                    <option value="1366x768">1366 x 768</option>
-                                    <option value="1440x900">1440 x 900</option>
-                                    <option value="1280x720">1280 x 720</option>
-                                    <option value="2560x1440">2560 x 1440</option>
+                                    class="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm appearance-none cursor-pointer bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner">
+                                    <option value="1920x1080" class="bg-slate-800">1920 x 1080</option>
+                                    <option value="1366x768" class="bg-slate-800">1366 x 768</option>
+                                    <option value="1440x900" class="bg-slate-800">1440 x 900</option>
+                                    <option value="1280x720" class="bg-slate-800">1280 x 720</option>
+                                    <option value="2560x1440" class="bg-slate-800">2560 x 1440</option>
                                 </select>
                             </div>
                         </div>
@@ -801,7 +761,7 @@
                         </div>
                         <div class="relative">
                             <textarea id="profile-ua" rows="2"
-                                class="glass-input-style w-full rounded-lg px-4 py-2.5 text-xs font-mono text-slate-300 focus:border-blue-500/50 resize-none"
+                                class="w-full rounded-lg px-4 py-2.5 text-xs font-mono text-slate-300 bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner resize-none"
                                 placeholder="Nhập hoặc để tự động tạo..."></textarea>
                         </div>
                     </div>
@@ -811,7 +771,7 @@
                         <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Ghi
                             chú</label>
                         <textarea id="profile-notes" rows="2"
-                            class="glass-input-style w-full rounded-lg px-4 py-2.5 text-sm focus:border-blue-500/50"
+                            class="w-full rounded-lg px-4 py-2.5 text-sm bg-slate-800/40 border border-white/10 text-slate-200 backdrop-blur focus:bg-slate-800/70 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 focus:outline-none transition-all shadow-inner"
                             placeholder="Nhập ghi chú cho profile này..."></textarea>
                     </div>
 
@@ -839,25 +799,28 @@
         });
 
         // Tab Switching Logic
+        // Tab Switching Logic
         function switchTab(tabId) {
             // Update Sidebar
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('active', 'text-slate-200', 'bg-white/5');
-                item.classList.add('text-slate-400');
+                // Reset to inactive state
+                item.className = 'sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent';
             });
 
             // Find active button
             const activeBtn = event.currentTarget;
-            activeBtn.classList.add('active', 'text-slate-200', 'bg-white/5');
-            activeBtn.classList.remove('text-slate-400');
+            // Set to active state
+            activeBtn.className = 'sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium bg-blue-500/15 border-l-2 border-blue-500 text-white transition-all';
 
             // Update Content
             document.querySelectorAll('.setting-section').forEach(section => {
-                section.classList.remove('active');
+                section.classList.add('hidden');
+                section.classList.remove('block');
             });
 
             const target = document.getElementById('section-' + tabId);
-            target.classList.add('active');
+            target.classList.remove('hidden');
+            target.classList.add('block');
 
             // Add slight slide up animation
             target.style.animation = 'none';

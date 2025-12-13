@@ -141,6 +141,18 @@ body {
     animation: spin 1s linear infinite;
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /*
 .badge-success {
     background-color: rgba(16, 185, 129, 0.1);
@@ -361,7 +373,8 @@ body {
     background: transparent !important;
 }
 
-/* --- Account Info Cells --- */
+/* --- Account Info Cells (Migrated to Tailwind) --- */
+/*
 .account-cell {
     display: flex;
     align-items: center;
@@ -413,13 +426,13 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Masked Data */
 .masked-data {
     color: #64748b;
     font-family: monospace;
     letter-spacing: 2px;
     user-select: none;
 }
+*/
 
 /* --- START BUTTON (NEON) --- */
 /* 
