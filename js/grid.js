@@ -113,7 +113,7 @@ function toggleProcessColumn() {
     } else {
         // [MỞ RỘNG]
         // Lấy lại chiều rộng đã lưu (hoặc mặc định 220)
-        const widthToRestore = processState.savedWidth || 300;
+        const widthToRestore = processState.savedWidth || 400;
 
         gridApi.setColumnWidths([{ key: 'process', newWidth: widthToRestore }], true);
         col.getColDef().resizable = true;
@@ -204,9 +204,6 @@ const columnDefs = [
         },
         getQuickFilterText: (params) => { if (!params.data || params.data.isLoading) return ''; return removeVietnameseTones(params.data.name + ' ' + params.data.uid); }
     },
-    { headerName: "Họ tên", field: "name", width: 150, colId: 'name', cellRenderer: textCellRenderer },
-    { headerName: "Ngày sinh", field: "birthday", width: 120, colId: 'birthday', cellRenderer: textCellRenderer },
-    { headerName: "Bạn bè", field: "friends", width: 100, colId: 'friends', cellRenderer: textCellRenderer },
     {
         headerName: "Thư mục", field: "folder", width: 150, colId: 'folder',
         cellRenderer: (params) => {
@@ -253,23 +250,46 @@ const columnDefs = [
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
     {
-        headerName: "Chất lượng", field: "accountQuality", width: 150, colId: 'accountQuality',
+        headerName: "Chất lượng tài khoản", field: "accountQuality", width: 250, colId: 'accountQuality',
         cellRenderer: (params) => {
-            if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-24"></div></div>`;
+            if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-24 bg-slate-700"></div></div>`;
             const val = params.value || 'N/A';
-            let colorClass = 'text-slate-400';
-            // Simple color mapping based strictly on the text logic in API
-            if (val.includes('Tích Xanh') || val.includes('Live Ads') || val === 'Tích xanh 902 ẩn tích') colorClass = 'text-emerald-400 font-medium';
-            else if (val.includes('Hạn Chế') || val.includes('HCQC') || val.includes('Xịt') || val.includes('Checkpoint')) colorClass = 'text-red-400 font-medium';
-            else if (val.includes('Đang Kháng') || val.includes('Đang kháng')) colorClass = 'text-amber-400 font-medium';
 
-            return `<div class="flex items-center h-full ${colorClass}" title="${val}">${val}</div>`;
+            // Dark mode colors
+            let bgClass = 'bg-slate-800 text-slate-400 border-slate-700';
+            let icon = '';
+
+            // Color logic
+            if (val.includes('Tích Xanh') || val.includes('Live Ads') || val === 'Tích xanh 902 ẩn tích') {
+                bgClass = 'bg-emerald-900/30 text-emerald-400 border-emerald-800';
+                icon = '<i class="ri-checkbox-circle-fill mr-1.5"></i>';
+            }
+            else if (val.includes('Hạn Chế') || val.includes('HCQC') || val.includes('Xịt') || val.includes('Checkpoint')) {
+                bgClass = 'bg-red-900/30 text-red-400 border-red-800';
+                icon = '<i class="ri-close-circle-fill mr-1.5"></i>';
+            }
+            else if (val.includes('Đang Kháng') || val.includes('Đang kháng')) {
+                bgClass = 'bg-amber-900/30 text-amber-400 border-amber-800';
+                icon = '<i class="ri-time-fill mr-1.5"></i>';
+            }
+
+            return `
+                <div class="flex items-center h-full w-full">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${bgClass} truncate max-w-full transition-colors">
+                        ${icon}
+                        <span class="truncate">${val}</span>
+                    </span>
+                </div>
+             `;
         }
     },
+    { headerName: "Họ tên", field: "name", width: 150, colId: 'name', cellRenderer: textCellRenderer },
+    { headerName: "Ngày sinh", field: "birthday", width: 120, colId: 'birthday', cellRenderer: textCellRenderer },
+    { headerName: "Bạn bè", field: "friends", width: 100, colId: 'friends', cellRenderer: textCellRenderer },
     { headerName: "Token", field: "token", width: 150, colId: 'token', cellRenderer: textCellRenderer },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
-        headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 100, colId: 'process',
+        headerName: "Tiến trình", field: "processStatus", pinned: 'right', minWidth: 150, width: 300, colId: 'process',
         cellRenderer: (params) => {
             if (params.data.isLoading) return `<div class="process-cell"><div class="skeleton h-4 w-20 rounded mr-2"></div></div>`;
             if (maskedColumns.has('process')) return `<span class="masked-data">*******</span>`;
@@ -400,6 +420,18 @@ const gridOptions = {
     },
     rowHeight: 56, headerHeight: 48, pagination: false, animateRows: true, tooltipShowDelay: 0,
     rowSelection: { mode: 'multiRow', enableClickSelection: false },
+    selectionColumnDef: {
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
+        pinned: 'left',
+        lockPosition: true,
+        suppressMenu: true,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        headerName: '',
+    },
     onCellContextMenu: (params) => { if (params.data && !params.data.isLoading) showContextMenu(params.event); },
     onModelUpdated: () => {
         updateFooterCount();

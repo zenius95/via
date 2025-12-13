@@ -333,6 +333,123 @@ class FacebookAPI {
 
         })
     }
+
+    async getUserInfo() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // ... (existing getUserInfo logic)
+                const uid = this.uid;
+                const token = this.accessToken;
+
+                // Simple User Info Query
+                const responses = await Promise.all([
+                    fetch(`https://graph.facebook.com/me?access_token=${token}&fields=id,name,birthday,email,picture.width(100).height(100)`).then(res => res.json())
+                ]);
+
+                const basicInfo = responses[0];
+
+                if (basicInfo.error) {
+                    reject(basicInfo.error);
+                    return;
+                }
+
+                resolve({
+                    id: basicInfo.id,
+                    name: basicInfo.name,
+                    birthday: basicInfo.birthday,
+                    email: basicInfo.email,
+                    picture: basicInfo.picture,
+                    // Friends removed from here
+                });
+
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    async getFriends() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Use getAccessToken2 to get a fresh token for friends fetching
+                const tokenData = await this.getAccessToken2();
+                let token = this.accessToken; // Default to main token
+
+                if (tokenData && tokenData.accessToken) {
+                    token = tokenData.accessToken;
+                }
+
+                const res = await fetch(`https://graph.facebook.com/me/friends?access_token=${token}&summary=true&limit=0`);
+                const data = await res.json();
+
+                if (data.summary) {
+                    resolve(data.summary.total_count);
+                } else {
+                    resolve(null);
+                }
+            } catch (e) {
+                // If getAccessToken2 fails, we might still try with this.accessToken? 
+                // Or just fail. User instruction implies we MUST use this new token type usually.
+                // But let's try fallback or just reject?
+                // For now, if getAccessToken2 fails (rejects), we catch it here.
+                // Let's fallback to main token if specific token fails?
+                // User said "loại này... chỉ để dùng cho getFriends".
+                // I will assume if it fails, we return 0 or null as before.
+                // Actually, let's look at the catch block.
+                console.error("getFriends failed using token2", e);
+                reject(e);
+            }
+        });
+    }
+
+    getAccessToken2() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const res = await fetch('https://adsmanager.facebook.com/adsmanager/manage/campaigns');
+                let data = await res.text();
+
+                try {
+                    let redirect = data.match(/window.location\.replace\("(.+)"/);
+                    if (redirect) {
+                        let redirectUrl = redirect[1].replace(/\\/g, '');
+                        const res2 = await fetch(redirectUrl);
+                        data = await res2.text();
+                    }
+                } catch (e) { }
+
+                if (res.url.includes('login') || res.url.includes('index.php?next')) {
+                    resolve('not_login');
+                } else if (res.url.includes('/checkpoint/1501092823525282')) {
+                    resolve('282');
+                } else if (res.url.includes('/checkpoint/828281030927956')) {
+                    resolve('956');
+                } else {
+                    const accessTokenMatches = data.match(/window.__accessToken="(.*)";/);
+                    const postTokenMatches = data.match(/(?<="token":")[^"]*/g)?.filter(item => item.startsWith('NA'));
+                    const postTokenMatches2 = data.match(/(?<="async_get_token":")[^"]*/g);
+
+                    // Safe logic for LSD
+                    let lsd = '';
+                    try {
+                        lsd = data.split(',["LSD",[],{"token":"')[1].split('"}')[0];
+                    } catch (e) { }
+
+                    if (accessTokenMatches && accessTokenMatches[1] && postTokenMatches && postTokenMatches[0]) {
+                        resolve({
+                            accessToken: accessTokenMatches[1],
+                            dtsg: postTokenMatches[0],
+                            dtsg2: postTokenMatches2 ? postTokenMatches2[0] : null,
+                            lsd
+                        });
+                    } else {
+                        reject('Token not found in AdsManager');
+                    }
+                }
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 }
 
 if (typeof window !== 'undefined') {

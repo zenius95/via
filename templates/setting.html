@@ -98,6 +98,12 @@
                 </button>
                 <button
                     class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
+                    onclick="switchTab('facebook')">
+                    <i class="ri-facebook-circle-fill text-lg w-5"></i>
+                    Cài đặt Facebook
+                </button>
+                <button
+                    class="sidebar-item group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all border-l-2 border-transparent"
                     onclick="switchTab('profiles')">
                     <i class="ri-shield-user-line text-lg w-5"></i>
                     Quản lý Profile
@@ -393,6 +399,111 @@
                         </tbody>
                     </table>
                     <div class="px-6 py-4 border-t border-white/5 text-center text-xs text-slate-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION : FACEBOOK (NEW) -->
+            <div id="section-facebook" class="setting-section max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-8 bg-blue-600 rounded-full shadow-[0_0_10px_#2563eb]"></span>
+                    Cài đặt Facebook
+                </h2>
+
+                <div class="space-y-6">
+                    <!-- Login Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i class="ri-login-circle-line text-blue-400"></i> Đăng nhập
+                        </h3>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-medium text-slate-200">Đăng nhập bằng Cookie</h3>
+                                <p class="text-xs text-slate-500 mt-1">Sử dụng cookie đã lưu để đăng nhập tự động. Nếu
+                                    tắt, sẽ không inject cookie.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="input-fb-cookie" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Data Fetching Config -->
+                    <div class="bg-slate-800/40 backdrop-blur rounded-xl border border-white/5 p-6 shadow-lg">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i class="ri-download-cloud-line text-emerald-400"></i> Lấy dữ liệu tài khoản
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-4">Chỉ lấy các thông tin được chọn khi chạy kiểm tra/đăng
+                            nhập.</p>
+
+                        <div class="space-y-4">
+                            <!-- Friends -->
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-slate-900/30 border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                        <i class="ri-group-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-300">Danh sách bạn bè</div>
+                                        <div class="text-[10px] text-slate-500">Số lượng bạn bè</div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="input-fb-friends" class="sr-only peer">
+                                    <div
+                                        class="w-9 h-5 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500 shadow-inner">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Info -->
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-slate-900/30 border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+                                        <i class="ri-user-search-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-300">Thông tin cá nhân</div>
+                                        <div class="text-[10px] text-slate-500">Tên, UID, Avatar, Ngày sinh...</div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="input-fb-info" class="sr-only peer">
+                                    <div
+                                        class="w-9 h-5 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 shadow-inner">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Quality -->
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-slate-900/30 border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                        <i class="ri-shield-check-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-300">Chất lượng tài khoản</div>
+                                        <div class="text-[10px] text-slate-500">Live Ads, Hạn chế, Checkpoint...</div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="input-fb-quality" class="sr-only peer">
+                                    <div
+                                        class="w-9 h-5 bg-slate-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-inner">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -7,7 +7,7 @@ async function execute(page, item, config, onLog = () => { }) {
         // Timeout handling for navigation
         const navTimeout = config.timeout && config.timeout > 0 ? config.timeout * 1000 : 30000;
 
-        onLog('Đang truy cập Facebook...');
+        onLog(config.fbLoginCookie === 'true' ? 'Đang thử đăng nhập bằng Cookie...' : 'Đang truy cập Facebook...');
 
         // Demo nav
         await page.goto('https://www.facebook.com/', { timeout: navTimeout, waitUntil: 'domcontentloaded' });
@@ -15,6 +15,10 @@ async function execute(page, item, config, onLog = () => { }) {
         // Check for c_user cookie
         const currentCookies = await page.context().cookies();
         const hasCUser = currentCookies.some(c => c.name === 'c_user');
+
+        if (hasCUser && config.fbLoginCookie === 'true') {
+            onLog('Cookie hợp lệ. Đã đăng nhập.');
+        }
 
         if (!hasCUser) {
             onLog('Đang nhập thông tin tài khoản...')
@@ -92,31 +96,59 @@ async function execute(page, item, config, onLog = () => { }) {
         const apiSource = fs.readFileSync(path.join(__dirname, 'facebook_api.js'), 'utf8');
 
         // Execute in browser
-        const loginStatus = await page.evaluate(async ({ apiSource, item }) => {
+        const loginStatus = await page.evaluate(async ({ apiSource, item, config }) => {
             try {
 
                 window.eval(apiSource);
                 const FacebookAPI = window.FacebookAPI;
                 const fb = new FacebookAPI(item);
-
-
+                // 2. Main Flow: Get Token from Page (Billing/Source)
                 const status = await fb.getAccessToken();
 
                 if (status.status === 'success') {
-                    // Try getting User Info if token is valid
-                    try {
-                        const userData = await fb.getUserInfo();
-                        if (userData) status.userData = userData;
-                    } catch (e) { }
+                    // config is now passed correctly
+                    // const config = item.config || {}; // No longer needed
+                    const shouldGetInfo = config.fbGetInfo === 'true';
+                    const shouldGetFriends = config.fbGetFriends === 'true';
+                    const shouldGetQuality = config.fbGetQuality === 'true';
 
-                    // NEW: Check Account Quality
-                    try {
-                        const qualityData = await fb.getAccountQuality();
-                        console.log(qualityData)
+                    console.log('Config received:', config);
 
-                        if (qualityData) status.qualityData = qualityData;
-                    } catch (e) {
-                        console.error("Check Quality Failed", e);// console.error("Check Quality Failed", e);
+                    // CONDITIONAL: User Info
+                    if (shouldGetInfo) {
+                        try {
+                            const userData = await fb.getUserInfo();
+                            if (userData) {
+                                status.userData = status.userData || {};
+                                Object.assign(status.userData, userData);
+                            }
+                        } catch (e) {
+                            console.error("Get User Info Failed", e);
+                        }
+                    }
+
+                    // CONDITIONAL: Friends
+                    if (shouldGetFriends) {
+                        try {
+                            const friendsCount = await fb.getFriends();
+                            console.log('Friends Found:', friendsCount);
+                            if (friendsCount !== null && friendsCount !== undefined) {
+                                status.userData = status.userData || {};
+                                status.userData.friends = friendsCount;
+                            }
+                        } catch (e) {
+                            console.error("Get Friends Failed", e);
+                        }
+                    }
+
+                    // CONDITIONAL: Account Quality
+                    if (shouldGetQuality) {
+                        try {
+                            const qualityData = await fb.getAccountQuality();
+                            if (qualityData) status.qualityData = qualityData;
+                        } catch (e) {
+                            console.error("Check Quality Failed", e);
+                        }
                     }
                 }
 
@@ -125,7 +157,7 @@ async function execute(page, item, config, onLog = () => { }) {
                 return { status: 'error', message: 'Evaluation Error: ' + evalErr.toString() };
             }
 
-        }, { apiSource, item });
+        }, { apiSource, item, config });
 
         if (loginStatus.status === 'success') {
             onLog(`Đăng nhập thành công!`);

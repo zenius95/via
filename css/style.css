@@ -207,11 +207,6 @@ body {
     padding-left: 16px !important;
 }
 
-.ag-theme-alpine-dark .ag-cell-last-left-pinned,
-.ag-theme-alpine-dark .ag-header-cell-last-left-pinned {
-    border-right: 1px solid #334155 !important;
-}
-
 .ag-theme-alpine-dark .ag-cell-wrapper {
     height: 100%;
 }
@@ -247,6 +242,7 @@ body {
 .ag-watermark {
     display: none !important;
 }
+
 
 /* Custom Header Component */
 .custom-header-container {

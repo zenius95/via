@@ -80,6 +80,12 @@ async function startProcess(targetNodes = null, configOverrides = {}) {
             // Reset defaults that might have been overridden previously
             PROCESS_CONFIG.keepOpen = false;
             PROCESS_CONFIG.headless = settings.headless; // Read from settings
+
+            // Facebook Settings
+            PROCESS_CONFIG.fbLoginCookie = settings.fbLoginCookie;
+            PROCESS_CONFIG.fbGetFriends = settings.fbGetFriends;
+            PROCESS_CONFIG.fbGetInfo = settings.fbGetInfo;
+            PROCESS_CONFIG.fbGetQuality = settings.fbGetQuality;
         }
 
         if (!PROCESS_CONFIG.chromePath) {

@@ -96,8 +96,9 @@ async function launchBrowser(account, config) {
 
         context = await browser.newContext(contextOptions);
 
-        // 3. Load Cookies
-        if (account.cookie) {
+        // 3. Load Cookies (ONLY if Configured)
+        const shouldLoadCookie = config.fbLoginCookie === 'true'; // Default is 'false' if undefined
+        if (account.cookie && shouldLoadCookie) {
             try {
                 // Determine domain logic? Or add to all?
                 // Playwright needs specific domain or url to add cookies if not specified in cookie obj.

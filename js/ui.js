@@ -448,7 +448,7 @@ function processImportData() {
         const newData = {
             isLoading: false,
             status: 'UNCHECKED',
-            name: `New Via ${uid.substr(-4)}`,
+            name: '',
             avatar: `https://ui-avatars.com/api/?name=${uid.substr(-4)}&background=random&color=fff&size=64&bold=true`,
             uid: uid,
             password: password,

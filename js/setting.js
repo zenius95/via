@@ -28,6 +28,12 @@ const elSplitRows = document.getElementById('input-split-rows');
 const elSplitCols = document.getElementById('input-split-cols');
 const elLayoutConfig = document.getElementById('layout-config-container');
 
+// Facebook Settings Elements
+const elFbCookie = document.getElementById('input-fb-cookie');
+const elFbFriends = document.getElementById('input-fb-friends');
+const elFbInfo = document.getElementById('input-fb-info');
+const elFbQuality = document.getElementById('input-fb-quality');
+
 // Data
 let currentSettings = {};
 
@@ -68,6 +74,13 @@ async function loadSettings() {
         if (elSplitRows) elSplitRows.value = currentSettings.splitRows || 2;
         if (elSplitCols) elSplitCols.value = currentSettings.splitCols || 2;
 
+        // Facebook Settings Loading
+        if (elFbCookie) elFbCookie.checked = currentSettings.fbLoginCookie === 'true';
+        if (elFbFriends) elFbFriends.checked = currentSettings.fbGetFriends === 'true';
+        if (elFbInfo) elFbInfo.checked = currentSettings.fbGetInfo === 'true';
+        if (elFbQuality) elFbQuality.checked = currentSettings.fbGetQuality === 'true';
+
+
         toggleLayoutConfig();
 
         // Auto detect if empty
@@ -98,7 +111,13 @@ const saveSettings = debounce(async () => {
         // Save Auto Split
         autoSplit: elAutoSplit ? String(elAutoSplit.checked) : 'false',
         splitRows: elSplitRows ? elSplitRows.value : '2',
-        splitCols: elSplitCols ? elSplitCols.value : '2'
+        splitCols: elSplitCols ? elSplitCols.value : '2',
+
+        // Save Facebook Settings
+        fbLoginCookie: elFbCookie ? String(elFbCookie.checked) : 'false',
+        fbGetFriends: elFbFriends ? String(elFbFriends.checked) : 'false',
+        fbGetInfo: elFbInfo ? String(elFbInfo.checked) : 'false',
+        fbGetQuality: elFbQuality ? String(elFbQuality.checked) : 'false'
     };
 
     try {
@@ -116,7 +135,10 @@ function setupListeners() {
         if (el) el.addEventListener('input', saveSettings);
     });
 
-    if (elHeadless) elHeadless.addEventListener('change', saveSettings);
+    const checks = [elHeadless, elFbCookie, elFbFriends, elFbInfo, elFbQuality];
+    checks.forEach(el => {
+        if (el) el.addEventListener('change', saveSettings);
+    });
 
     if (elAutoSplit) {
         elAutoSplit.addEventListener('change', () => {
