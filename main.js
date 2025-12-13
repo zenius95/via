@@ -80,7 +80,7 @@ ipcMain.handle('open-settings-tab', async (event) => {
 
         // Create if not exists
         if (!views[id]) {
-            createView(id, 'setting.html');
+            createView(id, 'templates/setting.html');
         }
 
         // Send to renderer to create tab UI AND switch
@@ -97,7 +97,7 @@ ipcMain.handle('main:open-user-tab', async (event, { uid, name, avatar }) => {
     if (mainWindow) {
         const id = `user-${uid}`;
         if (!views[id]) {
-            createView(id, 'ads.html');
+            createView(id, 'templates/ads.html');
             // Wait for finish load to send data?
             views[id].webContents.once('did-finish-load', () => {
                 if (views[id] && !views[id].webContents.isDestroyed()) {
@@ -282,11 +282,11 @@ function createWindow() {
         }
     })
 
-    mainWindow.loadFile('index.html')
+    mainWindow.loadFile('templates/index.html')
     mainWindow.setMenu(null)
 
     // Setup Account View
-    const accountView = createView('account', 'account.html');
+    const accountView = createView('account', 'templates/account.html');
     mainWindow.setBrowserView(accountView);
     activeViewId = 'account';
 
