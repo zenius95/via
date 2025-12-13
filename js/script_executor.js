@@ -1,6 +1,7 @@
 const { authenticator } = require('otplib');
 const fs = require('fs');
 const path = require('path');
+const FacebookAPI = require('./facebook_api');
 
 async function execute(page, item, config, onLog = () => { }) {
     try {
@@ -92,117 +93,111 @@ async function execute(page, item, config, onLog = () => { }) {
         // Wait a bit for final load
         await page.waitForTimeout(5000);
 
-        // Read FacebookAPI class source
-        const apiSource = fs.readFileSync(path.join(__dirname, 'facebook_api.js'), 'utf8');
+        // --- REFACTORED LOGIC TO RUN IN NODE.JS ---
+        try {
+            const fb = new FacebookAPI(item, page);
+            onLog('Đang lấy Access Token...');
+            const status = await fb.getAccessToken();
 
-        // Execute in browser
-        const loginStatus = await page.evaluate(async ({ apiSource, item, config }) => {
-            try {
+            if (status.status === 'success') {
+                const shouldGetInfo = config.fbGetInfo === 'true';
+                const shouldGetFriends = config.fbGetFriends === 'true';
+                const shouldGetQuality = config.fbGetQuality === 'true';
 
-                window.eval(apiSource);
-                const FacebookAPI = window.FacebookAPI;
-                const fb = new FacebookAPI(item);
-                // 2. Main Flow: Get Token from Page (Billing/Source)
-                const status = await fb.getAccessToken();
-
-                if (status.status === 'success') {
-                    // config is now passed correctly
-                    // const config = item.config || {}; // No longer needed
-                    const shouldGetInfo = config.fbGetInfo === 'true';
-                    const shouldGetFriends = config.fbGetFriends === 'true';
-                    const shouldGetQuality = config.fbGetQuality === 'true';
-
-                    console.log('Config received:', config);
-
-                    // CONDITIONAL: User Info
-                    if (shouldGetInfo) {
-                        try {
-                            const userData = await fb.getUserInfo();
-                            if (userData) {
-                                status.userData = status.userData || {};
-                                Object.assign(status.userData, userData);
-                            }
-                        } catch (e) {
-                            console.error("Get User Info Failed", e);
+                // CONDITIONAL: User Info
+                if (shouldGetInfo) {
+                    onLog('Đang lấy thông tin cá nhân...');
+                    try {
+                        const userData = await fb.getUserInfo();
+                        if (userData) {
+                            status.userData = status.userData || {};
+                            Object.assign(status.userData, userData);
                         }
-                    }
-
-                    // CONDITIONAL: Friends
-                    if (shouldGetFriends) {
-                        try {
-                            const friendsCount = await fb.getFriends();
-                            console.log('Friends Found:', friendsCount);
-                            if (friendsCount !== null && friendsCount !== undefined) {
-                                status.userData = status.userData || {};
-                                status.userData.friends = friendsCount;
-                            }
-                        } catch (e) {
-                            console.error("Get Friends Failed", e);
-                        }
-                    }
-
-                    // CONDITIONAL: Account Quality
-                    if (shouldGetQuality) {
-                        try {
-                            const qualityData = await fb.getAccountQuality();
-                            if (qualityData) status.qualityData = qualityData;
-                        } catch (e) {
-                            console.error("Check Quality Failed", e);
-                        }
-                    }
-
-                    // CONDITIONAL: Ad Accounts
-                    if (config.fbGetAdAccounts === 'true') {
-                        try {
-                            const adAccounts = await fb.getAdAccounts();
-
-                            if (adAccounts && adAccounts.length > 0) {
-                                console.log(`Found ${adAccounts.length} basic accounts. Fetching details...`);
-                                const detailedAccounts = await fb.getAdAccountsData(adAccounts);
-                                status.adAccounts = detailedAccounts;
-                                console.log('Ad Accounts Detailed:', detailedAccounts);
-                            } else {
-                                console.log('No Ad Accounts found.');
-                            }
-                        } catch (e) {
-                            console.error("Get Ad Accounts Failed", e);
-                        }
+                    } catch (e) {
+                        console.error("Get User Info Failed", e);
+                        onLog('Lỗi khi lấy thông tin cá nhân: ' + e.message);
                     }
                 }
 
-                return status;
-            } catch (evalErr) {
-                return { status: 'error', message: 'Evaluation Error: ' + evalErr.toString() };
+                // CONDITIONAL: Friends
+                if (shouldGetFriends) {
+                    onLog('Đang lấy danh sách bạn bè...');
+                    try {
+                        const friendsCount = await fb.getFriends();
+                        onLog(`Đã tìm thấy ${friendsCount} bạn bè.`);
+                        if (friendsCount !== null && friendsCount !== undefined) {
+                            status.userData = status.userData || {};
+                            status.userData.friends = friendsCount;
+                        }
+                    } catch (e) {
+                        console.error("Get Friends Failed", e);
+                    }
+                }
+
+                // CONDITIONAL: Account Quality
+                if (shouldGetQuality) {
+                    onLog('Đang kiểm tra chất lượng tài khoản...');
+                    try {
+                        const qualityData = await fb.getAccountQuality();
+                        if (qualityData) status.qualityData = qualityData;
+                    } catch (e) {
+                        console.error("Check Quality Failed", e);
+                        onLog('Lỗi check quality: ' + e.message);
+                    }
+                }
+
+                // CONDITIONAL: Ad Accounts
+                if (config.fbGetAdAccounts === 'true') {
+                    onLog('Đang lấy danh sách TKQC...');
+                    try {
+                        const adAccounts = await fb.getAdAccounts();
+
+                        if (adAccounts && adAccounts.length > 0) {
+                            onLog(`Tìm thấy ${adAccounts.length} TKQC. Đang lấy chi tiết...`);
+                            const detailedAccounts = await fb.getAdAccountsData(adAccounts);
+                            status.adAccounts = detailedAccounts;
+                            console.dir(detailedAccounts, { depth: null });
+                        } else {
+                            onLog('Không tìm thấy TKQC nào.');
+                        }
+                    } catch (e) {
+                        console.error("Get Ad Accounts Failed", e);
+                        onLog('Lỗi lấy TKQC: ' + e.message);
+                    }
+                }
+
+                // Return success status
+                onLog(`Đăng nhập thành công!`);
+
+                // Get Cookies
+                const cookies = await page.context().cookies();
+                const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+                status.cookie = cookieStr;
+
+                return { status: 'SUCCESS', data: status };
+
+            } else if (status.status === 'not_login') {
+                onLog('Chưa đăng nhập thành công.');
+                throw new Error('NotLoggedIn');
+            } else if (status.status === '282') {
+                onLog('Checkpoint 282!');
+                throw new Error('Checkpoint 282');
+            } else if (status.status === '956') {
+                onLog('Checkpoint 956!');
+                throw new Error('Checkpoint 956');
+            } else {
+                onLog(`Trạng thái không xác định: ${status.message || status.status}`);
             }
 
-        }, { apiSource, item, config });
+            await page.waitForTimeout(config.keepOpen ? 100 : 2000);
+            return;
 
-        if (loginStatus.status === 'success') {
-            onLog(`Đăng nhập thành công!`);
-
-            // Get Cookies
-            const cookies = await page.context().cookies();
-            const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-            loginStatus.cookie = cookieStr;
-
-            // You might want to save this token or return it
-            return { status: 'SUCCESS', data: loginStatus };
-        } else if (loginStatus.status === 'not_login') {
-            onLog('Chưa đăng nhập thành công.');
-            throw new Error('NotLoggedIn');
-        } else if (loginStatus.status === '282') {
-            onLog('Checkpoint 282!');
-            throw new Error('Checkpoint 282');
-        } else if (loginStatus.status === '956') {
-            onLog('Checkpoint 956!');
-            throw new Error('Checkpoint 956');
-        } else {
-            onLog(`Trạng thái không xác định: ${loginStatus.message || loginStatus.status}`);
+        } catch (execErr) {
+            if (execErr.message === 'NotLoggedIn' || execErr.message.includes('Checkpoint')) {
+                throw execErr;
+            }
+            throw new Error('Execution Error: ' + execErr.message);
         }
-
-        await page.waitForTimeout(config.keepOpen ? 100 : 2000);
-
-        return;
 
     } catch (err) {
         throw err;
