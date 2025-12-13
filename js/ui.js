@@ -354,7 +354,12 @@ function processImportData() {
                     const val = cols[index].trim();
                     if (type === 'uid') uid = val;
                     else if (type === 'password') password = val;
-                    else if (type === '2fa') twoFa = val;
+                    // Custom parsing fix
+                    else if (type === '2fa') twoFa = val.replace(/\s/g, '');
+
+                    // Heuristic parsing fix (this content block is tricky to match because of large gap, I will use multiple replace chunks in multi tool if needed, but here I can just target the 2FA line specifically using StartLine/EndLine or unique context)
+                    // Actually I can't do multiple discontinuous edits with replace_file_content.
+                    // I will target the Custom Parsing block first.
                     else if (type === 'email') email = val;
                     else if (type === 'email_pass') emailPassword = val;
                     else if (type === 'email_recover') emailRecover = val;
@@ -431,7 +436,7 @@ function processImportData() {
 
             // 3. OTHER FIELDS
             const twofaIndex = cols.findIndex(c => c.replace(/\s/g, '').length === 32 && !c.includes('@'));
-            if (twofaIndex !== -1) twoFa = cols[twofaIndex].trim();
+            if (twofaIndex !== -1) twoFa = cols[twofaIndex].replace(/\s/g, '');
 
             const tokenIndex = cols.findIndex(c => c.startsWith('EAA'));
             if (tokenIndex !== -1) token = cols[tokenIndex].trim();

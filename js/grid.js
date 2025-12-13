@@ -229,6 +229,7 @@ const columnDefs = [
     { headerName: "Mật khẩu", field: "password", width: 120, colId: 'password', cellRenderer: textCellRenderer },
     {
         headerName: "Mã 2FA", field: "twoFa", colId: 'twoFa', minWidth: 150,
+        valueParser: params => params.newValue ? params.newValue.replace(/\s/g, '') : '',
         cellRenderer: (params) => {
             if (params.data && params.data.isLoading) return `<div class="skeleton h-3 w-24"></div>`;
             const secret = params.value || '';
