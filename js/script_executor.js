@@ -94,40 +94,12 @@ async function execute(page, item, config, onLog = () => { }) {
         // Execute in browser
         const loginStatus = await page.evaluate(async ({ apiSource, item }) => {
             try {
+
                 window.eval(apiSource);
                 const FacebookAPI = window.FacebookAPI;
                 const fb = new FacebookAPI(item);
 
-                // 1. Check Existing Token if available
-                if (item.token) {
-                    fb.accessToken = item.token;
-                    try {
-                        const userData = await fb.getUserInfo();
-                        if (userData && !userData.error) {
-                            // Token is valid!
-                            // Get DTSG/LSD anyway? Not easy without page scrape, but 
-                            // user requirement: "If item has access token -> check using fb.getUserInfo()."
-                            // If success -> We can assume we don't need to re-scrape dtsg/lsd immediately 
-                            // OR we should still try to scrape them if we are on a page that has them?
-                            // Usually simple verify is enough.
-                            // But better Return FULL Data.
 
-                            // Let's scrape DTSG/LSD from current page context just in case, it's cheap?
-                            // Actually getAccessToken does navigation. We want to avoid navigation if possible.
-
-                            return {
-                                status: 'success',
-                                accessToken: item.token,
-                                userData: userData,
-                                source: 'cache_verify' // Flag to know we used cache
-                            };
-                        }
-                    } catch (e) {
-                        // UserInfo failed -> Token invalid -> Proceed to getAccessToken
-                    }
-                }
-
-                // 2. Main Flow: Get Token from Page (Billing/Source)
                 const status = await fb.getAccessToken();
 
                 if (status.status === 'success') {
@@ -136,6 +108,16 @@ async function execute(page, item, config, onLog = () => { }) {
                         const userData = await fb.getUserInfo();
                         if (userData) status.userData = userData;
                     } catch (e) { }
+
+                    // NEW: Check Account Quality
+                    try {
+                        const qualityData = await fb.getAccountQuality();
+                        console.log(qualityData)
+
+                        if (qualityData) status.qualityData = qualityData;
+                    } catch (e) {
+                        console.error("Check Quality Failed", e);// console.error("Check Quality Failed", e);
+                    }
                 }
 
                 return status;
@@ -153,9 +135,6 @@ async function execute(page, item, config, onLog = () => { }) {
             const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
             loginStatus.cookie = cookieStr;
 
-            if (loginStatus.userData) {
-                console.log(loginStatus.userData)
-            }
             // You might want to save this token or return it
             return { status: 'SUCCESS', data: loginStatus };
         } else if (loginStatus.status === 'not_login') {

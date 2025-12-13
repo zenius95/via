@@ -48,7 +48,8 @@ class Database {
                     notes TEXT,
                     processStatus TEXT,
                     processMessage TEXT,
-                    folder TEXT
+                    folder TEXT,
+                    accountQuality TEXT
                 )
             `);
 
@@ -101,8 +102,11 @@ class Database {
                 if (!rows.some(r => r.name === 'birthday')) {
                     this.db.run("ALTER TABLE accounts ADD COLUMN birthday TEXT");
                 }
-                if (!rows.some(r => r.name === 'friends')) {
+                if (rows && !rows.some(r => r.name === 'friends')) {
                     this.db.run("ALTER TABLE accounts ADD COLUMN friends TEXT");
+                }
+                if (rows && !rows.some(r => r.name === 'accountQuality')) {
+                    this.db.run("ALTER TABLE accounts ADD COLUMN accountQuality TEXT");
                 }
             }
         });
@@ -146,16 +150,19 @@ class Database {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
                     uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
-                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder, dtsg, lsd, birthday, friends
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder, dtsg, lsd, birthday, friends, accountQuality
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             stmt.run(
                 account.uid, account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
-                account.processStatus || '', account.processMessage || '', account.folder || '', account.dtsg || '', account.lsd || '',
+                account.processStatus || '', account.processMessage || '', account.folder || '',
+                // account.dtsg removed, account.lsd removed
+                '', '',
                 account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
+                account.accountQuality || '',
                 (err) => {
                     if (err) reject(err);
                     else resolve(true);
@@ -170,8 +177,8 @@ class Database {
             const stmt = this.db.prepare(`
                 INSERT OR REPLACE INTO accounts (
                     uid, password, twoFa, email, emailPassword, emailRecover, cookie, token, 
-                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, name, avatar, proxy, user_agent, notes, processStatus, processMessage, folder, accountQuality
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             this.db.serialize(() => {
@@ -182,6 +189,7 @@ class Database {
                         account.cookie, account.token, account.status, account.name, account.avatar,
                         account.proxy || '', account.user_agent || '', account.notes || '',
                         account.processStatus || '', account.processMessage || '', account.folder || '',
+                        account.accountQuality || '',
                         (err) => {
                             if (err) console.error('Insert account error', account.uid, err);
                         }
@@ -202,7 +210,7 @@ class Database {
                 UPDATE accounts SET 
                     password = ?, twoFa = ?, email = ?, emailPassword = ?, emailRecover = ?, cookie = ?, token = ?, 
                     status = ?, name = ?, avatar = ?, proxy = ?, user_agent = ?, notes = ?, 
-                    dtsg = ?, lsd = ?, birthday = ?, friends = ?
+                    dtsg = ?, lsd = ?, birthday = ?, friends = ?, accountQuality = ?
                 WHERE uid = ?
             `);
 
@@ -210,8 +218,10 @@ class Database {
                 account.password, account.twoFa, account.email, account.emailPassword, account.emailRecover || '',
                 account.cookie, account.token, account.status, account.name, account.avatar,
                 account.proxy || '', account.user_agent || '', account.notes || '',
-                account.dtsg || '', account.lsd || '',
+                // account.dtsg removed, account.lsd removed
+                '', '',
                 account.birthday || '', (account.friends !== undefined && account.friends !== null) ? account.friends : '',
+                account.accountQuality || '',
                 account.uid,
                 (err) => {
                     if (err) reject(err);

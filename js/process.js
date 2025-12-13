@@ -253,8 +253,8 @@ async function runThread(node) {
 
                     // Update Node Data
                     node.data.token = data.accessToken;
-                    node.data.dtsg = data.dtsg;
-                    node.data.lsd = data.lsd;
+                    // node.data.dtsg = data.dtsg; // Removed persistence as requested
+                    // node.data.lsd = data.lsd;   // Removed persistence as requested
                     node.data.cookie = data.cookie; // Update Cookie
                     node.data.status = 'LIVE'; // Assume Live on success
 
@@ -270,6 +270,14 @@ async function runThread(node) {
                         if (data.userData.picture && data.userData.picture.data) {
                             node.data.avatar = data.userData.picture.data.url;
                         }
+                    }
+
+                    // SAVE QUALITY DATA
+                    if (data.qualityData) {
+                        node.data.accountQuality = data.qualityData.status; // Save text status
+                        // Maybe save color too? Or deduce it in UI?
+                        // Let's save just the text status for now, or save full object if DB supports JSON?
+                        // DB schema is flat. Let's add 'accountQuality' column.
                     }
 
                     // Save to DB

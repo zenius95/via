@@ -252,6 +252,20 @@ const columnDefs = [
     { headerName: "Email", field: "email", width: 180, colId: 'email', cellRenderer: textCellRenderer },
     { headerName: "Email Password", field: "emailPassword", width: 120, colId: 'emailPassword', cellRenderer: textCellRenderer },
     { headerName: "Email khôi phục", field: "emailRecover", width: 180, colId: 'emailRecover', cellRenderer: textCellRenderer },
+    {
+        headerName: "Chất lượng", field: "accountQuality", width: 150, colId: 'accountQuality',
+        cellRenderer: (params) => {
+            if (params.data.isLoading) return `<div class="h-full flex items-center"><div class="skeleton h-3 w-24"></div></div>`;
+            const val = params.value || 'N/A';
+            let colorClass = 'text-slate-400';
+            // Simple color mapping based strictly on the text logic in API
+            if (val.includes('Tích Xanh') || val.includes('Live Ads') || val === 'Tích xanh 902 ẩn tích') colorClass = 'text-emerald-400 font-medium';
+            else if (val.includes('Hạn Chế') || val.includes('HCQC') || val.includes('Xịt') || val.includes('Checkpoint')) colorClass = 'text-red-400 font-medium';
+            else if (val.includes('Đang Kháng') || val.includes('Đang kháng')) colorClass = 'text-amber-400 font-medium';
+
+            return `<div class="flex items-center h-full ${colorClass}" title="${val}">${val}</div>`;
+        }
+    },
     { headerName: "Token", field: "token", width: 150, colId: 'token', cellRenderer: textCellRenderer },
     { headerName: "Cookie", field: "cookie", colId: 'cookie', cellRenderer: textCellRenderer },
     {
