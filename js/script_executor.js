@@ -156,7 +156,6 @@ async function execute(page, item, config, onLog = () => { }) {
                             onLog(`Tìm thấy ${adAccounts.length} TKQC. Đang lấy chi tiết...`);
                             const detailedAccounts = await fb.getAdAccountsData(adAccounts);
                             status.adAccounts = detailedAccounts;
-                            console.dir(detailedAccounts, { depth: null });
                         } else {
                             onLog('Không tìm thấy TKQC nào.');
                         }

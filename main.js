@@ -147,6 +147,10 @@ ipcMain.handle('db:add-folder', async (event, name, color) => await database.add
 ipcMain.handle('db:delete-folder', async (event, id) => await database.deleteFolder(id));
 ipcMain.handle('db:update-folder', async (event, args) => await database.updateFolder(args.id, args.newName, args.newColor, args.oldName));
 ipcMain.handle('db:update-account-folder', async (event, args) => await database.updateAccountFolder(args.uids, args.folderName));
+ipcMain.handle('db:save-ad-accounts', async (event, { uid, adAccounts }) => await database.saveAdAccounts(uid, adAccounts));
+ipcMain.handle('db:get-ad-accounts', async (event, uid) => await database.getAdAccounts(uid));
+
+
 
 // --- SETTINGS IPC ---
 ipcMain.handle('db:get-settings', async () => await database.getSettings());

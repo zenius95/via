@@ -80,6 +80,39 @@ class Database {
                 // Migrations run after tables are potentially created
                 this.runMigrations();
             });
+
+            // Ad Accounts Table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS ad_accounts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    account_uid TEXT,
+                    ad_id TEXT,
+                    name TEXT,
+                    status INTEGER,
+                    currency TEXT,
+                    balance TEXT,
+                    spend TEXT,
+                    account_limit TEXT,
+                    threshold TEXT,
+                    remain TEXT,
+                    pre_pay TEXT,
+                    payment TEXT,
+                    cards TEXT,
+                    users TEXT,
+                    role TEXT,
+                    type TEXT,
+                    bm_id TEXT,
+                    admin_number INTEGER,
+                    timezone TEXT,
+                    next_bill_date TEXT,
+                    next_bill_day TEXT,
+                    created_time TEXT,
+                    reason TEXT,
+                    country TEXT,
+                    last_updated TEXT,
+                    FOREIGN KEY(account_uid) REFERENCES accounts(uid) ON DELETE CASCADE
+                )
+            `);
         });
     }
 
@@ -128,6 +161,21 @@ class Database {
                         if (err) console.error('Migration is_deleted failed', err);
                         else console.log('Migrated DB: Added is_deleted');
                     });
+                }
+            }
+        });
+
+        // Ad Accounts Migrations
+        this.db.all("PRAGMA table_info(ad_accounts)", (err, rows) => {
+            if (!err && rows && rows.length > 0) {
+                if (!rows.some(r => r.name === 'users')) {
+                    this.db.run("ALTER TABLE ad_accounts ADD COLUMN users TEXT");
+                }
+                if (!rows.some(r => r.name === 'reason')) {
+                    this.db.run("ALTER TABLE ad_accounts ADD COLUMN reason TEXT");
+                }
+                if (!rows.some(r => r.name === 'next_bill_day')) {
+                    this.db.run("ALTER TABLE ad_accounts ADD COLUMN next_bill_day TEXT");
                 }
             }
         });
@@ -463,6 +511,96 @@ class Database {
             this.db.run("DELETE FROM profiles WHERE id = ?", [id], function (err) {
                 if (err) reject(err);
                 else resolve(this.changes);
+            });
+        });
+    }
+
+
+    // --- AD ACCOUNTS METHODS ---
+
+    saveAdAccounts(uid, adAccounts) {
+
+        console.log(adAccounts)
+
+        return new Promise((resolve, reject) => {
+            if (!uid) return reject('No UID provided');
+
+            this.db.serialize(() => {
+                this.db.run("BEGIN TRANSACTION");
+
+                // Clear old data for this user
+                this.db.run("DELETE FROM ad_accounts WHERE account_uid = ?", [uid]);
+
+                if (adAccounts && adAccounts.length > 0) {
+                    const stmt = this.db.prepare(`
+                        INSERT INTO ad_accounts (
+                            account_uid, ad_id, name, status, currency, balance, spend, 
+                            account_limit, threshold, remain, pre_pay, payment, cards, users,
+                            role, type, bm_id, admin_number, timezone, next_bill_date, next_bill_day,
+                            created_time, reason, country, last_updated
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `);
+
+                    const now = new Date().toISOString();
+
+                    adAccounts.forEach(ad => {
+                        const usersJson = ad.users ? JSON.stringify(ad.users) : '[]';
+                        stmt.run(
+                            uid,
+                            ad.adId || '',
+                            ad.name || '',
+                            ad.account_status,
+                            ad.currency || '',
+                            String(ad.balance || '0'),
+                            String(ad.spend || '0'),
+                            String(ad.limit || '0'),
+                            String(ad.threshold || '0'),
+                            String(ad.remain || '0'),
+                            ad.prePay || '',
+                            ad.payment || '',
+                            JSON.stringify(ad.cards || []),
+                            usersJson,
+                            ad.role || '',
+                            ad.type || '',
+                            ad.bmId || '',
+                            ad.adminNumber || 0,
+                            ad.timezone || '',
+                            ad.nextBillDate || '',
+                            String(ad.nextBillDay || ''),
+                            ad.createdTime || '',
+                            ad.reason || '',
+                            ad.country || '',
+                            now,
+                            (err) => {
+                                if (err) console.error('Insert Ad Account Error', err);
+                            }
+                        );
+                    });
+                    stmt.finalize();
+                }
+
+                this.db.run("COMMIT", (err) => {
+                    if (err) reject(err);
+                    else resolve(true);
+                });
+            });
+        });
+    }
+
+    getAdAccounts(uid) {
+        return new Promise((resolve, reject) => {
+            this.db.all("SELECT * FROM ad_accounts WHERE account_uid = ?", [uid], (err, rows) => {
+                if (err) reject(err);
+                else {
+                    // Parse JSON fields if needed, e.g. cards
+                    const results = rows.map(r => {
+                        try {
+                            r.cards = JSON.parse(r.cards);
+                        } catch (e) { r.cards = []; }
+                        return r;
+                    });
+                    resolve(results);
+                }
             });
         });
     }
